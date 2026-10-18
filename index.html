@@ -426,6 +426,14 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
 .foot-logo{background:#fff;border-radius:999px;padding:8px 22px;display:inline-flex;box-shadow:0 0 0 1px var(--line)}
 .foot-logo img{height:46px;width:auto}
 
+.mode{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:999px;border:1px solid var(--line2);color:var(--muted);white-space:nowrap}
+.mode.on{color:var(--good);border-color:color-mix(in oklab,var(--good) 45%,transparent)}
+.mode .dot{background:var(--good)}
+.crest.img{background:#fff;padding:3px;box-shadow:0 0 0 1px var(--line)}
+.crest.img img{width:100%;height:100%;object-fit:contain;display:block}
+.lg-badge.img{background:#fff;padding:4px;box-shadow:0 0 0 1px var(--line)}
+.lg-badge.img img{width:100%;height:100%;object-fit:contain;display:block}
+.real-note{display:flex;gap:10px;align-items:center;margin:18px 0 0;padding:10px 16px;border-radius:999px;background:var(--red-soft);font-size:13px}
 /* ---------- responsivo ---------- */
 @media (max-width:1080px){
   .pd-layout,.lg-layout,.studio,.cm-grid{grid-template-columns:minmax(0,1fr)}
@@ -473,14 +481,14 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
         <button class="tab" role="tab" data-v="lab" id="tab-lab">Análise tática</button>
         <button class="tab" role="tab" data-v="estudio" id="tab-estudio">Estúdio de posts</button>
       </nav>
-      <div class="clock" id="clock"></div>
+      <span class="mode" id="mode-pill" hidden></span><div class="clock" id="clock"></div>
     </div>
   </div>
   <div class="wrap"><div class="ticker" aria-label="Placar dos jogos de hoje"><div class="tk-track" id="ticker"></div></div></div>
 </header>
 
 <main class="wrap">
-  <div class="demo-note"><span class="pill solid">Protótipo</span><span>Clubes e estádios reais. <b>Elencos, árbitros e números são fictícios</b>, gerados para demonstração.</span></div>
+  <div class="demo-note" id="demo-note"><span class="pill solid" id="demo-pill">Protótipo</span><span id="demo-text">Clubes e estádios reais. <b>Elencos, árbitros e números são fictícios</b>, gerados para demonstração.</span></div>
 
   <!-- PARTIDAS -->
   <section class="view" id="v-partidas" role="tabpanel" aria-labelledby="tab-partidas">
@@ -508,19 +516,19 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
 
   <!-- LIGAS -->
   <section class="view" id="v-ligas" role="tabpanel" aria-labelledby="tab-ligas" hidden>
-    <div class="sec-head"><div><h2 class="sec" id="lg-title">Ligas</h2><p>Tabela com pontos esperados (xPts). A diferença entre pontos reais e esperados mostra quem está acima ou abaixo do próprio desempenho.</p></div></div>
+    <div class="sec-head"><div><h2 class="sec" id="lg-title">Ligas</h2><p id="lg-desc">Tabela com pontos esperados (xPts). A diferença entre pontos reais e esperados mostra quem está acima ou abaixo do próprio desempenho.</p></div></div>
     <div class="pd-bar"><div class="chips" id="lg-filter"></div></div>
     <div class="lg-layout">
-      <div class="card"><div class="tbl-wrap" id="lg-table"></div><div class="legend"><span><i style="background:var(--good)"></i>Vitória</span><span><i style="background:var(--low)"></i>Empate</span><span><i style="background:var(--red)"></i>Derrota</span><span>Top 10 da competição</span></div></div>
+      <div class="card"><div class="tbl-wrap" id="lg-table"></div><div class="legend"><span><i style="background:var(--good)"></i>Vitória</span><span><i style="background:var(--low)"></i>Empate</span><span><i style="background:var(--red)"></i>Derrota</span><span id="lg-leg-note">Top 10 da competição</span></div></div>
       <div style="display:grid;gap:16px;min-width:0">
-        <div class="card"><div class="card-h"><div><h3>Pontos − xPts</h3><div class="sub">Acima de zero: somou mais do que o desempenho sugere</div></div></div><div id="lg-luck"></div></div>
+        <div class="card"><div class="card-h"><div><h3 id="lg-luck-title">Pontos − xPts</h3><div class="sub" id="lg-luck-sub">Acima de zero: somou mais do que o desempenho sugere</div></div></div><div id="lg-luck"></div></div>
         <div class="card"><div class="card-h"><h3>Leitura da tabela</h3><button class="btn sm" id="lg-post">Gerar post da tabela</button></div><div class="insight" id="lg-insights"></div></div>
       </div>
     </div>
   </section>
 
   <!-- ANÁLISE TÁTICA -->
-  <section class="view" id="v-lab" role="tabpanel" aria-labelledby="tab-lab" hidden>
+  <section class="view" id="v-lab" role="tabpanel" aria-labelledby="tab-lab" hidden><div class="real-note" hidden><span class="pill solid">Demonstração</span><span>Esta seção ainda usa dados de demonstração. A versão com dados reais chega na próxima etapa.</span></div>
     <div class="sec-head"><div><h2 class="sec">Análise tática</h2><p>Escolha uma partida. Cada painel tem um botão que leva aquela análise direto para o estúdio de posts.</p></div>
       <div class="cm-pick"><label class="eyebrow" for="lab-match">Partida</label><select id="lab-match"></select></div></div>
     <div class="stage" style="margin-bottom:16px"><div id="lab-head"></div></div>
@@ -537,7 +545,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
   </section>
 
   <!-- ESTÚDIO -->
-  <section class="view" id="v-estudio" role="tabpanel" aria-labelledby="tab-estudio" hidden>
+  <section class="view" id="v-estudio" role="tabpanel" aria-labelledby="tab-estudio" hidden><div class="real-note" hidden><span class="pill solid">Demonstração</span><span>Esta seção ainda usa dados de demonstração. A versão com dados reais chega na próxima etapa.</span></div>
     <div class="sec-head"><div><h2 class="sec">Estúdio de posts</h2><p>Escolha a partida, o foco, o formato, a plataforma e o tom. O texto sai pronto a partir dos números do site. Cada clique em "Outra versão" sorteia frases e ângulos novos.</p></div></div>
     <div class="studio">
       <div class="st-controls card">
@@ -902,8 +910,8 @@ const pitchColor=s=>s==='h'?'var(--p-home)':'var(--p-away)';
 function ring(st,size=64,light=false){
  const r=size/2-5,c=2*Math.PI*r;const pct=st.k==='ft'?1:st.k==='pre'?0:Math.min(1,st.min/90);
  const trk=light?'rgba(255,255,255,.14)':'var(--line)';const txt=light?'#fff':'var(--ink)';
- const lab=st.k==='ft'?'FIM':st.ht?'INT':st.k==='pre'?st.label:st.label.replace("'","");
- return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(st.label)}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${trk}" stroke-width="4"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${st.k==='ft'?(light?'rgba(255,255,255,.55)':'var(--faint)'):'#FF2533'}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(c*pct).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/><text x="50%" y="50%" dy=".35em" text-anchor="middle" font-size="${size<50?10:size*.2}" fill="${txt}">${esc(lab)}${st.k==='live'&&!st.ht?"'":''}</text></svg>`;
+ const lab=st.ring||(st.k==='ft'?'FIM':st.ht?'INT':st.k==='pre'?st.label:st.label.replace("'",""));
+ return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(st.label)}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${trk}" stroke-width="4"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${st.k==='ft'?(light?'rgba(255,255,255,.55)':'var(--faint)'):'#FF2533'}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(c*pct).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/><text x="50%" y="50%" dy=".35em" text-anchor="middle" font-size="${size<50?10:size*.2}" fill="${txt}">${esc(lab)}${st.k==='live'&&!st.ht&&!st.ring?"'":''}</text></svg>`;
 }
 function donut(parts,size=120,stroke=14,center=''){
  const r=size/2-stroke/2,c=2*Math.PI*r;let off=0;const tot=sum(parts,p=>p.v)||1;const gap=parts.length>1?3:0;
@@ -948,7 +956,7 @@ function cmpRows(rows){return `<div class="cmp">${rows.map(([l,a,b,dp,inv])=>{co
 
 /* ================= relógio e ticker ================= */
 function renderClock(){const d=NOW();$('#clock').textContent=`${dateTxt(d)} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
- const n=todays.filter(m=>status(m).k==='live').length;const c=$('#live-cnt');c.hidden=!n;c.textContent=n+' ao vivo';}
+ if(REAL.on)return;const n=todays.filter(m=>status(m).k==='live').length;const c=$('#live-cnt');c.hidden=!n;c.textContent=n+' ao vivo';}
 function renderTicker(){
  const items=todays.map(m=>{const st=status(m);const d=st.k==='pre'?null:derive(m,st.min);
   return `<button class="tk-item" data-cm="${m.key}">${crest(m.h)}<b class="num">${d?d.h.goals:''}</b><span class="tk-st">${d?'–':m.ko}</span><b class="num">${d?d.a.goals:''}</b>${crest(m.a)}<span class="tk-st ${st.k==='live'?'live':''}">${st.k==='live'?st.label:st.k==='ft'?'FIM':LG[m.lg].short}</span></button>`;}).join('');
@@ -1473,12 +1481,322 @@ function goStudio(key,fmt){
  if(fmt)ST.fmt=fmt;ST.ver=1;show('estudio');
 }
 
+/* ================= DADOS REAIS (API-Football via /api/football) ================= */
+const TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Sao_Paulo';}catch(e){return 'America/Sao_Paulo';}})();
+// Ligas acompanhadas. Para incluir outra, adicione o id da API-Football aqui (sa:true = temporada no ano civil).
+const RL=[
+ {id:71,name:'Brasileirão Série A',short:'Brasileirão',sa:true},
+ {id:72,name:'Brasileirão Série B',short:'Série B',sa:true},
+ {id:73,name:'Copa do Brasil',short:'Copa do Brasil',sa:true},
+ {id:13,name:'Copa Libertadores',short:'Libertadores',sa:true},
+ {id:11,name:'Copa Sul-Americana',short:'Sul-Americana',sa:true},
+ {id:2,name:'Champions League',short:'Champions'},
+ {id:39,name:'Premier League',short:'Premier'},
+ {id:140,name:'La Liga',short:'La Liga'},
+ {id:135,name:'Serie A (Itália)',short:'Serie A'},
+ {id:78,name:'Bundesliga',short:'Bundesliga'},
+ {id:61,name:'Ligue 1',short:'Ligue 1'}
+];
+const RLmap=Object.fromEntries(RL.map(l=>[l.id,l]));
+const TABLE_LG=[71,72,39,140,135,78,61];
+const LIVE_S=['1H','HT','2H','ET','BT','P','LIVE','INT','SUSP'],FT_S=['FT','AET','PEN'],OFF_S=['PST','CANC','ABD','AWD','WO'];
+const seasonFor=id=>{const l=RLmap[id];const d=NOW();const y=d.getFullYear();return l&&l.sa?y:(d.getMonth()>=6?y:y-1);};
+const seasonLabel=id=>{const s=seasonFor(id);return RLmap[id]&&RLmap[id].sa?String(s):`${s}/${String(s+1).slice(2)}`;};
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const hhmm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+const durTxt=m=>m>=1440?`${Math.floor(m/1440)}d ${Math.floor(m%1440/60)}h`:m>=60?`${Math.floor(m/60)}h ${m%60}min`:`${m} min`;
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+const refName=raw=>String(raw||'').split(',')[0].trim();
+const lastName=n=>String(n||'').split(' ').slice(-1)[0];
+const lgName=f=>(RLmap[f.league.id]||{}).name||f.league.name;
+const lgShort=f=>(RLmap[f.league.id]||{}).short||f.league.name;
+const lgRank=id=>{const i=RL.findIndex(l=>l.id===id);return i<0?99:i;};
+const rCrest=(t,cls='')=>`<span class="crest img ${cls}" aria-hidden="true"><img src="${esc(t&&t.logo||'')}" alt="" loading="lazy"></span>`;
+const evMin=e=>`${e.time.elapsed}${e.time.extra?'+'+e.time.extra:''}'`;
+const sideOf=(f,teamId)=>teamId===f.teams.home.id?'h':'a';
+
+const REAL={on:false,cache:{},day:0,st:'all',lg:'all',key:null,tab:'lance',goals:null,lgTab:71,status:null,err:null,cur:null};
+
+async function apiGet(endpoint,params={},ttl=25000){
+ const qs=new URLSearchParams({endpoint,...params});const k=qs.toString();const c=REAL.cache[k];
+ if(c&&Date.now()-c.t<c.ttl)return c.v;
+ const r=await fetch('/api/football?'+k,{headers:{accept:'application/json'}});
+ let j;try{j=await r.json();}catch(e){throw new Error('O servidor respondeu de forma inesperada ('+r.status+').');}
+ if(!j.ok){throw new Error(j.error||(j.errors?Object.values(j.errors).join(' '):'Erro na API.'));}
+ REAL.cache[k]={t:Date.now(),v:j.response,ttl};return j.response;
+}
+async function bootReal(){
+ if(location.protocol==='file:')return;
+ try{const r=await fetch('/api/football?endpoint=status',{headers:{accept:'application/json'}});
+  if(!(r.headers.get('content-type')||'').includes('json'))return;
+  const j=await r.json();
+  if(j.ok){REAL.on=true;REAL.status=j.response;}else REAL.err=j.error||(j.errors?Object.values(j.errors).join(' '):'erro desconhecido');
+ }catch(e){}
+}
+function applyMode(){
+ const pill=$('#mode-pill');pill.hidden=false;
+ if(REAL.on){
+  pill.className='mode on';pill.innerHTML='<span class="dot"></span>Dados reais';
+  $('#demo-pill').textContent='Ao vivo';
+  $('#demo-text').innerHTML='Placar, jogos, escalações, estatísticas e tabelas com <b>dados reais da API-Football</b>. Análise tática e estúdio de posts ainda usam dados de demonstração.';
+  $$('.real-note').forEach(n=>n.hidden=false);$('#lg-post').hidden=true;
+ }else{
+  pill.className='mode';pill.textContent='Demonstração';
+  if(REAL.err)$('#demo-text').innerHTML=`Modo demonstração. A conexão com a API falhou: <b>${esc(REAL.err)}</b>`;
+ }
+}
+function rStatus(f){
+ const s=f.fixture.status,sh=s.short;
+ if(LIVE_S.includes(sh)){const ht=sh==='HT'||sh==='BT';if(sh==='P')return {k:'live',min:120,label:'Pênaltis',ring:'PEN'};
+  return {k:'live',min:ht?45.5:(s.elapsed||0),label:ht?'Intervalo':s.elapsed!=null?`${s.elapsed}${s.extra?'+'+s.extra:''}'`:'Ao vivo',ht};}
+ if(FT_S.includes(sh))return {k:'ft',min:95,label:sh==='PEN'?'Fim (pênaltis)':sh==='AET'?'Fim (prorrogação)':'Encerrado'};
+ if(OFF_S.includes(sh))return {k:'off',min:0,label:{PST:'Adiado',CANC:'Cancelado',ABD:'Interrompido',AWD:'W.O.',WO:'W.O.'}[sh]};
+ return {k:'pre',min:0,label:hhmm(new Date(f.fixture.date))};
+}
+function roundTxt(r){
+ if(!r)return '';let m=r.match(/Regular Season - (\d+)/);if(m)return 'Rodada '+m[1];
+ m=r.match(/Group Stage - (\d+)/i);if(m)return 'Fase de grupos · '+m[1];
+ const map={'Round of 32':'16-avos de final','Round of 16':'Oitavas de final','Quarter-finals':'Quartas de final','Semi-finals':'Semifinal','Final':'Final','1st Round':'1ª fase','2nd Round':'2ª fase','3rd Round':'3ª fase','League Stage':'Fase de liga'};
+ for(const k in map)if(r.startsWith(k))return map[k]+r.slice(k.length);return r;
+}
+async function rDay(off){const d=new Date(today0);d.setDate(d.getDate()+off);const list=await apiGet('fixtures',{date:ymd(d),timezone:TZ,leagues:RL.map(l=>l.id).join(',')});return (list||[]).slice().sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)||lgRank(a.league.id)-lgRank(b.league.id));}
+
+/* ticker e contador */
+async function renderTickerReal(){
+ let list;try{list=await rDay(0);}catch(e){$('#ticker').innerHTML='';return;}
+ const live=list.filter(f=>rStatus(f).k==='live').length;const c=$('#live-cnt');c.hidden=!live;c.textContent=live+' ao vivo';
+ if(!list.length){$('#ticker').innerHTML='<span class="tk-item">Sem jogos hoje nas ligas acompanhadas</span>';return;}
+ const items=list.map(f=>{const st=rStatus(f);const pre=st.k==='pre'||st.k==='off';
+  return `<button class="tk-item" data-rcm="${f.fixture.id}">${rCrest(f.teams.home)}<b class="num">${pre?'':f.goals.home}</b><span class="tk-st">${pre?esc(st.label):'–'}</span><b class="num">${pre?'':f.goals.away}</b>${rCrest(f.teams.away)}<span class="tk-st ${st.k==='live'?'live':''}">${st.k==='live'?esc(st.label):st.k==='ft'?'FIM':esc(lgShort(f))}</span></button>`;}).join('');
+ $('#ticker').innerHTML=items+items;
+}
+
+/* partidas */
+async function renderPartidasReal(){
+ const days=[];for(let o=-6;o<=2;o++){const d=new Date(today0);d.setDate(d.getDate()+o);days.push({o,d});}
+ $('#pd-days').innerHTML=days.map(x=>`<button class="day ${x.o===0?'today':''}" aria-pressed="${REAL.day===x.o}" data-rday="${x.o}"><small>${x.o===0?'Hoje':x.o===1?'Amanhã':x.o===-1?'Ontem':DOWS[x.d.getDay()]}</small><b class="num">${x.d.getDate()}</b><span class="c">${MON[x.d.getMonth()]}</span></button>`).join('');
+ const d0=new Date(today0);d0.setDate(d0.getDate()+REAL.day);
+ $('#pd-title').textContent=REAL.day===0?'Partidas de hoje':REAL.day===1?'Partidas de amanhã':REAL.day===-1?'Partidas de ontem':`Partidas · ${dateTxt(d0)}`;
+ const my=REAL.day;const box=$('#pd-list');
+ if(box.dataset.rday!==String(my)){box.innerHTML='<div class="empty">Carregando jogos…</div>';$('#pd-feat').innerHTML='';}
+ let list;
+ try{list=await rDay(my);}catch(e){if(view==='partidas'&&REAL.day===my){box.innerHTML=`<div class="empty">Não foi possível carregar os jogos. ${esc(e.message)}</div>`;box.dataset.rday='';$('#pd-status').innerHTML='';$('#pd-leagues').innerHTML='';$('#pd-ins').innerHTML='';}return;}
+ if(view!=='partidas'||REAL.day!==my)return;
+ box.dataset.rday=String(my);
+ const cnt=k=>list.filter(f=>rStatus(f).k===k).length;
+ const sts=[['all','Todos',list.length],['live','Ao vivo',cnt('live')],['ft','Encerrados',cnt('ft')],['pre','Próximos',cnt('pre')]];
+ $('#pd-status').innerHTML=sts.map(([k,l,n])=>`<button class="chip ${k==='live'?'live':''}" aria-pressed="${REAL.st===k}" data-rpst="${k}">${k==='live'&&n?'<span class="dot pulse"></span>':''}${l}<span class="n">${n}</span></button>`).join('');
+ const lgs=[...new Set(list.map(f=>f.league.id))].sort((a,b)=>lgRank(a)-lgRank(b));
+ if(REAL.lg!=='all'&&!lgs.includes(+REAL.lg))REAL.lg='all';
+ $('#pd-leagues').innerHTML=`<button class="chip" aria-pressed="${REAL.lg==='all'}" data-rplg="all">Todas as ligas</button>`+lgs.map(id=>{const f=list.find(x=>x.league.id===id);return `<button class="chip" aria-pressed="${String(REAL.lg)===String(id)}" data-rplg="${id}">${esc(lgShort(f))}</button>`;}).join('');
+ const shown=list.filter(f=>(REAL.st==='all'||rStatus(f).k===REAL.st)&&(REAL.lg==='all'||String(f.league.id)===String(REAL.lg)));
+ const by={};shown.forEach(f=>(by[f.league.id]=by[f.league.id]||[]).push(f));
+ const order=Object.keys(by).map(Number).sort((a,b)=>{const la=by[a].some(f=>rStatus(f).k==='live'),lb=by[b].some(f=>rStatus(f).k==='live');return (lb-la)||(lgRank(a)-lgRank(b));});
+ box.innerHTML=!list.length?'<div class="empty">Nenhum jogo das ligas acompanhadas neste dia.</div>':!order.length?'<div class="empty">Nenhum jogo com esses filtros. Tente "Todos".</div>':order.map(id=>{const g=by[id],f0=g[0];
+  return `<div class="lg-group"><div class="lg-gh"><span class="lg-badge img"><img src="${esc(f0.league.logo)}" alt="" loading="lazy"></span><div><h3>${esc(lgName(f0))}</h3><small>${esc(roundTxt(f0.league.round))} · ${g.length} jogo${g.length>1?'s':''}</small></div>${TABLE_LG.includes(id)?`<button class="btn sm" data-rlgo="${id}">Tabela</button>`:''}</div>${g.map(rowReal).join('')}</div>`;}).join('');
+ renderFeatReal(list);renderInsReal(list);
+}
+function rowReal(f){
+ const st=rStatus(f),h=f.teams.home,a=f.teams.away,g=f.goals,v=f.fixture.venue||{};let sc,stc,ex;
+ if(st.k==='pre'||st.k==='off'){sc=`<span class="sc pre">${esc(st.label)}</span>`;stc=`<span class="st">${st.k==='off'?esc(st.label):'Hoje'}</span>`;ex=`<div class="mini-prob"><small><span>${esc(roundTxt(f.league.round))}</span></small><small><span>${esc(v.name||'')}</span></small></div>`;}
+ else{const ht=f.score&&f.score.halftime;sc=`<span class="sc ${st.k==='live'?'live':''}">${g.home} – ${g.away}${ht&&ht.home!=null&&(st.k==='ft'||st.min>45)?`<span class="xg">1º T ${ht.home}–${ht.away}</span>`:''}</span>`;
+  stc=st.k==='live'?ring(st,42):'<span class="st">FIM</span>';ex=`<div class="mini-prob"><small><span>${esc(v.name||'')}</span></small><small><span>${f.fixture.referee?'Árb. '+esc(refName(f.fixture.referee)):''}</span></small></div>`;}
+ return `<button class="mrow" data-rcm="${f.fixture.id}" aria-label="${esc(h.name)} contra ${esc(a.name)}, ${esc(st.label)}"><span class="stc">${stc}</span><span class="tm h"><span>${esc(h.name)}</span>${rCrest(h)}</span>${sc}<span class="tm">${rCrest(a)}<span>${esc(a.name)}</span></span>${ex}<span class="chev">${IC.chev}</span></button>`;
+}
+function renderFeatReal(list){
+ const live=list.filter(f=>rStatus(f).k==='live').sort((a,b)=>lgRank(a.league.id)-lgRank(b.league.id));
+ const pre=list.filter(f=>rStatus(f).k==='pre').sort((a,b)=>lgRank(a.league.id)-lgRank(b.league.id)||new Date(a.fixture.date)-new Date(b.fixture.date));
+ const ft=list.filter(f=>rStatus(f).k==='ft').sort((a,b)=>(b.goals.home+b.goals.away)-(a.goals.home+a.goals.away));
+ const f=live[0]||pre[0]||ft[0];if(!f){$('#pd-feat').innerHTML='';return;}
+ const st=rStatus(f),h=f.teams.home,a=f.teams.away;
+ let mid;
+ if(st.k==='pre'){const mins=Math.max(0,Math.round((new Date(f.fixture.date)-NOW())/60000));mid=`<div style="display:grid;justify-items:center;gap:6px"><div class="score" style="font-size:34px">${esc(st.label)}</div><span class="eyebrow">${mins>0?'em '+durTxt(mins):'em instantes'}</span></div>`;}
+ else mid=`<div style="display:grid;justify-items:center;gap:8px"><div class="score">${f.goals.home}<i>×</i>${f.goals.away}</div>${st.k==='live'?ring(st,46,true):'<span class="pill">Encerrado</span>'}</div>`;
+ $('#pd-feat').innerHTML=`<div class="stage feat">${ARCS}<div class="cm-stage-top"><span class="eyebrow">${st.k==='live'?'Em destaque agora':st.k==='pre'?'Próximo grande jogo':'Jogo do dia'}</span>${st.k==='live'?'<span class="pill live">Ao vivo</span>':`<span class="pill">${esc(lgShort(f))}</span>`}</div>
+ <div class="row"><div class="tmx">${rCrest(h,'lg')}${esc(h.name)}</div>${mid}<div class="tmx">${rCrest(a,'lg')}${esc(a.name)}</div></div>
+ <div class="xl">${esc((f.fixture.venue||{}).name||'')}${f.fixture.referee?' · árbitro '+esc(refName(f.fixture.referee)):''}</div>
+ <div class="acts"><button class="btn primary" data-rcm="${f.fixture.id}">${st.k==='live'?'Acompanhar ao vivo':st.k==='pre'?'Ver pré-jogo':'Abrir central'}</button></div></div>`;
+}
+function renderInsReal(list){
+ const ft=list.filter(f=>rStatus(f).k==='ft'),live=list.filter(f=>rStatus(f).k==='live');const played=[...ft,...live];
+ if(!played.length){$('#pd-ins').innerHTML='<p style="color:var(--muted);margin:0;font-size:13px">Os destaques aparecem aqui quando os jogos começarem.</p>';return;}
+ const gs=f=>(f.goals.home||0)+(f.goals.away||0);const goals=sum(played,gs);
+ const most=maxBy(played,gs),big=maxBy(played,f=>Math.abs((f.goals.home||0)-(f.goals.away||0)));
+ const hw=ft.filter(f=>f.goals.home>f.goals.away).length,dr=ft.filter(f=>f.goals.home===f.goals.away).length;
+ const rows=[[String(goals),'Gols no dia',`${played.length} jogo(s) iniciados, média de ${f1(goals/played.length)}`],[String(gs(most)),'Jogo com mais gols',`${most.teams.home.name} ${most.goals.home}×${most.goals.away} ${most.teams.away.name}`],[String(Math.abs(big.goals.home-big.goals.away)),'Maior diferença',`${big.teams.home.name} ${big.goals.home}×${big.goals.away} ${big.teams.away.name}`],
+  ft.length?[`${Math.round(hw/ft.length*100)}%`,'Vitórias dos mandantes',`${hw} de ${ft.length} encerrados, ${dr} empate(s)`]:[String(live.length),'Jogos ao vivo agora','Toque em um jogo para acompanhar']];
+ $('#pd-ins').innerHTML=rows.map(([a,b,c])=>`<div class="ins"><span class="ix num">${esc(a)}</span><p>${esc(b)}<small>${esc(c)}</small></p></div>`).join('');
+}
+
+/* central do jogo */
+function statMap(f){const out={};(f.statistics||[]).forEach(s=>{const side=sideOf(f,s.team.id);(s.statistics||[]).forEach(x=>{(out[x.type]=out[x.type]||{h:null,a:null})[side]=x.value;});});return out;}
+const sv=v=>v==null?0:typeof v==='string'?(parseFloat(v.replace('%','').replace(',','.'))||0):v;
+const STAT_PT=[['Ball Possession','Posse (%)',0],['expected_goals','xG',2],['Total Shots','Finalizações',0],['Shots on Goal','No alvo',0],['Shots off Goal','Para fora',0],['Blocked Shots','Bloqueadas',0],['Shots insidebox','Dentro da área',0],['Shots outsidebox','Fora da área',0],['Goalkeeper Saves','Defesas do goleiro',0],['Total passes','Passes',0],['Passes accurate','Passes certos',0],['Passes %','Precisão de passe (%)',0],['Corner Kicks','Escanteios',0],['Fouls','Faltas',0],['Offsides','Impedimentos',0],['Yellow Cards','Amarelos',0],['Red Cards','Vermelhos',0],['goals_prevented','Gols evitados',2]];
+function statRows(sm,only){return STAT_PT.filter(([k])=>sm[k]&&(sm[k].h!=null||sm[k].a!=null)&&(!only||only.includes(k))).map(([k,l,dp])=>[l,sv(sm[k].h),sv(sm[k].a),dp]);}
+function goalFlashReal(f,e){if(!e)return;const el=$('#goal-flash');el.innerHTML=`<span class="bl">${IC.ball}</span><div><b>GOL!</b><span style="display:block">${esc(e.player&&e.player.name||'')} · ${esc(e.team&&e.team.name||'')} · ${f.goals.home}×${f.goals.away}</span></div>`;el.hidden=false;clearTimeout(goalFlashReal._t);goalFlashReal._t=setTimeout(()=>el.hidden=true,3600);}
+async function renderCentroReal(){
+ let today=[];try{today=await rDay(0);}catch(e){}
+ if(!REAL.key){const live=today.filter(f=>rStatus(f).k==='live').sort((a,b)=>lgRank(a.league.id)-lgRank(b.league.id));const f0=live[0]||today.find(f=>rStatus(f).k==='pre')||today[today.length-1];REAL.key=f0?String(f0.fixture.id):null;}
+ if(!REAL.key){$('#cm-match').innerHTML='';$('#cm-stage').innerHTML='<div class="empty">Nenhum jogo hoje nas ligas acompanhadas. Escolha uma partida de outro dia na aba Partidas.</div>';$('#cm-replay').innerHTML='';$('#cm-tabs').innerHTML='';$('#cm-body').innerHTML='';return;}
+ const my=REAL.key;
+ if(!REAL.cur||String(REAL.cur.fixture.id)!==my){$('#cm-stage').innerHTML='<div class="empty">Carregando partida…</div>';$('#cm-body').innerHTML='';$('#cm-tabs').innerHTML='';$('#cm-replay').innerHTML='';}
+ let f;try{const arr=await apiGet('fixtures',{id:my,timezone:TZ});f=arr&&arr[0];}catch(e){if(view==='centro'&&REAL.key===my)$('#cm-stage').innerHTML=`<div class="empty">Não foi possível carregar a partida. ${esc(e.message)}</div>`;return;}
+ if(view!=='centro'||REAL.key!==my)return;
+ if(!f){$('#cm-stage').innerHTML='<div class="empty">Partida não encontrada.</div>';return;}
+ REAL.cur=f;
+ const opts=today.map(x=>`<option value="${x.fixture.id}">${esc(x.teams.home.name)} × ${esc(x.teams.away.name)} · ${esc(rStatus(x).label)}</option>`);
+ if(!today.some(x=>String(x.fixture.id)===my))opts.unshift(`<option value="${my}">${esc(f.teams.home.name)} × ${esc(f.teams.away.name)} · ${shortDate(new Date(f.fixture.date))}</option>`);
+ const sel=$('#cm-match');if(document.activeElement!==sel){sel.innerHTML=opts.join('');sel.value=my;}
+ const st=rStatus(f),h=f.teams.home,a=f.teams.away,ev=f.events||[],lu=f.lineups||[],v=f.fixture.venue||{};
+ const gnow=(f.goals.home||0)+(f.goals.away||0);
+ if(REAL.goals!=null&&gnow>REAL.goals&&st.k==='live')goalFlashReal(f,ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty').slice(-1)[0]);
+ REAL.goals=gnow;
+ const L=id=>lu.find(x=>x.team.id===id)||{};
+ const co=t=>[L(t.id).formation,L(t.id).coach&&L(t.id).coach.name?'téc. '+L(t.id).coach.name:''].filter(Boolean).join(' · ');
+ const scorers=s=>{const tid=f.teams[s==='h'?'home':'away'].id;const goals=ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty'&&e.team.id===tid).map(e=>`<span>${s==='a'?IC.ball:''}${esc(lastName(e.player.name))} ${evMin(e)}${e.detail==='Penalty'?' (p)':e.detail==='Own Goal'?' (contra)':''}${s==='h'?IC.ball:''}</span>`);
+  const reds=ev.filter(e=>e.type==='Card'&&/Red|Second/i.test(e.detail)&&e.team.id===tid).map(e=>`<span>${s==='a'?IC.card('var(--p-home)'):''}${esc(lastName(e.player.name))} ${evMin(e)}${s==='h'?IC.card('var(--p-home)'):''}</span>`);return goals.concat(reds).join('');};
+ const sm=statMap(f);const poss=sm['Ball Possession'];const ph=poss?sv(poss.h):0,pa=poss?sv(poss.a):0;const ht=f.score&&f.score.halftime;
+ const pill=st.k==='live'?`<span class="pill live">Ao vivo · ${esc(st.label)}</span>`:`<span class="pill">${esc(st.k==='pre'?'Pré-jogo':st.label)}</span>`;
+ $('#cm-stage').innerHTML=`<div class="stage">${ARCS}${ARCS.replace('class="arcs"','class="arcs l"')}
+ <div class="cm-stage-top"><span class="eyebrow">${esc(lgName(f))} · ${esc(roundTxt(f.league.round))} · ${dateTxt(new Date(f.fixture.date))} · ${hhmm(new Date(f.fixture.date))}</span>${pill}</div>
+ <div class="cm-row"><div class="cm-team">${rCrest(h,'xl')}<span class="nm">${esc(h.name)}</span><span class="co">${esc(co(h))}</span></div>
+  <div class="cm-mid">${st.k==='pre'||st.k==='off'?`<div class="score"><span class="t">${esc(st.label)}</span></div>`:`<div class="score">${f.goals.home}<i>×</i>${f.goals.away}</div>${ring(st,58,true)}`}</div>
+  <div class="cm-team">${rCrest(a,'xl')}<span class="nm">${esc(a.name)}</span><span class="co">${esc(co(a))}</span></div></div>
+ <div class="scorers"><div class="h">${scorers('h')}</div><div class="a">${scorers('a')}</div></div>
+ ${poss&&(ph||pa)?`<div class="momentum"><div class="eyebrow" style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Posse ${ph}%</span><span>${ht&&ht.home!=null&&st.k!=='pre'?'1º tempo '+ht.home+'–'+ht.away:''}</span><span>${pa}%</span></div><div class="pbar" style="height:10px;background:rgba(255,255,255,.12)"><span style="flex:${ph};background:var(--p-home)"></span><span style="flex:${pa};background:var(--p-away)"></span></div></div>`:''}
+ <div class="cm-meta">${f.fixture.referee?`<span class="pill">${IC.whistle}Árbitro: ${esc(refName(f.fixture.referee))}</span>`:''}${v.name?`<span class="pill">${IC.pin}${esc(v.name)}${v.city?', '+esc(v.city):''}</span>`:''}</div></div>`;
+ let rp;
+ if(st.k==='live')rp=`<span class="dot pulse"></span><span style="font-size:13px">Dados reais da API-Football. A central atualiza sozinha.</span><span class="rm" style="margin-left:auto">${esc(st.label)}</span>`;
+ else if(st.k==='pre'){const mins=Math.max(0,Math.round((new Date(f.fixture.date)-NOW())/60000));rp=`<span style="font-size:13px">Começa em ${durTxt(mins)}. As escalações costumam sair de 20 a 40 minutos antes do jogo.</span>`;}
+ else rp=`<span style="font-size:13px">${esc(st.label)} · dados oficiais da API-Football.</span>`;
+ $('#cm-replay').innerHTML=`<div class="replay">${rp}</div>`;
+ const tabs=[['lance','Lance a lance'],['escalacoes','Escalações'],['stats','Estatísticas'],['jogadores','Jogadores'],['arbitragem','Arbitragem']];
+ if(!tabs.some(t=>t[0]===REAL.tab))REAL.tab='lance';
+ $('#cm-tabs').innerHTML=tabs.map(([k,l])=>`<button aria-pressed="${REAL.tab===k}" data-rcmt="${k}">${l}</button>`).join('');
+ const body=$('#cm-body');
+ if(REAL.tab==='lance')body.innerHTML=lanceReal(f,sm);
+ else if(REAL.tab==='escalacoes')body.innerHTML=lineupReal(f);
+ else if(REAL.tab==='stats'){const rows=statRows(sm);body.innerHTML=rows.length?`<div class="card"><div class="card-h"><div><h3>Estatísticas</h3><div class="sub">${esc(h.name)} à esquerda, ${esc(a.name)} à direita</div></div></div>${cmpRows(rows)}</div>`:'<div class="empty">As estatísticas aparecem aqui quando a partida começar.</div>';}
+ else if(REAL.tab==='jogadores')body.innerHTML=playersReal(f);
+ else{body.innerHTML='<div class="empty">Carregando dados da arbitragem…</div>';const html=await refReal(f);if(view==='centro'&&REAL.tab==='arbitragem'&&REAL.key===my)body.innerHTML=html;}
+}
+const CARD_WHY={Foul:'falta',Argument:'reclamação','Time wasting':'cera','Unsportsmanlike conduct':'conduta antidesportiva',Simulation:'simulação',Handball:'mão na bola','Professional foul':'falta tática',Roughing:'jogo brusco','Violent conduct':'conduta violenta','Off the ball foul':'falta sem bola','Delay of game':'retardar o jogo'};
+const VAR_PT={'Goal cancelled':'gol anulado','Goal Disallowed - offside':'gol anulado por impedimento','Goal Disallowed - handball':'gol anulado por mão na bola','Goal Disallowed - foul':'gol anulado por falta','Penalty confirmed':'pênalti confirmado','Penalty cancelled':'pênalti cancelado','Goal confirmed':'gol confirmado','Card upgrade':'cartão alterado','Card reviewed':'cartão revisado','Red card cancelled':'vermelho cancelado'};
+function narrReal(e,sc){
+ const tn=e.team&&e.team.name||'',p=e.player&&e.player.name||'Jogador',as=e.assist&&e.assist.name,tag='placar '+sc.h+'×'+sc.a;
+ if(e.type==='Goal'){
+  if(e.detail==='Missed Penalty')return {k:'Pênalti perdido',t:`${p} (${tn}) desperdiça a cobrança de pênalti.`,big:true,ic:IC.ball};
+  if(e.detail==='Own Goal')return {k:'Gol contra',t:`Gol contra de ${p}.`,goal:true,tag,ic:IC.ball};
+  if(e.detail==='Penalty')return {k:'Gol de pênalti',t:`GOOOL DO ${tn.toUpperCase()}! ${p} converte o pênalti.`,goal:true,tag,ic:IC.ball};
+  return {k:'Gol',t:`GOOOL DO ${tn.toUpperCase()}! ${p} marca.${as?` Assistência de ${as}.`:''}`,goal:true,tag,ic:IC.ball};}
+ if(e.type==='Card'){const why=e.comments?(CARD_WHY[e.comments]||e.comments):'';
+  if(/Second/i.test(e.detail))return {k:'Segundo amarelo',t:`Segundo amarelo para ${p} (${tn}). Expulso!${why?' Motivo: '+why+'.':''}`,big:true,ic:IC.card('var(--red)')};
+  if(/Red/i.test(e.detail))return {k:'Cartão vermelho',t:`EXPULSO! ${p} (${tn}) recebe vermelho direto.${why?' Motivo: '+why+'.':''}`,big:true,ic:IC.card('var(--red)')};
+  return {k:'Cartão amarelo',t:`Amarelo para ${p} (${tn})${why?' por '+why:''}.`,ic:IC.card('var(--yellow)')};}
+ if(e.type==='subst')return {k:'Substituição',t:`Substituição no ${tn}: ${p} ⇄ ${as||'?'}.`,ic:IC.sub};
+ if(e.type==='Var')return {k:'VAR',t:`VAR: ${VAR_PT[e.detail]||e.detail||'revisão'}${e.player&&e.player.name?' · '+p:''}.`,big:true,ic:IC.var};
+ return {k:e.type||'Lance',t:`${e.detail||''} ${e.player&&e.player.name||''}`.trim(),ic:IC.whistle};
+}
+function lanceReal(f,sm){
+ const st=rStatus(f),sh=f.fixture.status.short;
+ const items=(f.events||[]).map(e=>({m:e.time.elapsed+(e.time.extra||0)/100,e}));
+ if(st.k==='live'||st.k==='ft')items.push({m:-1,ph:'ko'});
+ if(['HT','2H','ET','BT','P','FT','AET','PEN'].includes(sh))items.push({m:45.99,ph:'ht'});
+ if(st.k==='ft')items.push({m:9999,ph:'ft'});
+ items.sort((x,y)=>x.m-y.m);
+ const sc={h:0,a:0};
+ const html=items.map(it=>{
+  if(it.ph){const n=it.ph==='ko'?{k:'Início',t:`Rola a bola: ${f.teams.home.name} × ${f.teams.away.name}.`}:it.ph==='ht'?{k:'Intervalo',t:`Fim do primeiro tempo: ${f.teams.home.name} ${sc.h} × ${sc.a} ${f.teams.away.name}.`}:{k:'Fim de jogo',t:`Apito final: ${f.teams.home.name} ${sc.h} × ${sc.a} ${f.teams.away.name}.`};
+   return `<div class="ev phase"><span class="mn">${it.ph==='ko'?"0'":it.ph==='ht'?'INT':'FIM'}</span><div class="bd"><div class="k">${IC.whistle}${n.k}</div><p>${esc(n.t)}</p></div></div>`;}
+  const e=it.e;const s=sideOf(f,e.team&&e.team.id);if(e.type==='Goal'&&e.detail!=='Missed Penalty')sc[s]++;
+  const n=narrReal(e,{...sc});const cls=n.goal?'goal':n.big?'big':'';
+  return `<div class="ev ${cls}"><span class="mn">${evMin(e)}</span><div class="bd"><div class="k">${n.ic||''}${esc(n.k)} · <span class="side-dot" style="background:${sideColor(s)}"></span>${esc(e.team&&e.team.name||'')}</div><p>${esc(n.t)}</p>${n.tag?`<div class="tag">${esc(n.tag)}</div>`:''}</div></div>`;
+ }).reverse().join('');
+ const poss=sm['Ball Possession'];const rows=statRows(sm,['Total Shots','Shots on Goal','expected_goals','Corner Kicks','Fouls','Yellow Cards']);
+ const side=`<div class="card"><div class="card-h"><h3>Agora no jogo</h3></div>${poss?`<div class="don-wrap">${donut([{v:sv(poss.h),c:'var(--red)',l:f.teams.home.name},{v:sv(poss.a),c:'var(--away)',l:f.teams.away.name}],116,13,`<text x="50%" y="47%" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="17" fill="var(--ink)">${sv(poss.h)}%</text><text x="50%" y="62%" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="JetBrains Mono, monospace">posse</text>`)}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(f.teams.home.name)} ${sv(poss.h)}%</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(f.teams.away.name)} ${sv(poss.a)}%</span></div></div>`:''}${rows.length?`<div class="mini-stats">${cmpRows(rows)}</div>`:'<p style="color:var(--muted);font-size:13px;margin:0">As estatísticas aparecem aqui quando a partida começar.</p>'}</div>`;
+ return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Lance a lance</h3><div class="sub">${(f.events||[]).length} eventos · mais recentes primeiro</div></div></div><div class="feed">${html||'<p style="color:var(--muted);margin:0">Os lances aparecem aqui assim que a bola rolar.</p>'}</div></div><div style="display:grid;gap:16px;min-width:0">${side}</div></div>`;
+}
+const POS_PT={G:'GOL',D:'DEF',M:'MEI',F:'ATA'};
+function lineupReal(f){
+ const lu=f.lineups||[];if(lu.length<2)return '<div class="empty">Escalações ainda não divulgadas. Elas costumam sair de 20 a 40 minutos antes do jogo.</div>';
+ const HL=lu.find(l=>l.team.id===f.teams.home.id)||lu[0],AL=lu.find(l=>l.team.id===f.teams.away.id)||lu[1];
+ const ps={};(f.players||[]).forEach(t=>(t.players||[]).forEach(p=>{ps[p.player.id]=p.statistics&&p.statistics[0];}));
+ const ev=f.events||[];
+ const info=id=>{const g=ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty'&&e.detail!=='Own Goal'&&e.player&&e.player.id===id).length;const y=ev.some(e=>e.type==='Card'&&/Yellow/i.test(e.detail)&&e.player&&e.player.id===id);const r=ev.some(e=>e.type==='Card'&&/Red|Second/i.test(e.detail)&&e.player&&e.player.id===id);const sub=ev.find(e=>e.type==='subst'&&((e.player&&e.player.id===id)||(e.assist&&e.assist.id===id)));const s=ps[id];const rt=s&&s.games&&s.games.rating?parseFloat(s.games.rating):null;return {g,y,r,sub,rt};};
+ const place=Lx=>{const xi=(Lx.startXI||[]).map(x=>x.player);const rows={};
+  if(xi.length&&xi.every(p=>p.grid)){xi.forEach(p=>{const [r,c]=p.grid.split(':').map(Number);(rows[r]=rows[r]||[]).push({p,c});});}
+  else{const ord={G:1,D:2,M:3,F:4};xi.forEach(p=>{const r=ord[p.pos]||3;rows[r]=rows[r]||[];rows[r].push({p,c:rows[r].length+1});});}
+  const rk=Object.keys(rows).map(Number).sort((a,b)=>a-b);const R=rk.length;const out=[];
+  rk.forEach((r,ri)=>{const arr=rows[r].sort((a,b)=>a.c-b.c);arr.forEach((o,ci)=>out.push({p:o.p,fr:R>1?ri/(R-1):0,fc:(ci+.5)/arr.length}));});return out;};
+ const W=68,H=105;
+ const node=(o,s)=>{const X=s==='h'?o.fc*W:W-o.fc*W,Y=s==='h'?H-7-o.fr*39:7+o.fr*39;const p=o.p,i=info(p.id);const fill=s==='h'?'var(--p-home)':'var(--p-away)',txt=s==='h'?'#fff':'#111';
+  return `<g><circle cx="${X}" cy="${Y}" r="3.4" fill="${fill}" stroke="var(--pitch)" stroke-width=".6"/><text x="${X}" y="${Y+1.15}" text-anchor="middle" font-size="3" font-weight="800" font-family="Orbitron, sans-serif" fill="${txt}">${p.number==null?'':p.number}</text><text x="${X}" y="${Y+6.4}" text-anchor="middle" font-size="2.3" fill="#fff" font-family="Sora, sans-serif">${esc(lastName(p.name))}</text>${i.rt?`<rect x="${X+1.8}" y="${Y-5.6}" width="5.4" height="2.8" rx="1.4" fill="${rcol(i.rt)}"/><text x="${X+4.5}" y="${Y-3.6}" text-anchor="middle" font-size="1.9" font-weight="700" fill="#fff" font-family="JetBrains Mono, monospace">${f1(i.rt)}</text>`:''}${i.g?`<circle cx="${X-3.6}" cy="${Y-3}" r="1.5" fill="#fff"/><circle cx="${X-3.6}" cy="${Y-3}" r=".7" fill="#111"/>`:''}${i.y||i.r?`<rect x="${X+2.7}" y="${Y+.8}" width="1.6" height="2.3" rx=".3" fill="${i.r?'#FF2533':'#F2C200'}"/>`:''}${i.sub?`<circle cx="${X-3.6}" cy="${Y+2.6}" r="1.2" fill="#3ECB79"/>`:''}</g>`;};
+ const pitch=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Escalações em campo"><rect width="${W}" height="${H}" fill="var(--pitch)"/>${[1,3,5,7,9].map(i=>`<rect y="${i*10.5}" width="${W}" height="10.5" fill="var(--pitch2)"/>`).join('')}<g fill="none" stroke="var(--pitch-line)" stroke-width=".35"><rect x="1" y="1" width="${W-2}" height="${H-2}" rx="1"/><line x1="1" y1="${H/2}" x2="${W-1}" y2="${H/2}"/><circle cx="${W/2}" cy="${H/2}" r="9.15"/><rect x="${W/2-20.16}" y="1" width="40.32" height="16.5"/><rect x="${W/2-20.16}" y="${H-17.5}" width="40.32" height="16.5"/></g><text x="2.5" y="${H/2-2}" font-size="2.4" fill="rgba(255,255,255,.55)" font-family="JetBrains Mono, monospace">${esc(AL.formation||'')}</text><text x="2.5" y="${H/2+4}" font-size="2.4" fill="rgba(255,255,255,.55)" font-family="JetBrains Mono, monospace">${esc(HL.formation||'')}</text>${place(AL).map(o=>node(o,'a')).join('')}${place(HL).map(o=>node(o,'h')).join('')}</svg>`;
+ const list=(Lx,s)=>{const row=(p,isSub)=>{const i=info(p.id);const ics=[i.g?Array(i.g).fill(IC.ball).join(''):'',i.y?IC.card('var(--yellow)'):'',i.r?IC.card('var(--red)'):'',i.sub?IC.sub+evMin(i.sub):'',i.rt?`<span class="rt" style="background:${rcol(i.rt)}">${f1(i.rt)}</span>`:''].join('');
+   return `<div class="lp"><span class="no ${isSub&&!i.sub?'':s}">${p.number==null?'':p.number}</span><span class="nm">${esc(p.name)}<small>${POS_PT[p.pos]||p.pos||''}</small></span><span class="ics">${ics}</span></div>`;};
+  return `<div class="card lu-list"><h4>${rCrest(Lx.team)}${esc(Lx.team.name)}</h4><div class="coach">Técnico: ${esc(Lx.coach&&Lx.coach.name||'não informado')}${Lx.formation?' · '+esc(Lx.formation):''}</div><h5>Titulares</h5>${(Lx.startXI||[]).map(x=>row(x.player,false)).join('')}<h5>Banco</h5>${(Lx.substitutes||[]).map(x=>row(x.player,true)).join('')||'<p style="color:var(--muted);font-size:12px">Não informado</p>'}</div>`;};
+ return `<div class="lu-grid">${list(HL,'h')}<div class="lu-pitch">${pitch}</div>${list(AL,'a')}</div>`;
+}
+function playersReal(f){
+ const rows=[];(f.players||[]).forEach(t=>{const s=sideOf(f,t.team.id);(t.players||[]).forEach(p=>{const x=p.statistics&&p.statistics[0];if(!x||!x.games||!x.games.minutes)return;rows.push({s,name:p.player.name,x});});});
+ if(!rows.length)return '<div class="empty">As estatísticas individuais aparecem durante e depois da partida.</div>';
+ rows.sort((a,b)=>(parseFloat(b.x.games.rating)||0)-(parseFloat(a.x.games.rating)||0));
+ const n=v=>v==null?0:v;
+ return `<div class="card"><div class="card-h"><div><h3>Desempenho individual</h3><div class="sub">Ordenado pela nota da API-Football</div></div></div><div class="ptable"><table class="tbl"><thead><tr><th class="l">Jogador</th><th class="l">Pos</th><th>Min</th><th>Nota</th><th>G</th><th>A</th><th>Final.</th><th>Passes</th><th>P.ch.</th><th>Prec.</th><th>Des.+Int.</th><th>Duelos</th><th>Dribles</th><th>Cartões</th></tr></thead><tbody>${rows.map(({s,name,x})=>{const rt=parseFloat(x.games.rating)||null;
+  return `<tr><td class="l"><span class="side-dot" style="background:${sideColor(s)}"></span>${esc(name)}${x.games.substitute?' <small style="color:var(--muted)">(entrou)</small>':''}</td><td class="l">${POS_PT[x.games.position]||esc(x.games.position||'')}</td><td>${x.games.minutes}</td><td>${rt?`<span class="rt" style="background:${rcol(rt)}">${f1(rt)}</span>`:'–'}</td><td>${n(x.goals&&x.goals.total)||''}</td><td>${n(x.goals&&x.goals.assists)||''}</td><td>${n(x.shots&&x.shots.on)}/${n(x.shots&&x.shots.total)}</td><td>${n(x.passes&&x.passes.total)}</td><td>${n(x.passes&&x.passes.key)}</td><td>${x.passes&&x.passes.accuracy!=null?esc(String(x.passes.accuracy)).replace('%','')+'%':'–'}</td><td>${n(x.tackles&&x.tackles.total)+n(x.tackles&&x.tackles.interceptions)}</td><td>${n(x.duels&&x.duels.won)}/${n(x.duels&&x.duels.total)}</td><td>${n(x.dribbles&&x.dribbles.success)}</td><td>${(x.cards&&x.cards.yellow?IC.card('var(--yellow)'):'')+(x.cards&&x.cards.red?IC.card('var(--red)'):'')}</td></tr>`;}).join('')}</tbody></table></div></div>`;
+}
+async function refReal(f){
+ const raw=f.fixture.referee;if(!raw)return '<div class="empty">A API ainda não informou o árbitro desta partida.</div>';
+ const name=refName(raw),nat=raw.includes(',')?raw.split(',').slice(1).join(',').trim():'';
+ let hist=[],err='';
+ try{const all=await apiGet('fixtures',{league:f.league.id,season:f.league.season,timezone:TZ},600000);const key=norm(name);
+  hist=(all||[]).filter(x=>x.fixture.referee&&norm(refName(x.fixture.referee))===key&&FT_S.includes(x.fixture.status.short)&&x.fixture.id!==f.fixture.id).sort((a,b)=>new Date(b.fixture.date)-new Date(a.fixture.date));}catch(e){err=e.message;}
+ const n=hist.length,hw=hist.filter(x=>x.goals.home>x.goals.away).length,dr=hist.filter(x=>x.goals.home===x.goals.away).length,aw=n-hw-dr;const gpg=n?sum(hist,x=>x.goals.home+x.goals.away)/n:0;
+ const ev=f.events||[];const yc=ev.filter(e=>e.type==='Card'&&/Yellow/i.test(e.detail)).length,rc=ev.filter(e=>e.type==='Card'&&/Red|Second/i.test(e.detail)).length,pens=ev.filter(e=>e.type==='Goal'&&/Penalty/.test(e.detail)).length,vars=ev.filter(e=>e.type==='Var').length;
+ const sm=statMap(f);const fouls=sm.Fouls?sv(sm.Fouls.h)+sv(sm.Fouls.a):null;
+ const txt=n?`Nesta temporada da ${lgName(f)}, apitou ${n} jogo(s) antes deste: ${hw} vitória(s) do mandante, ${dr} empate(s) e ${aw} do visitante, com média de ${f1(gpg)} gols por partida.`:err?`Não foi possível carregar o histórico agora (${err}).`:`Ainda não há outros jogos dele nesta competição na base da API.`;
+ return `<div class="cm-grid"><div class="card"><div class="ref-card"><div class="ref-av">${esc(initials(name))}</div><div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${nat?`<span class="pill">${esc(nat)}</span>`:''}<span class="pill">${esc(lgShort(f))} ${esc(seasonLabel(f.league.id))}</span></div><h3>${esc(name)}</h3><p>${esc(txt)}</p></div></div>
+ <div class="ref-tiles"><div class="tile"><b class="num">${n}</b><span>jogos na temporada</span></div><div class="tile"><b class="num">${n?Math.round(hw/n*100)+'%':'–'}</b><span>vitórias do mandante</span></div><div class="tile"><b class="num">${dr}</b><span>empates</span></div><div class="tile"><b class="num">${n?f1(gpg):'–'}</b><span>gols por jogo</span></div></div>
+ ${n?`<div class="card-h" style="margin:22px 0 8px"><h3>Últimos jogos apitados</h3></div><div class="tbl-wrap"><table class="hist"><thead><tr><th>Data</th><th>Partida</th><th>Placar</th></tr></thead><tbody>${hist.slice(0,8).map(x=>`<tr><td>${shortDate(new Date(x.fixture.date))}</td><td>${esc(x.teams.home.name)} × ${esc(x.teams.away.name)}</td><td class="num">${x.goals.home}–${x.goals.away}</td></tr>`).join('')}</tbody></table></div>`:''}</div>
+ <div style="display:grid;gap:16px;min-width:0"><div class="card"><div class="card-h"><h3>Neste jogo</h3></div><div class="crew"><div><span>Faltas</span><b class="num">${fouls==null?'–':fouls}</b></div><div><span>Amarelos</span><b class="num">${yc}</b></div><div><span>Vermelhos</span><b class="num">${rc}</b></div><div><span>Pênaltis convertidos</span><b class="num">${pens}</b></div><div><span>Revisões do VAR</span><b class="num">${vars}</b></div></div></div>
+ <div class="card"><div class="card-h"><h3>Próxima evolução</h3></div><p style="margin:0;color:var(--muted);font-size:13px">Média de cartões e de faltas por árbitro exige guardar os eventos de cada partida. Com um banco de dados (próxima etapa), o TEL.SCORE monta esse histórico sozinho, rodada após rodada.</p></div></div></div>`;
+}
+
+/* ligas */
+async function renderLigasReal(){
+ if(!TABLE_LG.includes(REAL.lgTab))REAL.lgTab=71;
+ const my=REAL.lgTab,L=RLmap[my];
+ $('#lg-filter').innerHTML=TABLE_LG.map(id=>`<button class="chip" aria-pressed="${my===id}" data-rlg="${id}">${esc(RLmap[id].short)}</button>`).join('');
+ $('#lg-title').textContent=L.name;
+ $('#lg-desc').textContent=`Classificação oficial da temporada ${seasonLabel(my)}, atualizada pela API-Football.`;
+ $('#lg-luck-title').textContent='Saldo de gols';$('#lg-luck-sub').textContent='Gols marcados menos gols sofridos';$('#lg-leg-note').textContent='Últimos 5 jogos';
+ $('#lg-table').innerHTML='<div class="empty">Carregando tabela…</div>';$('#lg-luck').innerHTML='';$('#lg-insights').innerHTML='';
+ let rows;
+ try{const r=await apiGet('standings',{league:my,season:seasonFor(my)},300000);rows=r&&r[0]&&r[0].league&&r[0].league.standings&&r[0].league.standings[0];}
+ catch(e){if(view==='ligas'&&REAL.lgTab===my)$('#lg-table').innerHTML=`<div class="empty">Não foi possível carregar a tabela. ${esc(e.message)}</div>`;return;}
+ if(view!=='ligas'||REAL.lgTab!==my)return;
+ if(!rows||!rows.length){$('#lg-table').innerHTML='<div class="empty">Tabela indisponível para esta temporada.</div>';return;}
+ const fm=s=>String(s||'').split('').slice(-5).map(c=>({W:'V',D:'E',L:'D'}[c]||c));
+ $('#lg-table').innerHTML=`<table class="tbl"><thead><tr><th class="l">#</th><th class="l">Clube</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th><th class="l">Últimos 5</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.description&&/Libertadores|Champions/i.test(r.description)?'z':''}" title="${esc(r.description||'')}"><td class="pos l"><span>${r.rank}</span></td><td class="l"><span class="tmc">${rCrest(r.team)}${esc(r.team.name)}</span></td><td>${r.all.played}</td><td>${r.all.win}</td><td>${r.all.draw}</td><td>${r.all.lose}</td><td>${r.all.goals.for}</td><td>${r.all.goals.against}</td><td>${r.goalsDiff>0?'+':''}${r.goalsDiff}</td><td class="pts">${r.points}</td><td class="l"><span class="form">${fm(r.form).map(x=>`<i class="${x}">${x}</i>`).join('')}</span></td></tr>`).join('')}</tbody></table>`;
+ const sorted=rows.slice().sort((a,b)=>b.goalsDiff-a.goalsDiff);const mx=Math.max(4,...sorted.map(x=>Math.abs(x.goalsDiff)));const w=360,rh=24,h=sorted.length*rh+26,cx=210,half=w-cx-34,X=v=>cx+(v/mx)*half;
+ let g=`<line x1="${cx}" x2="${cx}" y1="0" y2="${h-22}" stroke="var(--line2)"/>`;
+ sorted.forEach((x,i)=>{const y=i*rh+4,d=x.goalsDiff,x0=Math.min(X(0),X(d)),wd=Math.abs(X(d)-X(0));g+=`<text x="${cx-148}" y="${y+14}" style="fill:var(--ink);font-family:var(--f-body);font-size:11.5px">${esc(x.team.name.length>18?x.team.name.slice(0,17)+'…':x.team.name)}</text><rect x="${x0}" y="${y+4}" width="${Math.max(wd,2)}" height="14" rx="7" fill="${d>=0?'var(--good)':'var(--red)'}" opacity=".9"/><text x="${d>=0?X(d)+5:X(d)-5}" y="${y+14}" text-anchor="${d>=0?'start':'end'}">${d>0?'+':''}${d}</text>`;});
+ $('#lg-luck').innerHTML=`<svg class="chart" viewBox="${cx-150} 0 ${w-cx+160} ${h}" role="img" aria-label="Saldo de gols por clube">${g}</svg>`;
+ const lead=rows[0],sec=rows[1]||rows[0],atk=maxBy(rows,r=>r.all.goals.for),def=minBy(rows,r=>r.all.goals.against),hot=maxBy(rows,r=>fm(r.form).filter(x=>x==='V').length);
+ $('#lg-insights').innerHTML=[[String(lead.points-sec.points),`pontos separam ${lead.team.name} de ${sec.team.name}`,`Líder com ${lead.points} pontos em ${lead.all.played} jogos`],[String(atk.all.goals.for),`melhor ataque: ${atk.team.name}`,`${f1(atk.all.goals.for/Math.max(atk.all.played,1))} gols por jogo`],[String(def.all.goals.against),`melhor defesa: ${def.team.name}`,`${f1(def.all.goals.against/Math.max(def.all.played,1))} gols sofridos por jogo`],[`${fm(hot.form).filter(x=>x==='V').length}/5`,`melhor fase: ${hot.team.name}`,'Vitórias nos últimos 5 jogos']].map(([a,b,c])=>`<div class="ins"><span class="ix num">${esc(a)}</span><p>${esc(b)}<small>${esc(c)}</small></p></div>`).join('');
+}
+async function realTick(){
+ if(!REAL.on)return;renderClock();await renderTickerReal();
+ if(view==='partidas'&&REAL.day===0)renderPartidasReal();
+ if(view==='centro'&&REAL.cur&&rStatus(REAL.cur).k!=='ft'&&String(REAL.cur.fixture.id)===REAL.key)renderCentroReal();
+}
+
 /* ================= navegação ================= */
 let view='partidas';const VIEWS=['partidas','centro','ligas','lab','estudio'];
 function show(v,push=true){
  view=v;$$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));$$('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
  if(v!=='centro')stopReplay();
- if(v==='partidas')renderPartidas();if(v==='centro')renderCentro();if(v==='ligas')renderLeagues();if(v==='lab')renderLab();if(v==='estudio'){renderStudioControls();generate();}
+ if(v==='partidas')(REAL.on?renderPartidasReal:renderPartidas)();if(v==='centro')(REAL.on?renderCentroReal:renderCentro)();if(v==='ligas')(REAL.on?renderLigasReal:renderLeagues)();if(v==='lab')renderLab();if(v==='estudio'){renderStudioControls();generate();}
  try{localStorage.setItem('telscore:view',v);}catch(e){}
  if(push){try{history.replaceState(null,'','#'+v);}catch(e){}}
  window.scrollTo(0,0);
@@ -1487,6 +1805,13 @@ document.addEventListener('click',e=>{
  const t=e.target.closest('button,tr[data-pl],th[data-sort]');if(!t)return;
  if(t.classList.contains('tab'))return show(t.dataset.v);
  if(t.dataset.go)return show(t.dataset.go);
+ if(t.dataset.rcm){REAL.key=String(t.dataset.rcm);REAL.goals=null;REAL.cur=null;REAL.tab='lance';return show('centro');}
+ if(t.dataset.rday!=null){REAL.day=+t.dataset.rday;REAL.st='all';REAL.lg='all';return renderPartidasReal();}
+ if(t.dataset.rpst){REAL.st=t.dataset.rpst;return renderPartidasReal();}
+ if(t.dataset.rplg){REAL.lg=t.dataset.rplg;return renderPartidasReal();}
+ if(t.dataset.rcmt){REAL.tab=t.dataset.rcmt;return renderCentroReal();}
+ if(t.dataset.rlg){REAL.lgTab=+t.dataset.rlg;return renderLigasReal();}
+ if(t.dataset.rlgo){REAL.lgTab=+t.dataset.rlgo;return show('ligas');}
  if(t.dataset.cm){ST.focus='auto';return openCentro(t.dataset.cm);}
  if(t.dataset.studio){ST.focus='auto';return goStudio(t.dataset.studio,t.dataset.fmt);}
  if(t.dataset.lab){labKey=t.dataset.lab;labPlayer=null;return show('lab');}
@@ -1513,20 +1838,24 @@ document.addEventListener('click',e=>{
  if(t.id==='lg-post'){const m=finished().filter(x=>x.lg===curLg).slice(-1)[0]||finished().slice(-1)[0];ST.focus='auto';return goStudio(m.key,'tabela');}
 });
 document.addEventListener('input',e=>{if(e.target.id==='rp-range'){stopReplay();CM.replay=+e.target.value;CM.goals=null;renderCentro();}});
-$('#cm-match').addEventListener('change',e=>openCentro(e.target.value));
+$('#cm-match').addEventListener('change',e=>{if(REAL.on){REAL.key=e.target.value;REAL.goals=null;REAL.cur=null;renderCentroReal();}else openCentro(e.target.value);});
 $('#lab-match').addEventListener('change',e=>{labKey=e.target.value;labPlayer=null;renderLab();});
 $('#st-match').addEventListener('change',e=>{ST.match=e.target.value;ST.focus='auto';ST.ver=1;renderStudioControls();generate();});
 $('#st-focus').addEventListener('change',e=>{ST.focus=e.target.value;ST.ver=1;generate();});
 $('#st-search').addEventListener('input',e=>{ST.q=e.target.value;renderFormats();});
 
-renderClock();renderTicker();
 let start='partidas';const hsh=(location.hash||'').slice(1);
 if(VIEWS.includes(hsh))start=hsh;else{try{const s=localStorage.getItem('telscore:view');if(s&&VIEWS.includes(s))start=s;}catch(e){}}
-show(start,false);
-setInterval(()=>{renderClock();ALL.forEach(m=>{if(m.off===0)m._d=null;});renderTicker();
- if(view==='partidas')renderPartidas();
- if(view==='centro'&&CM.replay==null){const m=MATCHES[CM.key];if(m&&status(m).k!=='ft'||CM._wasLive){CM._wasLive=m&&status(m).k==='live';renderCentro();}}
-},15000);
+(async()=>{
+ renderClock();await bootReal();applyMode();
+ if(REAL.on)renderTickerReal();else renderTicker();
+ show(start,false);
+ setInterval(()=>{if(REAL.on)return;renderClock();ALL.forEach(m=>{if(m.off===0)m._d=null;});renderTicker();
+  if(view==='partidas')renderPartidas();
+  if(view==='centro'&&CM.replay==null){const m=MATCHES[CM.key];if(m&&status(m).k!=='ft'||CM._wasLive){CM._wasLive=m&&status(m).k==='live';renderCentro();}}
+ },15000);
+ setInterval(()=>{if(REAL.on)realTick();},30000);
+})();
 })();
 </script>
 </body>
