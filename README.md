@@ -32,6 +32,10 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 | Estúdio · pré-jogo (jogos dos próximos 7 dias): prévia, palpite, escalação provável, desfalques, retrospecto, momento dos times, raio-x da temporada, ficha do jogo e enquete, em todas as plataformas, inclusive vídeo animado | API-Football (predictions, injuries, última escalação) |
 | Visual dos posts: foto do estádio na capa, ilustrações de futebol próprias em cada slide (campo, rede, prancheta, bola, refletores), foto do jogador ou escudo do time citado no slide e foto de capa própria opcional | API-Football (estádios, escudos, fotos) e ilustrações do próprio site |
 
+## Análise TEL.SCORE (mercado x dados)
+
+Nos jogos que ainda vão acontecer, a prévia compara as probabilidades do mercado (média das casas de apostas, sem a margem) com um cálculo próprio feito só com dados: xG dos últimos 5 jogos, pontos recentes, titulares lesionados ou suspensos, nível estimado da liga de cada clube (tabela `LG_TIER` no `index.html`) e posição na tabela. O resultado aparece na aba Prévia da Central e no formato "Mercado x Dados" do Estúdio.
+
 ## Celular
 
 No celular, as seções ficam numa barra fixa embaixo (Jogos, Central, Ligas, Análise, Estúdio), como num app. O cabeçalho fica compacto, os filtros deslizam para o lado e os jogos aparecem com um time por linha.
