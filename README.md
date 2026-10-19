@@ -29,6 +29,7 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 | Análise tática · arquivo histórico: xG por chute, mapa de finalizações, rede de passes, mapa de calor, radar, PPDA, field tilt | StatsBomb Open Data |
 | Estúdio de posts: 28 formatos × 7 plataformas × 5 tons, com jogos atuais (últimos 7 dias) e arquivo histórico | API-Football e StatsBomb Open Data |
 | Vídeo animado (Reels, TikTok, Stories): cenas com placar, número do jogo, estatísticas em barras, linha do tempo dos gols, jogador em destaque e análise; prévia com play, pausa, barra de tempo e escolha de cenas; baixa em MP4 (ou WebM em navegadores sem MP4) | Mesmos dados do post, gravado no próprio navegador |
+| Estúdio · pré-jogo (jogos dos próximos 7 dias): prévia, palpite, escalação provável, desfalques, retrospecto, momento dos times, raio-x da temporada, ficha do jogo e enquete, em todas as plataformas, inclusive vídeo animado | API-Football (predictions, injuries, última escalação) |
 | Visual dos posts: foto do estádio na capa, ilustrações de futebol próprias em cada slide (campo, rede, prancheta, bola, refletores), foto do jogador ou escudo do time citado no slide e foto de capa própria opcional | API-Football (estádios, escudos, fotos) e ilustrações do próprio site |
 
 ## Celular
