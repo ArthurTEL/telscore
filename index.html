@@ -1720,7 +1720,8 @@ const lastName=n=>String(n||'').split(' ').slice(-1)[0];
 const lgName=f=>(RLmap[f.league.id]||{}).name||f.league.name;
 const lgShort=f=>(RLmap[f.league.id]||{}).short||f.league.name;
 const lgRank=id=>{const i=RL.findIndex(l=>l.id===id);return i<0?99:i;};
-const rCrest=(t,cls='')=>`<span class="crest img ${cls}" aria-hidden="true"><img src="${esc(t&&t.logo||'')}" alt="" loading="lazy"></span>`;
+const imgUrl=u=>!u?'':(prox(u)||u);
+const rCrest=(t,cls='')=>{const u=imgUrl(t&&t.logo),c=esc(teamCode(t&&t.name||''));return u?`<span class="crest img ${cls}" aria-hidden="true" data-c="${c}"><img src="${esc(u)}" alt="" loading="lazy" onerror="var p=this.parentNode;p.classList.remove('img');p.textContent=p.dataset.c"></span>`:`<span class="crest ${cls}" aria-hidden="true">${c}</span>`;};
 const evMin=e=>`${e.time.elapsed}${e.time.extra?'+'+e.time.extra:''}'`;
 const sideOf=(f,teamId)=>teamId===f.teams.home.id?'h':'a';
 
@@ -1853,7 +1854,7 @@ async function renderPartidasReal(){
  const by={};shown.forEach(f=>(by[f.league.id]=by[f.league.id]||[]).push(f));
  const order=Object.keys(by).map(Number).sort((a,b)=>{const la=by[a].some(f=>rStatus(f).k==='live'),lb=by[b].some(f=>rStatus(f).k==='live');return (lb-la)||(lgRank(a)-lgRank(b));});
  box.innerHTML=!list.length?'<div class="empty">Nenhum jogo das ligas acompanhadas neste dia.</div>':!order.length?'<div class="empty">Nenhum jogo com esses filtros. Tente "Todos".</div>':order.map(id=>{const g=by[id],f0=g[0];
-  return `<div class="lg-group"><div class="lg-gh"><span class="lg-badge img"><img src="${esc(f0.league.logo)}" alt="" loading="lazy"></span><div><h3>${esc(lgName(f0))}</h3><small>${esc(roundTxt(f0.league.round))} · ${g.length} jogo${g.length>1?'s':''}</small></div>${TABLE_LG.includes(id)?`<button class="btn sm" data-rlgo="${id}">Tabela</button>`:''}</div>${g.map(rowReal).join('')}</div>`;}).join('');
+  return `<div class="lg-group"><div class="lg-gh"><span class="lg-badge img"><img src="${esc(imgUrl(f0.league.logo))}" alt="" loading="lazy" onerror="this.remove()"></span><div><h3>${esc(lgName(f0))}</h3><small>${esc(roundTxt(f0.league.round))} · ${g.length} jogo${g.length>1?'s':''}</small></div>${TABLE_LG.includes(id)?`<button class="btn sm" data-rlgo="${id}">Tabela</button>`:''}</div>${g.map(rowReal).join('')}</div>`;}).join('');
  renderFeatReal(list);renderInsReal(list);
 }
 function rowReal(f){
