@@ -462,6 +462,26 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
 .pp{width:66px;height:66px;border-radius:50%;object-fit:cover;background:#1b1b20;box-shadow:0 0 0 3px var(--p-home);flex:none}
 .story .mx{margin:16px 0 0}
 .story .pp{width:90px;height:90px;margin-top:12px}
+.cz.z1 td.pos span{background:var(--red);color:#fff}
+.cz.z2 td.pos span{background:var(--ink);color:var(--bg)}
+.grp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:16px}
+.grp .tbl td,.grp .tbl th{padding:7px 6px}
+.grp .tmc .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;display:inline-block}
+.bracket{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
+.br-col{flex:0 0 min(290px,82vw);display:grid;gap:12px}
+.br-col h4{font-family:var(--f-brand);font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 2px}
+.tie{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px;display:grid;gap:8px}
+.tie-t{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13.5px;font-weight:600}
+.tie-t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tie-t b{font-family:var(--f-brand);font-size:16px}
+.tie-t.out{opacity:.5}
+.tie-t.win b{color:var(--red-ink)}
+.tie-t .crest{width:24px;height:24px}
+.tie-p{font-size:11.5px;color:var(--muted);font-family:var(--f-mono)}
+.tie-legs{display:flex;gap:6px;flex-wrap:wrap}
+.leg{appearance:none;border:1px solid var(--line2);background:var(--surface2);border-radius:999px;padding:4px 10px;font-size:11px;font-family:var(--f-mono);cursor:pointer;color:var(--ink)}
+.leg:hover{border-color:var(--red)}
+.leg.live{border-color:var(--red);color:var(--red-ink)}
 /* ---------- responsivo ---------- */
 @media (max-width:1080px){
   .pd-layout,.lg-layout,.studio,.cm-grid{grid-template-columns:minmax(0,1fr)}
@@ -553,6 +573,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
         <div class="card"><div class="card-h"><h3>Leitura da tabela</h3><button class="btn sm" id="lg-post">Gerar post da tabela</button></div><div class="insight" id="lg-insights"></div></div>
       </div>
     </div>
+    <div id="lg-cup" hidden></div>
   </section>
 
   <!-- ANÁLISE TÁTICA -->
@@ -1532,6 +1553,7 @@ const RL=[
  {id:13,name:'Copa Libertadores',short:'Libertadores',sa:true},
  {id:11,name:'Copa Sul-Americana',short:'Sul-Americana',sa:true},
  {id:2,name:'Champions League',short:'Champions'},
+ {id:3,name:'Europa League',short:'Europa League'},
  {id:39,name:'Premier League',short:'Premier'},
  {id:140,name:'La Liga',short:'La Liga'},
  {id:135,name:'Serie A (Itália)',short:'Serie A'},
@@ -1539,7 +1561,7 @@ const RL=[
  {id:61,name:'Ligue 1',short:'Ligue 1'}
 ];
 const RLmap=Object.fromEntries(RL.map(l=>[l.id,l]));
-const TABLE_LG=[71,72,39,140,135,78,61];
+const TABLE_LG=[71,72,13,11,2,3,39,140,135,78,61];
 const LIVE_S=['1H','HT','2H','ET','BT','P','LIVE','INT','SUSP'],FT_S=['FT','AET','PEN'],OFF_S=['PST','CANC','ABD','AWD','WO'];
 const seasonFor=id=>{const l=RLmap[id];const d=NOW();const y=d.getFullYear();return l&&l.sa?y:(d.getMonth()>=6?y:y-1);};
 const seasonLabel=id=>{const s=seasonFor(id);return RLmap[id]&&RLmap[id].sa?String(s):`${s}/${String(s+1).slice(2)}`;};
@@ -1594,10 +1616,61 @@ function rStatus(f){
  if(OFF_S.includes(sh))return {k:'off',min:0,label:{PST:'Adiado',CANC:'Cancelado',ABD:'Interrompido',AWD:'W.O.',WO:'W.O.'}[sh]};
  return {k:'pre',min:0,label:hhmm(new Date(f.fixture.date))};
 }
+/* ================= COPAS: Champions, Europa League, Libertadores, Sul-Americana ================= */
+const CUPS=new Set([2,3,13,11]);
+const CUP_INFO={2:{phase:'Fase de liga',fmt:'36 clubes numa tabela única. Do 1º ao 8º vão direto às oitavas; do 9º ao 24º disputam os playoffs.'},3:{phase:'Fase de liga',fmt:'36 clubes numa tabela única. Do 1º ao 8º vão direto às oitavas; do 9º ao 24º disputam os playoffs.'},13:{phase:'Fase de grupos',fmt:'32 clubes em 8 grupos. Os dois primeiros de cada grupo vão às oitavas; o 3º cai para a Sul-Americana.'},11:{phase:'Fase de grupos',fmt:'32 clubes em 8 grupos. O 1º vai às oitavas; o 2º disputa os playoffs contra os terceiros da Libertadores.'}};
+const KO_RX=/Round of|Quarter|Semi|^Final|Play-?offs|Knockout|8th Finals|Preliminary|Qualifying|\d(st|nd|rd|th) Round/i;
+async function renderCupReal(id){
+ const L=RLmap[id],info=CUP_INFO[id]||{};
+ $('.lg-layout').hidden=true;const box=$('#lg-cup');box.hidden=false;
+ $('#lg-desc').textContent=`Temporada ${seasonLabel(id)}. ${info.fmt||''}`;
+ const tab=REAL.cupTab||(L.sa&&NOW().getMonth()>=6?'mata':'tabela');REAL.cupTab=tab;
+ box.innerHTML=`<div class="pd-bar" style="margin-top:0"><div class="seg" id="cup-tabs">${[['tabela',info.phase||'Tabela'],['mata','Mata-mata']].map(([k,l])=>`<button aria-pressed="${tab===k}" data-cuptab="${k}">${l}</button>`).join('')}</div></div><div id="cup-body"><div class="empty">Carregando…</div></div>`;
+ const body=$('#cup-body');
+ if(tab==='tabela'){
+  let groups;
+  try{const r=await apiGet('standings',{league:id,season:seasonFor(id)},300000);groups=r&&r[0]&&r[0].league&&r[0].league.standings||[];}
+  catch(e){if(view==='ligas'&&REAL.lgTab===id&&REAL.cupTab===tab)body.innerHTML=`<div class="empty">Não foi possível carregar a tabela. ${esc(e.message)}</div>`;return;}
+  if(view!=='ligas'||REAL.lgTab!==id||REAL.cupTab!=='tabela')return;
+  groups=groups.filter(g=>g&&g.length);
+  if(!groups.length){body.innerHTML=`<div class="empty">A ${esc(info.phase||'tabela').toLowerCase()} desta temporada ainda não está disponível. Veja o <button class="btn sm" data-cuptab="mata">Mata-mata</button></div>`;return;}
+  const fm=s=>String(s||'').split('').slice(-5).map(c=>({W:'V',D:'E',L:'D'}[c]||c));
+  if(groups.length===1&&groups[0].length>12){
+   const rows=groups[0];
+   body.innerHTML=`<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">#</th><th class="l">Clube</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th><th class="l">Últimos 5</th></tr></thead><tbody>${rows.map(r=>{const z=r.rank<=8?'z1':r.rank<=24?'z2':'';return `<tr class="cz ${z}" title="${esc(r.description||'')}"><td class="pos l"><span>${r.rank}</span></td><td class="l"><span class="tmc">${rCrest(r.team)}${esc(r.team.name)}</span></td><td>${r.all.played}</td><td>${r.all.win}</td><td>${r.all.draw}</td><td>${r.all.lose}</td><td>${r.all.goals.for}</td><td>${r.all.goals.against}</td><td>${r.goalsDiff>0?'+':''}${r.goalsDiff}</td><td class="pts">${r.points}</td><td class="l"><span class="form">${fm(r.form).map(x=>`<i class="${x}">${x}</i>`).join('')}</span></td></tr>`;}).join('')}</tbody></table></div>
+   <div class="legend"><span><i style="background:var(--red)"></i>Oitavas de final direto (1º ao 8º)</span><span><i style="background:var(--ink)"></i>Playoffs (9º ao 24º)</span><span><i style="background:var(--line2)"></i>Eliminados</span></div></div>`;
+  }else{
+   const name=g=>(g[0]&&g[0].group||'').replace(/^.*Group\s*/i,'Grupo ').replace(/^Group/i,'Grupo');
+   const lib=id===13;
+   body.innerHTML=`<div class="grp-grid">${groups.map(g=>`<div class="card grp"><div class="card-h" style="margin-bottom:8px"><h3>${esc(name(g)||'Grupo')}</h3></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">#</th><th class="l">Clube</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>Pts</th></tr></thead><tbody>${g.map(r=>{const z=id===13?(r.rank<=2?'z1':r.rank===3?'z2':''):(r.rank===1?'z1':r.rank===2?'z2':'');return `<tr class="cz ${z}" title="${esc(r.description||'')}"><td class="pos l"><span>${r.rank}</span></td><td class="l"><span class="tmc">${rCrest(r.team)}<span class="nm" title="${esc(r.team.name)}">${esc(r.team.name)}</span></span></td><td>${r.all.played}</td><td>${r.all.win}</td><td>${r.all.draw}</td><td>${r.all.lose}</td><td>${r.goalsDiff>0?'+':''}${r.goalsDiff}</td><td class="pts">${r.points}</td></tr>`;}).join('')}</tbody></table></div></div>`).join('')}</div>
+   <div class="legend"><span><i style="background:var(--red)"></i>${lib?'Oitavas de final (1º e 2º)':'Oitavas de final (1º)'}</span><span><i style="background:var(--ink)"></i>${lib?'Vai para a Sul-Americana (3º)':'Playoffs (2º)'}</span><span><i style="background:var(--line2)"></i>Eliminados</span></div>`;
+  }
+  return;
+ }
+ // mata-mata
+ let fx;
+ try{fx=await apiGet('fixtures',{league:id,season:seasonFor(id),timezone:TZ,v:Math.floor(Date.now()/1800000)},600000);}
+ catch(e){if(view==='ligas'&&REAL.lgTab===id&&REAL.cupTab===tab)body.innerHTML=`<div class="empty">Não foi possível carregar o mata-mata. ${esc(e.message)}</div>`;return;}
+ if(view!=='ligas'||REAL.lgTab!==id||REAL.cupTab!=='mata')return;
+ const ko=(fx||[]).filter(f=>f.league&&KO_RX.test(f.league.round||'')&&!/Group|League Stage|Regular Season/i.test(f.league.round||''));
+ if(!ko.length){body.innerHTML='<div class="empty">O mata-mata desta temporada ainda não começou. Os confrontos aparecem aqui assim que forem definidos.</div>';return;}
+ const byRound=new Map();ko.forEach(f=>{const k=f.league.round.replace(/\s*-\s*\d+(st|nd|rd|th)?\s*Leg$/i,'').replace(/\s*-\s*(1st|2nd) Leg$/i,'').trim();if(!byRound.has(k))byRound.set(k,[]);byRound.get(k).push(f);});
+ const rounds=[...byRound.entries()].map(([k,list])=>({k,list,first:Math.min(...list.map(f=>new Date(f.fixture.date)))})).sort((a,b)=>a.first-b.first);
+ const tieHTML=list=>{const ties=new Map();list.sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)).forEach(f=>{const ids=[f.teams.home.id,f.teams.away.id].sort((a,b)=>a-b).join('-');if(!ties.has(ids))ties.set(ids,[]);ties.get(ids).push(f);});
+  return [...ties.values()].map(legs=>{const A=legs[0].teams.home,B=legs[0].teams.away;let ga=0,gb=0,played=0;legs.forEach(f=>{if(FT_S.includes(f.fixture.status.short)||LIVE_S.includes(f.fixture.status.short)){played++;const ah=f.teams.home.id===A.id;ga+=(ah?f.goals.home:f.goals.away)||0;gb+=(ah?f.goals.away:f.goals.home)||0;}});
+   const last=legs[legs.length-1];const done=FT_S.includes(last.fixture.status.short);const pen=last.score&&last.score.penalty&&last.score.penalty.home!=null?last.score.penalty:null;
+   let win=null;if(done){if(last.teams.home.winner===true)win=last.teams.home.id;else if(last.teams.away.winner===true)win=last.teams.away.id;else if(ga!==gb)win=ga>gb?A.id:B.id;}
+   const penTxt=pen?(()=>{const ah=last.teams.home.id===A.id;return ` (${ah?pen.home:pen.away}–${ah?pen.away:pen.home} pên.)`;})():'';
+   const legTxt=legs.map((f,i)=>{const st=rStatus(f);const s=FT_S.includes(f.fixture.status.short)||LIVE_S.includes(f.fixture.status.short)?`${f.goals.home}–${f.goals.away}`:shortDate(new Date(f.fixture.date));return `<button class="leg ${st.k==='live'?'live':''}" data-rcm="${f.fixture.id}">${legs.length>1?(i?'Volta':'Ida'):'Jogo'} · ${esc(teamCode(f.teams.home.name))} ${s} ${esc(teamCode(f.teams.away.name))}</button>`;}).join('');
+   const row=(T,g)=>`<div class="tie-t ${win===T.id?'win':win?'out':''}">${rCrest(T)}<span>${esc(T.name)}</span><b class="num">${played?g:''}</b></div>`;
+   return `<div class="tie">${row(A,ga)}${row(B,gb)}${penTxt?`<div class="tie-p">${penTxt.trim()}</div>`:''}<div class="tie-legs">${legTxt}</div></div>`;}).join('');};
+ body.innerHTML=`<div class="bracket">${rounds.map(r=>`<div class="br-col"><h4>${esc(roundTxt(r.k))}</h4>${tieHTML(r.list)}</div>`).join('')}</div><p class="chart-note">Toque em um jogo para abrir a Central do jogo. O chaveamento atualiza a cada 30 minutos.</p>`;
+}
+
 function roundTxt(r){
  if(!r)return '';let m=r.match(/Regular Season - (\d+)/);if(m)return 'Rodada '+m[1];
  m=r.match(/Group Stage - (\d+)/i);if(m)return 'Fase de grupos · '+m[1];
- const map={'Round of 32':'16-avos de final','Round of 16':'Oitavas de final','Quarter-finals':'Quartas de final','Semi-finals':'Semifinal','Final':'Final','1st Round':'1ª fase','2nd Round':'2ª fase','3rd Round':'3ª fase','League Stage':'Fase de liga'};
+ const map={'Knockout Round Play-offs':'Playoffs','Play-offs':'Playoffs','8th Finals':'Oitavas de final','Preliminary Round':'Fase preliminar','Round of 32':'16-avos de final','Round of 16':'Oitavas de final','Quarter-finals':'Quartas de final','Semi-finals':'Semifinal','Final':'Final','1st Round':'1ª fase','2nd Round':'2ª fase','3rd Round':'3ª fase','League Stage':'Fase de liga'};
  for(const k in map)if(r.startsWith(k))return map[k]+r.slice(k.length);return r;
 }
 async function rDay(off){const d=new Date(today0);d.setDate(d.getDate()+off);const list=await apiGet('fixtures',{date:ymd(d),timezone:TZ,leagues:RL.map(l=>l.id).join(',')});return (list||[]).slice().sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)||lgRank(a.league.id)-lgRank(b.league.id));}
@@ -1812,6 +1885,8 @@ async function renderLigasReal(){
  const my=REAL.lgTab,L=RLmap[my];
  $('#lg-filter').innerHTML=TABLE_LG.map(id=>`<button class="chip" aria-pressed="${my===id}" data-rlg="${id}">${esc(RLmap[id].short)}</button>`).join('');
  $('#lg-title').textContent=L.name;
+ if(CUPS.has(my))return renderCupReal(my);
+ $('.lg-layout').hidden=false;$('#lg-cup').hidden=true;
  $('#lg-desc').textContent=`Classificação oficial da temporada ${seasonLabel(my)}, atualizada pela API-Football.`;
  $('#lg-luck-title').textContent='Saldo de gols';$('#lg-luck-sub').textContent='Gols marcados menos gols sofridos';$('#lg-leg-note').textContent='Últimos 5 jogos';
  $('#lg-table').innerHTML='<div class="empty">Carregando tabela…</div>';$('#lg-luck').innerHTML='';$('#lg-insights').innerHTML='';
@@ -2642,8 +2717,9 @@ document.addEventListener('click',e=>{
  if(t.dataset.rpst){REAL.st=t.dataset.rpst;return renderPartidasReal();}
  if(t.dataset.rplg){REAL.lg=t.dataset.rplg;return renderPartidasReal();}
  if(t.dataset.rcmt){REAL.tab=t.dataset.rcmt;return renderCentroReal();}
- if(t.dataset.rlg){REAL.lgTab=+t.dataset.rlg;return renderLigasReal();}
- if(t.dataset.rlgo){REAL.lgTab=+t.dataset.rlgo;return show('ligas');}
+ if(t.dataset.cuptab){REAL.cupTab=t.dataset.cuptab;return renderLigasReal();}
+ if(t.dataset.rlg){REAL.lgTab=+t.dataset.rlg;REAL.cupTab=null;return renderLigasReal();}
+ if(t.dataset.rlgo){REAL.lgTab=+t.dataset.rlgo;REAL.cupTab=null;return show('ligas');}
  if(t.dataset.labsrc){LV.src=t.dataset.labsrc;return renderLabAny();}
  if(t.dataset.lvpl){LV.player=+t.dataset.lvpl;return drawLabLive(LV.cur);}
  if(t.dataset.lvsort){const k=t.dataset.lvsort;LV.sort=LV.sort.k===k?{k,d:-LV.sort.d}:{k,d:['name','pos'].includes(k)?1:-1};return drawLabLive(LV.cur);}
