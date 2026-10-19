@@ -31,6 +31,10 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 | Vídeo animado (Reels, TikTok, Stories): cenas com placar, número do jogo, estatísticas em barras, linha do tempo dos gols, jogador em destaque e análise; prévia com play, pausa, barra de tempo e escolha de cenas; baixa em MP4 (ou WebM em navegadores sem MP4) | Mesmos dados do post, gravado no próprio navegador |
 | Visual dos posts: foto do estádio na capa, ilustrações de futebol próprias em cada slide (campo, rede, prancheta, bola, refletores), foto do jogador ou escudo do time citado no slide e foto de capa própria opcional | API-Football (estádios, escudos, fotos) e ilustrações do próprio site |
 
+## Tema dia e noite
+
+No topo do site há três botões: dia, noite e automático (segue o tema do celular ou computador). A escolha fica salva no navegador de cada visitante.
+
 ## Configuração na Vercel
 
 1. Em **Settings → Environment Variables** do projeto, crie:

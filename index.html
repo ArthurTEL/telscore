@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}</style>
+<meta name="theme-color" content="#F4F4F6" id="meta-theme">
+<script>(function(){try{var t=localStorage.getItem('telscore:theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <title>TEL.SCORE</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -518,6 +520,12 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
 .vnote{font-size:12.5px;color:var(--muted);margin:14px 0 0;line-height:1.45}
 .vplayer+.caption{margin-top:18px}
 @media (max-width:720px){.vplayer{grid-template-columns:1fr}.vstage{max-width:300px;width:100%;margin:0 auto}}
+.theme{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:var(--surface);box-shadow:0 0 0 1px var(--line);flex:none}
+.theme button{width:32px;height:32px;border:0;border-radius:50%;background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:background .15s,color .15s}
+.theme button svg{width:16px;height:16px}
+.theme button:hover{color:var(--ink)}
+.theme button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{transition:background-color .25s,border-color .25s,color .25s!important}
 /* ---------- responsivo ---------- */
 @media (max-width:1080px){
   .pd-layout,.lg-layout,.studio,.cm-grid{grid-template-columns:minmax(0,1fr)}
@@ -565,7 +573,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
         <button class="tab" role="tab" data-v="lab" id="tab-lab">Análise tática</button>
         <button class="tab" role="tab" data-v="estudio" id="tab-estudio">Estúdio de posts</button>
       </nav>
-      <span class="mode" id="mode-pill" hidden></span><div class="clock" id="clock"></div>
+      <span class="mode" id="mode-pill" hidden></span><div class="theme" role="group" aria-label="Tema do site"><button data-theme-set="light" aria-pressed="false" title="Modo dia" aria-label="Modo dia"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg></button><button data-theme-set="dark" aria-pressed="false" title="Modo noturno" aria-label="Modo noturno"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8z"/></svg></button><button data-theme-set="auto" aria-pressed="false" title="Automático (segue o aparelho)" aria-label="Automático, segue o aparelho"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.6"/><path d="M8 2.4v11.2A5.6 5.6 0 0 0 8 2.4z" fill="currentColor" stroke="none"/></svg></button></div><div class="clock" id="clock"></div>
     </div>
   </div>
   <div class="wrap"><div class="ticker" aria-label="Placar dos jogos de hoje"><div class="tk-track" id="ticker"></div></div></div>
@@ -3117,6 +3125,19 @@ $('#st-bgfile').addEventListener('change',e=>{const file=e.target.files&&e.targe
 $('#st-search').addEventListener('input',e=>{ST.q=e.target.value;rsOn()?renderFormatsReal():renderFormats();});
 $('#st-comp').addEventListener('change',e=>{RS.comp=e.target.value;RS.key=null;RS.data=null;renderStudioReal();});
 
+/* ---- tema dia / noite ---- */
+function themeGet(){try{const t=localStorage.getItem('telscore:theme');return t==='light'||t==='dark'?t:'auto';}catch(e){return 'auto';}}
+function themeApply(t,anim){
+ const root=document.documentElement;
+ if(anim){root.classList.add('theme-anim');clearTimeout(themeApply._t);themeApply._t=setTimeout(()=>root.classList.remove('theme-anim'),400);}
+ if(t==='light'||t==='dark')root.setAttribute('data-theme',t);else root.removeAttribute('data-theme');
+ const dark=t==='dark'||(t==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+ const m=document.getElementById('meta-theme');if(m)m.setAttribute('content',dark?'#08080A':'#F4F4F6');
+ document.querySelectorAll('[data-theme-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeSet===t)));
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-theme-set]');if(!b)return;const t=b.dataset.themeSet;try{if(t==='auto')localStorage.removeItem('telscore:theme');else localStorage.setItem('telscore:theme',t);}catch(err){}themeApply(t,true);toast(t==='dark'?'Modo noturno ativado':t==='light'?'Modo dia ativado':'Tema automático: segue o seu aparelho');});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themeGet()==='auto')themeApply('auto');});}catch(e){}
+themeApply(themeGet());
 try{new MutationObserver(()=>{syncDl();vMount();}).observe($('#st-preview'),{childList:true});}catch(e){}
 syncDl();vMount();renderSaved();
 let start='partidas';const hsh=(location.hash||'').slice(1);
