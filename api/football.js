@@ -7,7 +7,9 @@ const BASE = 'https://v3.football.api-sports.io';
 // Só estes endpoints e parâmetros podem ser chamados pelo site.
 const ALLOWED = {
   status: [],
-  fixtures: ['date', 'id', 'live', 'league', 'season', 'timezone', 'from', 'to', 'status', 'round', 'team', 'last', 'next'],
+  fixtures: ['date', 'id', 'ids', 'live', 'league', 'season', 'timezone', 'from', 'to', 'status', 'round', 'team', 'last', 'next'],
+  predictions: ['fixture'],
+  injuries: ['fixture', 'team', 'season', 'date'],
   standings: ['league', 'season'],
   'fixtures/headtohead': ['h2h', 'last', 'timezone']
 };
@@ -68,10 +70,16 @@ module.exports = async (req, res) => {
     if (errors) ttl = 30;
     else if (endpoint === 'status') ttl = 60;
     else if (endpoint === 'standings') ttl = 3600;
+    else if (endpoint === 'predictions') ttl = 3600;
+    else if (endpoint === 'injuries') ttl = 1800;
+    else if (endpoint === 'fixtures/headtohead') ttl = 21600;
     else if (endpoint === 'fixtures') {
       const list = Array.isArray(response) ? response : [];
       const anyLive = list.some(f => f.fixture && f.fixture.status && LIVE.has(f.fixture.status.short));
       if (anyLive) ttl = liveTTL;
+      else if (q.ids) {
+        ttl = list.length && list.every(f => f.fixture && FINISHED.has(f.fixture.status.short)) ? 86400 : 600;
+      } else if (q.team && q.last) ttl = 1800;
       else if (q.id) {
         const s = list[0] && list[0].fixture && list[0].fixture.status.short;
         ttl = FINISHED.has(s) ? 86400 : 600;
