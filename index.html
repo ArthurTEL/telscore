@@ -585,6 +585,14 @@ html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{transition:
   .st-bar .acts>#st-dl{grid-column:1 / -1}
   footer{padding-bottom:20px}
 }
+.slide .kick,.story .kick{font-family:var(--f-mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--p-home);font-weight:700;margin-top:auto}
+.story .kick{font-size:8px}
+.slide .viz,.story .viz{margin:6px 0 8px}
+.viz svg{display:block;width:100%;height:auto;overflow:visible}
+.slide p.sm{font-size:11.5px;line-height:1.4;margin:0 0 auto}
+.story p.sm{font-size:10.5px;line-height:1.35;margin:0 0 auto}
+p .note{display:block;margin-top:6px;font-family:var(--f-mono);font-size:8.5px;line-height:1.4;opacity:.7;font-weight:400}
+.slide.vz>.sart,.story.vz>.sart{opacity:.4}
 /* ---------- responsivo ---------- */
 @media (max-width:1080px){
   .pd-layout,.lg-layout,.studio,.cm-grid{grid-template-columns:minmax(0,1fr)}
@@ -1601,6 +1609,173 @@ function mediaFor(c,text){
 }
 function coverImage(c){return ST.bg||(c.venueImg?prox(c.venueImg):'');}
 
+/* ================= VISUAIS DOS SLIDES (mesmo desenho na prévia em SVG e no PNG em canvas) ================= */
+const VZW=924;let VZ_ID=0;
+const VZF={display:()=>CV.display,body:()=>CV.body,mono:()=>CV.mono};
+const vzMeasureCtx=(()=>{let c=null;return ()=>c||(c=document.createElement('canvas').getContext('2d'));})();
+function vzMeasure(s,st){const m=vzMeasureCtx();m.font=`${st.w||400} ${st.size}px ${VZF[st.f||'body']()}`;return m.measureText(String(s)).width;}
+function vzFit(s,st,maxW,minSize){let size=st.size;while(size>(minSize||18)&&vzMeasure(s,{...st,size})>maxW)size-=2;return size;}
+function vzEll(s,st,maxW){s=String(s||'');if(vzMeasure(s,st)<=maxW)return s;while(s.length>1&&vzMeasure(s+'…',st)>maxW)s=s.slice(0,-1);return s+'…';}
+function vzWrap(s,st,maxW){const words=String(s||'').split(/\s+/).filter(Boolean);const L=[];let line='';words.forEach(w=>{const t=line?line+' '+w:w;if(vzMeasure(t,st)>maxW&&line){L.push(line);line=w;}else line=t;});if(line)L.push(line);return L;}
+function svgPainter(){
+ const o=[];const fam=f=>VZF[f||'body']().replace(/'/g,'');
+ return {o,
+  rect(x,y,w,h,r,fill,a){if(w<=0||h<=0)return;o.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(r,h/2,w/2).toFixed(1)}" fill="${fill}"${a!=null&&a<1?` fill-opacity="${a}"`:''}/>`);},
+  circle(cx,cy,r,fill,stroke,sw,a){o.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill||'none'}"${stroke?` stroke="${stroke}" stroke-width="${sw}"`:''}${a!=null&&a<1?` opacity="${a}"`:''}/>`);},
+  ring(cx,cy,r,frac,stroke,sw){frac=Math.max(0,Math.min(.9999,frac));if(frac<=0)return;const a0=-Math.PI/2,a1=a0+frac*2*Math.PI;const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);o.push(`<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${frac>.5?1:0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round"/>`);},
+  line(x0,y0,x1,y1,stroke,sw,a){o.push(`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round"${a!=null&&a<1?` opacity="${a}"`:''}/>`);},
+  text(s,x,y,st){const an=st.align==='right'?'end':st.align==='center'?'middle':'start';o.push(`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-family='${fam(st.f)}' font-size="${st.size}" font-weight="${st.w||400}" fill="${st.fill||'#fff'}" text-anchor="${an}"${st.a!=null&&st.a<1?` opacity="${st.a}"`:''}${st.ls?` letter-spacing="${st.ls}"`:''}>${esc(String(s))}</text>`);},
+  image(url,x,y,w,h,round){if(!url)return;const cid='vz'+(VZ_ID++);if(round)o.push(`<clipPath id="${cid}"><circle cx="${(x+w/2).toFixed(1)}" cy="${(y+h/2).toFixed(1)}" r="${(w/2).toFixed(1)}"/></clipPath>`);o.push(`<image href="${esc(url)}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="${round?'xMidYMid slice':'xMidYMid meet'}"${round?` clip-path="url(#${cid})"`:''}/>`);}
+ };
+}
+function cvPainter(ctx,ox,oy,imgs){
+ const F=st=>`${st.w||400} ${st.size}px ${VZF[st.f||'body']()}`;
+ return {
+  rect(x,y,w,h,r,fill,a){if(w<=0||h<=0)return;ctx.save();ctx.globalAlpha*=a==null?1:a;ctx.fillStyle=fill;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(ox+x,oy+y,w,h,Math.min(r,h/2,w/2));else ctx.rect(ox+x,oy+y,w,h);ctx.fill();ctx.restore();},
+  circle(cx,cy,r,fill,stroke,sw,a){ctx.save();ctx.globalAlpha*=a==null?1:a;ctx.beginPath();ctx.arc(ox+cx,oy+cy,r,0,Math.PI*2);if(fill&&fill!=='none'){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.stroke();}ctx.restore();},
+  ring(cx,cy,r,frac,stroke,sw){frac=Math.max(0,Math.min(1,frac));if(frac<=0)return;ctx.save();ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.lineCap='round';ctx.beginPath();ctx.arc(ox+cx,oy+cy,r,-Math.PI/2,-Math.PI/2+frac*2*Math.PI);ctx.stroke();ctx.restore();},
+  line(x0,y0,x1,y1,stroke,sw,a){ctx.save();ctx.globalAlpha*=a==null?1:a;ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(ox+x0,oy+y0);ctx.lineTo(ox+x1,oy+y1);ctx.stroke();ctx.restore();},
+  text(s,x,y,st){ctx.save();ctx.globalAlpha*=st.a==null?1:st.a;ctx.fillStyle=st.fill||'#fff';ctx.font=F(st);ctx.textAlign=st.align||'left';ctx.textBaseline='alphabetic';ctx.fillText(String(s),ox+x,oy+y);ctx.restore();},
+  image(url,x,y,w,h,round){const im=url&&imgs[url];if(!im||!im.naturalWidth)return;ctx.save();if(round){ctx.beginPath();ctx.arc(ox+x+w/2,oy+y+h/2,w/2,0,Math.PI*2);ctx.clip();const k=Math.max(w/im.naturalWidth,h/im.naturalHeight);const iw=im.naturalWidth*k,ih=im.naturalHeight*k;ctx.drawImage(im,ox+x+(w-iw)/2,oy+y+(h-ih)/2,iw,ih);}else{const k=Math.min(w/im.naturalWidth,h/im.naturalHeight);const iw=im.naturalWidth*k,ih=im.naturalHeight*k;ctx.drawImage(im,ox+x+(w-iw)/2,oy+y+(h-ih)/2,iw,ih);}ctx.restore();}
+ };
+}
+const VZC={red:'#FF2533',white:'#FFFFFF',track:'rgba(255,255,255,.14)',soft:'rgba(255,255,255,.08)',green:'#1FA45B',grey:'#8B8B94',yellow:'#F2C200'};
+function vzCrest(P,t,cx,cy,r){P.circle(cx,cy,r,'#fff');if(t&&t.img)P.image(t.img,cx-r*.72,cy-r*.72,r*1.44,r*1.44,false);else P.text((t&&t.code)||'',cx,cy+r*.18,{f:'display',w:800,size:Math.round(r*.5),fill:'#111',align:'center'});}
+function vzFace(P,t,cx,cy,r,ring){P.circle(cx,cy,r,'#24242a');const ini=String(t&&t.name||'').split(/\s+/).filter(Boolean).map(w=>w[0]).slice(-2).join('').toUpperCase();P.text(ini,cx,cy+r*.2,{f:'display',w:800,size:Math.round(r*.55),fill:'#fff',align:'center'});if(t&&t.photo)P.image(t.photo,cx-r,cy-r,2*r,2*r,true);P.circle(cx,cy,r+3,null,ring||VZC.red,Math.max(5,r*.08));}
+function vzEnt(P,t,cx,cy,r){if(t&&(t.photo||t.player))vzFace(P,t,cx,cy,r,t.ring);else vzCrest(P,t,cx,cy,r);}
+const rcolHex=v=>v>=8?'#1FA45B':v>=7?'#2F7FE0':v>=6.5?'#8B8B94':'#E5283A';
+function vzPaint(P,v,W){
+ W=W||VZW;
+ if(v.k==='cmp'){const r=56;vzEnt(P,v.h,r,r+4,r);vzEnt(P,v.a,W-r,r+4,r);
+  const hv=+v.h.v||0,av=+v.a.v||0,best=hv===av?'':v.low?(hv<av?'h':'a'):(hv>av?'h':'a');
+  const st={f:'display',w:900,size:112};const sh=vzFit(v.h.txt,st,W/2-r*2-40,60),sa=vzFit(v.a.txt,st,W/2-r*2-40,60);
+  P.text(v.h.txt,2*r+28,r+44,{...st,size:sh,fill:best==='h'?VZC.red:'#fff'});P.text(v.a.txt,W-2*r-28,r+44,{...st,size:sa,fill:best==='a'?VZC.red:'#fff',align:'right'});
+  P.text(vzEll(v.h.lab||'',{f:'mono',size:28},W/2-40),0,2*r+50,{f:'mono',size:28,a:.75});P.text(vzEll(v.a.lab||'',{f:'mono',size:28},W/2-40),W,2*r+50,{f:'mono',size:28,a:.75,align:'right'});
+  const by=2*r+76,tot=hv+av,sw=tot?hv/tot:.5;P.rect(0,by,W,30,15,VZC.track);P.rect(0,by,Math.max(0,W*sw-5),30,15,best==='h'?VZC.red:'#fff');P.rect(W*sw+5,by,Math.max(0,W*(1-sw)-5),30,15,best==='a'?VZC.red:'#fff');
+  let y=by+30;if(v.sub){P.text(v.sub,W/2,y+52,{f:'mono',size:30,a:.8,align:'center'});y+=70;}return y+6;}
+ if(v.k==='big'){let x=0;const hasE=v.e&&(v.e.img||v.e.photo||v.e.code||v.e.name);if(hasE){vzEnt(P,v.e,86,110,86);x=210;}
+  const st={f:'display',w:900,size:210};const s=vzFit(v.txt,st,W-x,90);P.text(v.txt,x,110+s*.36,{...st,size:s,fill:VZC.red});
+  let y=Math.max(hasE?206:0,110+s*.36)+20;if(v.lab){const ls={f:'mono',size:34};const L=vzWrap(v.lab,ls,W-x).slice(0,2);L.forEach((l,i)=>P.text(l,x,y+34+i*44,{...ls,a:.82}));y+=34+L.length*44;}return y+8;}
+ if(v.k==='player'){const r=104;vzFace(P,v,r,r+6,r,v.ring);const x=2*r+44,rw=v.rating?170:0;
+  const ns={f:'body',w:700,size:58};const nsz=vzFit(v.name,ns,W-x-rw-10,38);P.text(vzEll(v.name,{...ns,size:nsz},W-x-rw-10),x,96,{...ns,size:nsz});
+  P.text(vzEll(v.team||'',{f:'mono',size:32},W-x-rw-10),x,146,{f:'mono',size:32,a:.75});
+  if(v.rating){P.rect(W-150,40,150,104,26,rcolHex(v.rating));P.text(f1(v.rating),W-75,112,{f:'display',w:900,size:58,fill:'#fff',align:'center'});P.text('nota',W-75,170,{f:'mono',size:24,a:.7,align:'center'});}
+  let y=2*r+40;const ch=(v.chips||[]).slice(0,3);if(ch.length){const cw=(W-(ch.length-1)*16)/ch.length;ch.forEach((c,i)=>{const cx=i*(cw+16);P.rect(cx,y,cw,118,24,VZC.soft);P.text(String(c.v),cx+cw/2,y+62,{f:'display',w:900,size:vzFit(String(c.v),{f:'display',w:900,size:56},cw-24,30),fill:i===0?VZC.red:'#fff',align:'center'});P.text(vzEll(c.l,{f:'mono',size:24},cw-20),cx+cw/2,y+98,{f:'mono',size:24,a:.75,align:'center'});});y+=118;}return y+6;}
+ if(v.k==='goals'){const x0=70,x1=W-10,ay=150,mx=v.max||90;vzCrest(P,v.h,26,ay-58,26);vzCrest(P,v.a,26,ay+58,26);
+  P.line(x0,ay,x1,ay,VZC.track,10);[0,45,90].forEach(m=>{const x=x0+(x1-x0)*m/mx;P.line(x,ay-12,x,ay+12,'rgba(255,255,255,.35)',3);P.text(m+"'",x,ay+(m===45?-22:44),{f:'mono',size:22,a:.55,align:m===0?'left':m===90?'right':'center'});});
+  const last={h:-1e9,a:-1e9};v.list.forEach(g=>{const x=x0+(x1-x0)*Math.min(g.m,mx)/mx;const up=g.side==='h';let lx=Math.max(x0+60,Math.min(x1-60,x));if(lx-last[g.side]<150)lx=last[g.side]+150;last[g.side]=lx;
+   P.line(x,ay,lx,up?ay-58:ay+58,'rgba(255,255,255,.35)',3);P.circle(x,ay,17,'#fff',VZC.red,6);
+   P.text(g.label,lx,up?ay-70:ay+92,{f:'display',w:900,size:38,fill:VZC.red,align:'center'});P.text(vzEll(g.name,{f:'body',w:600,size:28},170),lx,up?ay-112:ay+128,{f:'body',w:600,size:28,align:'center'});});
+  return ay+150;}
+ if(v.k==='pct'){const r=128,cx=r+14,cy=r+14;P.circle(cx,cy,r,null,VZC.track,34);P.ring(cx,cy,r,(v.v||0)/100,VZC.red,34);P.text(String(v.v),cx,cy+30,{f:'display',w:900,size:96,align:'center'});P.text('percentil',cx,cy+72,{f:'mono',size:24,a:.7,align:'center'});
+  const x=2*r+70;P.text(vzEll(v.lab,{f:'body',w:700,size:62},W-x),x,cy-36,{f:'body',w:700,size:62});
+  const L=vzWrap(v.raw||'',{f:'mono',size:32},W-x).slice(0,2);L.forEach((l,i)=>P.text(l,x,cy+14+i*42,{f:'mono',size:32,a:.8}));
+  P.text(vzEll(`acima de ${v.v}% dos jogadores`,{f:'body',size:30},W-x),x,cy+14+L.length*42+44,{f:'body',size:30,a:.65});return 2*r+40;}
+ if(v.k==='funnel'){vzCrest(P,v.e,44,44,44);P.text(vzEll(v.e.name||'',{f:'body',w:700,size:48},W-120),110,62,{f:'body',w:700,size:48});
+  const mx=Math.max(1,...v.steps.map(s=>s.v));let y=122;v.steps.forEach((s,i)=>{const w=Math.max(150,W*(s.v/mx));P.rect(0,y,w,74,20,i===v.steps.length-1?VZC.red:'#fff',i===v.steps.length-1?1:.16+i*.1);
+   P.text(String(s.v),26,y+54,{f:'display',w:900,size:46,fill:i===v.steps.length-1?'#fff':'#fff'});P.text(s.l,26+vzMeasure(String(s.v),{f:'display',w:900,size:46})+18,y+50,{f:'body',w:600,size:32});y+=90;});
+  return y;}
+ if(v.k==='bars3'){const mx=Math.max(...v.rows.map(r=>+r.v||0));let y=0;v.rows.forEach(rw=>{const best=(+rw.v||0)===mx&&mx>0;
+   if(rw.e)vzEnt(P,rw.e,38,y+38,38);else{P.circle(38,y+38,38,'rgba(255,255,255,.14)');P.text(rw.sym||'=',38,y+52,{f:'display',w:900,size:40,align:'center'});}
+   P.text(vzEll(rw.lab,{f:'body',w:700,size:44},W-330),100,y+54,{f:'body',w:700,size:44});P.text(rw.txt,W,y+60,{f:'display',w:900,size:72,fill:best?VZC.red:'#fff',align:'right'});
+   P.rect(0,y+92,W,22,11,VZC.track);P.rect(0,y+92,W*Math.max(0,Math.min(1,(+rw.v||0)/(v.max||mx||1))),22,11,best?VZC.red:'#fff');y+=146;});return y-10;}
+ if(v.k==='form'){let y=0;v.rows.forEach(rw=>{vzCrest(P,rw.e,40,y+44,40);P.text(vzEll(rw.e.name||'',{f:'body',w:700,size:42},W-470),100,y+58,{f:'body',w:700,size:42});
+   const ch=String(rw.form||'').split('').slice(-5);ch.forEach((c,i)=>{const cx=W-36-(ch.length-1-i)*80;P.circle(cx,y+44,34,c==='V'?VZC.green:c==='D'?'#E5283A':VZC.grey);P.text(c,cx,y+58,{f:'display',w:900,size:34,align:'center'});});y+=120;});
+  P.text('V vitória · E empate · D derrota (mais recente à direita)',0,y+18,{f:'mono',size:24,a:.6});return y+30;}
+ if(v.k==='xi'){vzCrest(P,v.e,40,40,40);P.text(vzEll(v.e.name||'',{f:'body',w:700,size:46},W-380),100,58,{f:'body',w:700,size:46});if(v.formation)P.text(v.formation,W,64,{f:'display',w:900,size:60,fill:VZC.red,align:'right'});
+  const ps=v.players.slice(0,11);const rows=[ps.slice(0,6),ps.slice(6)];let y=120;rows.forEach(row=>{const cw=W/6;row.forEach((p,i)=>{const cx=cw*i+cw/2+(row.length<6?cw/2:0);vzFace(P,p,cx,y+56,52,v.ring);P.text(vzEll(lastName(p.name),{f:'body',w:600,size:24},cw-6),cx,y+142,{f:'body',w:600,size:24,align:'center'});});y+=170;});return y;}
+ if(v.k==='quote'){P.text('“',0,190,{f:'display',w:900,size:260,fill:VZC.red});(v.es||[]).slice(0,2).forEach((e,i)=>vzEnt(P,e,W-56-i*130,80,56));return 150;}
+ return 0;
+}
+function vizSVG(v){const P=svgPainter();const h=Math.ceil(vzPaint(P,v,VZW));return `<svg viewBox="0 -4 ${VZW} ${h+8}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${P.o.join('')}</svg>`;}
+function vizImgs(v){const out=new Set();const walk=o=>{if(!o||typeof o!=='object')return;for(const k in o){const x=o[k];if((k==='img'||k==='photo')&&typeof x==='string'&&x)out.add(x);else if(typeof x==='object')walk(x);}};walk(v);return [...out];}
+async function vizDraw(ctx,v,x,y,W){const imgs={};await Promise.all(vizImgs(v).map(u=>loadImg(u).then(im=>{if(im)imgs[u]=im;})));const P=cvPainter(ctx,x,y,imgs);return vzPaint(P,v,W);}
+function vizHeight(v,W){const P={rect(){},circle(){},ring(){},line(){},text(){},image(){}};return vzPaint(P,v,W);}
+
+/* ---- enriquecimento: cada bloco de texto ganha um título e um visual ---- */
+function vzTeam(c,s){const T=s==='h'?c.H:c.A;return {img:imgUrl(T.logo),code:tCode(T),name:T.name};}
+function vzPl(c,p){return {player:true,name:p.name,photo:p.photo?prox(p.photo):(c.src==='api'&&p.id?plPh(p.id):''),ring:p.side==='h'?VZC.red:'#fff'};}
+const vzNum=x=>x==null?'':String(x);
+function vzPlayerIn(c,t){const at=n=>{let k=-1,from=0;while((k=t.indexOf(n,from))>=0){const nx=t.charAt(k+n.length);if(!/[0-9A-Za-zÀ-ÿ]/.test(nx))return k;from=k+1;}return -1;};return (c.players||[]).filter(p=>p.name).map(p=>[at(p.name),p]).filter(x=>x[0]>=0).sort((a,b)=>a[0]-b[0]||b[1].name.length-a[1].name.length).map(x=>x[1]);}
+function vzPlayerCard(c,p){const ch=[];if(p.rating)ch.push({v:p.goals+p.assists>0?`${p.goals}G ${p.assists}A`:String(p.mins||0)+"'",l:p.goals+p.assists>0?'gols e assist.':'minutos'});
+ if(p.gk)ch.push({v:p.saves!=null?p.saves:(p.def||0),l:p.saves!=null?'defesas':'ações def.'});else{ch.push({v:p.key||0,l:'passes-chave'});ch.push({v:p.def||0,l:'ações def.'});}
+ if(ch.length<3&&p.passes!=null)ch.push({v:p.passes,l:'passes'});
+ return {k:'player',...vzPl(c,p),team:`${p.tn||''}${p.pos?' · '+p.pos:''}`,rating:p.rating||0,chips:ch.slice(0,3)};}
+function vizFor(c,text,fmtName,fmtId){
+ const t=String(text||'');const has=c.has||{};const H=c.H,A=c.A;if(!H||!A)return null;
+ const pre=t.match(/^([^:]{2,30}):\s+(.+)$/);let kick=pre&&!/^\d|\d{2}/.test(pre[1])?pre[1]:'';let body=kick?pre[2]:t;if(kick&&vzPlayerIn(c,kick).length){kick='';body=t;}
+ const fP=FEAT[fmtId]&&c[FEAT[fmtId]]||null;
+ const cmpV=(lab,hv,av,fmt,sub,low)=>({k:'cmp',h:{...vzTeam(c,'h'),v:hv,txt:fmt(hv),lab:H.name},a:{...vzTeam(c,'a'),v:av,txt:fmt(av),lab:A.name},sub,low});
+ const i0=n=>String(Math.round(+n||0)),d2=n=>(+n||0).toFixed(2).replace('.',','),pc=n=>Math.round(+n||0)+'%';
+ const R=(k,v)=>({kick:k,v,t:body});
+ // pré-jogo
+ if(c.pre){
+  if(c.kick&&t.includes(c.kick)&&!/\d+%/.test(t))return {kick:kick||(c.isToday?'Hoje':'Quando'),v:{k:'big',txt:c.kick,lab:`${c.dateLabel}${c.stadium?' · '+c.stadium:''}`},t:body};
+  if(c.pct&&/probabilidade|pelo modelo|vitória do .*%/i.test(t))return R(kick||'Probabilidades',{k:'bars3',max:100,rows:[{e:vzTeam(c,'h'),lab:H.name,v:c.pct.h,txt:c.pct.h+'%'},{lab:'Empate',v:c.pct.d,txt:c.pct.d+'%',sym:'='},{e:vzTeam(c,'a'),lab:A.name,v:c.pct.a,txt:c.pct.a+'%'}]});
+  if(/últimos 5/i.test(t)&&(H.form||A.form))return R(kick||'Forma recente',{k:'form',rows:[{e:vzTeam(c,'h'),form:H.form},{e:vzTeam(c,'a'),form:A.form}]});
+  if(c.h2h&&c.h2h.length&&/confronto|confrontos/i.test(t)&&/\d/.test(t)){const r0=preRec(c);return R(kick||'Confronto direto',{k:'bars3',rows:[{e:vzTeam(c,'h'),lab:`Vitórias ${H.name}`,v:r0.wh,txt:String(r0.wh)},{lab:'Empates',v:r0.dr,txt:String(r0.dr),sym:'='},{e:vzTeam(c,'a'),lab:`Vitórias ${A.name}`,v:r0.wa,txt:String(r0.wa)}]});}
+  if(c.lu){for(const s of ['h','a']){const T=s==='h'?H:A;if(t.startsWith(T.name+' (')||t.startsWith(T.name+':')&&c.lu[s].xi.some(p=>t.includes(p.name)))return {kick:'Escalação',v:{k:'xi',e:vzTeam(c,s),formation:c.lu[s].formation,ring:s==='h'?VZC.red:'#fff',players:c.lu[s].xi.map(p=>({player:true,name:p.name,photo:plPh(p.id)}))},t:body.length>140?`${T.name}${c.lu.official?': escalação oficial.':': provável escalação, com base no último jogo.'}`:body};}}
+  if(/^Desfalques:/i.test(t)||/desfalques/i.test(kick)){const nh=injList(c,'h').length,na=injList(c,'a').length;return R(kick||'Desfalques',cmpV('Desfalques',nh,na,i0,null,true));}
+  for(const s of ['h','a']){const T=s==='h'?H:A;if(t.startsWith(T.name+':')&&c.inj.length){const L=injList(c,s);if(L.length)return {kick:`Desfalques · ${T.name}`,v:{k:'xi',e:vzTeam(c,s),formation:String(L.length),ring:VZC.red,players:L.map(x=>({player:true,name:x.name,photo:prox(x.photo)||plPh(x.id)}))},t:body};}}
+  if(H.season&&A.season){if(/^Ataque:/i.test(t))return R('Ataque',cmpV('',H.season.gf,A.season.gf,n=>numPT(n),'gols marcados por jogo'));if(/^Defesa:/i.test(t))return R('Defesa',cmpV('',H.season.ga,A.season.ga,n=>numPT(n),'gols sofridos por jogo',true));if(/^Na temporada/i.test(t))return R('Temporada',cmpV('',H.season.gf,A.season.gf,n=>numPT(n),`sofridos por jogo: ${numPT(H.season.ga)} x ${numPT(A.season.ga)}`));if(/sem sofrer gol/i.test(t))return R('Solidez',cmpV('',H.season.cs,A.season.cs,i0,'jogos sem sofrer gol'));}
+  if(/^Quando:/i.test(t))return R('Quando',{k:'big',txt:c.kick,lab:c.whenTxt});
+  if(/^Onde:/i.test(t)&&c.stadium)return R('Onde',{k:'big',txt:'📍',lab:body});
+  if(/Avaliação geral|Maior diferença/i.test(t)){const m=t.match(/(\d+)% x (\d+)%/);if(m)return R(kick||'Comparativo',cmpV('',+m[1],+m[2],pc));}
+ }
+ // pós-jogo: estatísticas do time
+ const L2=(hv,av,low)=>(low?hv<av:hv>av)?H:A;const O2=T=>T===H?A:H;
+ const INS={
+  poss:()=>{const T=H.poss>=A.poss?H:A,p=Math.round(Math.max(H.poss,A.poss));const X=H.xg>=A.xg?H:A;return `O ${T.name} ficou com a bola ${p}% do tempo${p>=60?': domínio claro da posse':p>=53?': leve controle':': posse dividida'}.${c.has.xg?(X===T?` E transformou isso em chances: xG ${d2(X.xg)}.`:` Mas quem criou mais foi o ${X.name} (xG ${d2(X.xg)}).`):''}`;},
+  shots:()=>{const T=L2(H.shots,A.shots),d=Math.abs(H.shots-A.shots);const pr=X=>X.shots?Math.round(X.sot/X.shots*100):0;return d?`O ${T.name} finalizou ${d} vez(es) a mais. Pontaria: ${pr(H)}% x ${pr(A)}% dos chutes no alvo.`:`Mesmo número de finalizações. Pontaria: ${pr(H)}% x ${pr(A)}% no alvo.`;},
+  xg:()=>{const T=H.xg>=A.xg?H:A,d=Math.abs(H.xg-A.xg);const W=c.res==='h'?H:c.res==='a'?A:null;return `O ${T.name} criou chances melhores: ${d2(d)} de xG a mais. ${W?(W===T?'O placar acompanhou as chances.':`Mesmo assim, quem venceu foi o ${W.name}.`):(d>.6?'O empate saiu barato para o rival.':'O empate reflete o jogo.')}`;},
+  passes:()=>{const T=L2(H.passes,A.passes),d=Math.abs(H.passes-A.passes);return `O ${T.name} trocou ${d} passes a mais${H.acc!=null?`, com ${Math.round(T.acc)}% de acerto`:''}. Mais passes significam mais controle, não necessariamente mais perigo.`;},
+  corners:()=>{const T=L2(H.corners,A.corners),d=Math.abs(H.corners-A.corners);return d?`O ${T.name} teve ${d} escanteio(s) a mais, sinal de pressão no campo de ataque.`:'Escanteios empatados: pressão equilibrada.';},
+  fouls:()=>{const T=H.fouls>=A.fouls?H:A;return `O ${T.name} fez ${Math.abs(H.fouls-A.fouls)} falta(s) a mais. Total no jogo: ${H.fouls+A.fouls}.`;}
+ };
+ const st=(re,lab,hv,av,fmt,sub,low,ins)=>re.test(t)&&hv!=null&&av!=null?{kick:kick||lab,v:cmpV(lab,hv,av,fmt,sub,low),t:ins?ins():body}:null;
+ let x=null;
+ if(!c.pre){
+  x=st(/^Posse|\bposse\b.*%/i,'Posse de bola',H.poss,A.poss,pc,H.passes!=null?`passes: ${H.passes} x ${A.passes}`:null,false,/^Posse/i.test(t)?INS.poss:null);if(x&&has.poss)return x;
+  x=st(/^Finaliza|finalizações: \d/i,'Finalizações',H.shots,A.shots,i0,H.sot!=null?`no alvo: ${H.sot} x ${A.sot}`:null,false,/^Finaliza/i.test(t)?INS.shots:null);if(x&&has.shots&&!/transformou|Conversão/.test(t))return x;
+  if(/(^| )xG\b|de xG/.test(t)&&has.xg&&!/Gols menos xG|percentil/i.test(t)&&!/^Pista/.test(t))return {kick:kick&&kick!=='xG'?kick:'xG · gols esperados',v:cmpV('',H.xg,A.xg,d2,`placar: ${H.goals} x ${A.goals}`),t:/^xG:\s*[\d,]+ x [\d,]+\.?$/.test(t)?INS.xg():body};
+  x=st(/^Passes:/i,'Passes',H.passes,A.passes,i0,H.acc!=null?`acerto: ${Math.round(H.acc)}% x ${Math.round(A.acc)}%`:null,false,INS.passes);if(x)return x;
+  x=st(/Escanteios/i,'Escanteios',H.corners,A.corners,i0,null,false,/^Escanteios: \d+ x \d+\.?$/.test(t)?INS.corners:null);if(x)return x;
+  x=st(/^Faltas/i,'Faltas',H.fouls,A.fouls,i0,null,true,INS.fouls);if(x)return x;
+  if(/^PPDA/i.test(t)&&has.ppda)return R('Pressão (PPDA)',cmpV('',H.ppda,A.ppda,n=>numPT(n),'menor = pressão mais alta',true));
+  if(/^Grandes chances/i.test(t)&&H.big!=null)return R('Grandes chances',cmpV('',H.big,A.big,i0));
+  if(/^Cartões:/i.test(t)&&H.yellow!=null)return R('Cartões',cmpV('',(H.yellow||0)+(H.red||0),(A.yellow||0)+(A.red||0),i0,`vermelhos: ${H.red||0} x ${A.red||0}`,true));
+  if(/^Gols no 1º tempo/i.test(t)&&c.goals&&c.goals.length)return R(kick||'Gols',{k:'goals',max:Math.max(90,...c.goals.map(g=>g.m)),h:vzTeam(c,'h'),a:vzTeam(c,'a'),list:c.goals.slice().sort((p,q)=>p.m-q.m).map(g=>({m:g.m,label:g.label,side:g.side,name:lastName(g.player)}))});
+  if(/^Gols:/i.test(t)&&c.goals&&c.goals.length){const G=c.goals.slice().sort((p,q)=>p.m-q.m);const nh=G.filter(g=>g.side==='h').length;return {kick:'Gols',v:{k:'goals',max:Math.max(90,...G.map(g=>g.m)),h:vzTeam(c,'h'),a:vzTeam(c,'a'),list:G.map(g=>({m:g.m,label:g.label,side:g.side,name:lastName(g.player)}))},t:`${G.length} gol(s): ${nh} do ${H.name} e ${G.length-nh} do ${A.name}. ${G.map(g=>`${g.label} ${g.player}${g.type==='pênalti'?' (pênalti)':g.type==='gol contra'?' (contra)':''}`).join(' · ')}.`};}
+  const fun=t.match(/^(.+?): (\d+) finalizações, (\d+) no alvo.*?(\d+) gol/);if(fun){const s=fun[1]===H.name?'h':fun[1]===A.name?'a':null;if(s)return {kick:'Funil de ataque',v:{k:'funnel',e:vzTeam(c,s),steps:[{v:+fun[2],l:'finalizações'},{v:+fun[3],l:'no alvo'},{v:+fun[4],l:'gol(s)'}]},t:body};}
+  const pm=t.match(/percentil (\d+)/i);if(pm){const lab=(kick||t.split(':')[0]).trim();const raw=(t.match(/\(([^)]*\)?)\)/)||[])[1]||'';const pv=+pm[1];const extra=t.split(/\)\.\s*/).slice(1).join('. ').trim();return {kick:'Percentil',v:{k:'pct',v:pv,lab,raw:raw.replace(/\)$/,''),e:fP?vzPl(c,fP):null},t:`${lab}: melhor que ${pv}% dos jogadores de linha desta partida. ${pv>=80?'É ponto forte.':pv>=60?'Acima da média.':pv>=40?'Na média.':'Ponto a melhorar.'}${extra?' '+extra:''}`};}
+ }
+ // jogadores citados
+ const PL=vzPlayerIn(c,t);
+ if(PL.length>=2&&/ x /.test(t)){const m=t.match(/^(?:[^:]+:\s*)?(.+?) ([\d,]+) x ([\d,]+) (.+?)\.?$/);if(m){const p1=PL.find(p=>m[1].endsWith(p.name)),p2=PL.find(p=>m[4].startsWith(p.name));if(p1&&p2&&p1!==p2){const n=s=>parseFloat(s.replace(',','.'));const v1=n(m[2]),v2=n(m[3]);return {kick:kick||'Duelo',v:{k:'cmp',h:{...vzPl(c,p1),v:v1,txt:m[2],lab:lastName(p1.name)},a:{...vzPl(c,p2),v:v2,txt:m[3],lab:lastName(p2.name)}},t:v1===v2?`Empate nesse quesito entre ${p1.name} e ${p2.name}.`:`Vantagem de ${v1>v2?p1.name:p2.name}: ${m[2]} x ${m[3]}${kick?` em ${kick.toLowerCase()}`:''}.`};}}}
+ if(PL.length&&PL[0].rating>0)return {kick:kick||(/^\d\./.test(t)?`${t.match(/^(\d)\./)[1]}º lugar`:PL[0].gk?'Goleiro':'Jogador'),v:vzPlayerCard(c,PL[0]),t:body};
+ // minuto de lance
+ const mm=t.match(/^(\d{1,3}(?:\+\d+)?)'/);if(mm){const p=PL[0];const side=/\bdo ([^:,.]+)/.exec(t);const s=side&&side[1]===A.name?'a':side&&side[1]===H.name?'h':null;return {kick:/Gol/i.test(t)?'Gol':/Expuls|vermelho/i.test(t)?'Expulsão':/Amarelo|amarelo/.test(t)?'Cartão':'Lance',v:{k:'big',txt:mm[1]+"'",lab:'',e:p?vzPl(c,p):s?vzTeam(c,s):null},t:t.replace(/^\d{1,3}(?:\+\d+)?'\s*·?\s*/,'')};}
+ // time citado com dois números: comparação
+ const hi=t.indexOf(H.name),ai=t.indexOf(A.name);
+ const nums=[...t.matchAll(/(-?\d+(?:,\d+)?)(%?)/g)].filter(m=>!/^\d{4}$/.test(m[1]));
+ if(hi>=0&&ai>=0&&nums.length>=2&&!PL.length){const a1=nums.find(n=>n.index>hi),a2=nums.find(n=>n.index>ai);if(a1&&a2&&a1!==a2){const n=s=>parseFloat(s.replace(',','.'));return R(kick||'Comparativo',cmpV('',n(a1[1]),n(a2[1]),v=>(String(v).replace('.',','))+(a1[2]||'')));}}
+ // um número em destaque
+ const sc=t.match(/\b(\d+x\d+)\b/);
+ if(nums.length||sc){let txt,lab='';if(sc){txt=sc[1].replace('x',' × ');lab='placar';}else{const score=m=>(m[2]?3:0)+(+m[1].replace(',','.')!==0?2:0);const m=nums.slice().sort((p,q)=>score(q)-score(p)||p.index-q.index)[0];txt=m[1]+(m[2]||'');const after=t.slice(m.index+m[0].length).match(/^\s*([^\d.,;:()]{2,40})/);lab=after?after[1].trim().split(/\s+/).slice(0,4).join(' '):'';}
+  const e=PL[0]?vzPl(c,PL[0]):fP?vzPl(c,fP):hi>=0&&ai<0?vzTeam(c,'h'):ai>=0&&hi<0?vzTeam(c,'a'):null;return {kick:kick||fmtName||'Em números',v:{k:'big',txt,lab,e},t:body.replace(/\s+/g,' ')};}
+ // sem números: frase de destaque
+ const es=[];if(hi>=0)es.push(vzTeam(c,'h'));if(ai>=0)es.push(vzTeam(c,'a'));if(PL[0])es.unshift(vzPl(c,PL[0]));else if(fP)es.unshift(vzPl(c,fP));
+ return {kick:kick||'',v:{k:'quote',es},t:body};
+}
+// junta frases curtas sem dado ao slide anterior e limita a quantidade de slides
+function vizItems(c,blocks,fmtName,max,fmtId){
+ const it=[];let lead='';blocks.forEach(b=>{let t=String(b);const weak=!/\d/.test(t)&&t.length<80&&!vzPlayerIn(c,t).length;if(weak&&it.length){it[it.length-1].note=(it[it.length-1].note?it[it.length-1].note+' ':'')+t;return;}if(weak&&!it.length){lead=(lead+' '+t).trim();return;}let e=null;try{e=vizFor(c,t,fmtName,fmtId);}catch(err){console.error(err);e=null;}const x={src:(lead?lead+' ':'')+t,kick:e?e.kick:'',v:e?e.v:null,t:e?e.t:t};if(lead){x.t=lead+' '+x.t;lead='';}it.push(x);});
+ if(lead&&!it.length)it.push({src:lead,kick:'',v:{k:'quote',es:[]},t:lead});
+ while(it.length>max){const a=it.pop();it[it.length-1].note=((it[it.length-1].note||'')+' '+a.src).trim();}
+ return it;
+}
+const vizBlockHTML=(x,story)=>`${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${x.v?`<div class="viz" data-viz="${esc(JSON.stringify(x.v))}">${vizSVG(x.v)}</div>`:''}<p class="${x.v?'sm':''}">${esc(x.t)}${x.note?`<span class="note">${esc(x.note)}</span>`:''}</p>`;
+
 /* ---- escudos e fotos nos posts ---- */
 const prox=u=>!u?'':/^https:\/\/media\.api-sports\.io\//.test(u)?'/api/logo?u='+encodeURIComponent(u):/^data:image\//.test(u)?u:'';
 const tCode=T=>T.short||(T.team&&T.team.short)||teamCode(T.name);
@@ -1617,17 +1792,17 @@ function compose(c,f,tone,plat,r){
  const dt=c.m.off===0?'hoje':shortDate(c.m.date);const liveNote=c.live?` (parcial, ${c.minute})`:'';
  let html='',text='';
  if(plat==='ig'){
-  let sl=blocks.slice();while(sl.length>7){const a=sl.splice(-2);sl.push(a.join(' '));}const N=sl.length+2;
+  const its=vizItems(c,blocks,f.name,7,f.id);const sl=its.map(x=>x.src+(x.note?' '+x.note:''));const N=its.length+2;
   const ph=featPhoto(c,f),cvi=coverImage(c),aseed=f.id+(c.id||c.score);html=`<div class="slides"><div class="slide cover">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}<div class="sn"><span>${esc(c.lg.short)} · ${dt}</span><span>1/${N}</span></div>${mxHTML(c)}<h5>${esc(out.head)}</h5><div class="bsrow"><div style="min-width:0"><div class="bs num">${esc(out.stat[0])}</div><div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div>${ph?`<img class="pp" src="${esc(ph)}" alt="" crossorigin="anonymous">`:''}</div><div class="rule"></div><div class="foot"><span>@tel.score</span><span>arraste →</span></div></div>
-   ${sl.map((b,i)=>`<div class="slide">${artDiv(artKindFor(aseed,i),false)}<div class="sn"><span>${esc(f.name)}</span><span>${i+2}/${N}</span></div>${mediaFor(c,b)}<p>${esc(b)}</p><div class="foot"><span>@tel.score</span><span>${esc(c.score)}</span></div></div>`).join('')}
+   ${its.map((x,i)=>`<div class="slide${x.v?' vz':''}">${artDiv(artKindFor(aseed,i),false)}<div class="sn"><span>${esc(f.name)}</span><span>${i+2}/${N}</span></div>${x.v?vizBlockHTML(x):`${mediaFor(c,x.src)}<p>${esc(x.src)}</p>`}<div class="foot"><span>@tel.score</span><span>${esc(c.score)}</span></div></div>`).join('')}
    <div class="slide cta">${artDiv('ball',true)}<div class="sn"><span>TEL.SCORE</span><span>${N}/${N}</span></div>${mxHTML(c)}<h5>${tone.emoji?'Curtiu? Salva e manda pro grupo':'Salve para consultar depois'}</h5><p style="margin:0 0 auto;font-size:13.5px">${esc(close)}</p><div class="foot"><span>@tel.score</span><span>placar · análise</span></div></div></div>`;
   const cap=[open,out.head+em(),blocks[0],tone.emoji?'Arraste para ver tudo ➡️':'Arraste para ver a análise completa.',close,'',tags].filter((x,i)=>x||i===5).join('\n');
   html+=`<div class="caption"><div class="who">${AV}tel.score</div>${esc(cap)}</div>`;
   text=`[CARROSSEL ${N} SLIDES · 1080×1350]\n\nSlide 1: ${out.head} | ${out.stat[0]} (${out.stat[1]})\n${sl.map((b,i)=>`Slide ${i+2}: ${b}`).join('\n')}\nSlide ${N}: ${close}\n\nLEGENDA:\n${cap}`;
  } else if(plat==='story'){
   const poll=out.poll||[pick(r,['Concorda com a análise?','Você viu esse jogo?','Esse número te surpreendeu?']),['Sim','Não']];
-  const fr=[{h:out.head,s:out.stat},{p:blocks[0]},{p:blocks[Math.min(2,blocks.length-1)],poll},{h:tone.emoji?'Análise completa no feed 👆':'Análise completa no feed'}];
-  const cvi=coverImage(c),aseed=f.id+(c.id||c.score);html=`<div class="stories">${fr.map((x,i)=>`<div class="story">${i===0?artDiv('lights',false,true)+coverBgDiv(cvi):artDiv(i===fr.length-1?'ball':artKindFor(aseed,i,true),false,true)}<div class="bars">${fr.map((_,j)=>`<i class="${j<=i?'on':''}"></i>`).join('')}</div><div style="display:flex;align-items:center;gap:6px;font-size:11px">${AV.replace('class="avatar"','class="avatar" style="width:22px;height:22px"')}tel.score</div>${i===0?mxHTML(c):''}${x.h?`<h5>${esc(x.h)}</h5>`:''}${x.s?`<div class="bs num">${esc(x.s[0])}</div><div style="font-family:var(--f-mono);font-size:10px;opacity:.75">${esc(x.s[1])}</div>`:''}${i===0&&featPhoto(c,f)?`<img class="pp" src="${esc(featPhoto(c,f))}" alt="" crossorigin="anonymous">`:''}${x.p?`${mediaFor(c,x.p)}<p>${esc(x.p)}</p>`:''}${x.poll?`<div class="sticker"><b>${esc(x.poll[0])}</b>${x.poll[1].slice(0,4).map(o=>`<span>${esc(o)}</span>`).join('')}</div>`:''}</div>`).join('')}</div>`;
+  const sits=vizItems(c,blocks,f.name,6,f.id);const fr=[{h:out.head,s:out.stat},{p:sits[0]?sits[0].src:blocks[0],it:sits[0]},{p:blocks[Math.min(2,blocks.length-1)],poll},{h:tone.emoji?'Análise completa no feed 👆':'Análise completa no feed'}];
+  const cvi=coverImage(c),aseed=f.id+(c.id||c.score);html=`<div class="stories">${fr.map((x,i)=>`<div class="story">${i===0?artDiv('lights',false,true)+coverBgDiv(cvi):artDiv(i===fr.length-1?'ball':artKindFor(aseed,i,true),false,true)}<div class="bars">${fr.map((_,j)=>`<i class="${j<=i?'on':''}"></i>`).join('')}</div><div style="display:flex;align-items:center;gap:6px;font-size:11px">${AV.replace('class="avatar"','class="avatar" style="width:22px;height:22px"')}tel.score</div>${i===0?mxHTML(c):''}${x.h?`<h5>${esc(x.h)}</h5>`:''}${x.s?`<div class="bs num">${esc(x.s[0])}</div><div style="font-family:var(--f-mono);font-size:10px;opacity:.75">${esc(x.s[1])}</div>`:''}${i===0&&featPhoto(c,f)?`<img class="pp" src="${esc(featPhoto(c,f))}" alt="" crossorigin="anonymous">`:''}${x.it&&x.it.v?vizBlockHTML(x.it,true):x.p?`${mediaFor(c,x.p)}<p>${esc(x.p)}</p>`:''}${x.poll?`<div class="sticker"><b>${esc(x.poll[0])}</b>${x.poll[1].slice(0,4).map(o=>`<span>${esc(o)}</span>`).join('')}</div>`:''}</div>`).join('')}</div>`;
   text=fr.map((x,i)=>`STORY ${i+1}: ${x.h||''}${x.s?' | '+x.s[0]+' ('+x.s[1]+')':''}${x.p?x.p:''}${x.poll?`\n  [Enquete] ${x.poll[0]} → ${x.poll[1].join(' / ')}`:''}`).join('\n');
  } else if(plat==='x'){
   const tw=[[open,out.head+(tone.emoji?' 🧵':''),`${out.stat[0]}: ${out.stat[1]}${liveNote}`].filter(Boolean).join('\n\n'),...blocks.map(b=>b+em()),[close,tags].filter(Boolean).join('\n\n')];
@@ -2654,6 +2829,60 @@ const PRE_FORMATS=[
  b.push({t:'O resultado da enquete sai no pós-jogo, junto com a análise.'});
  return {head:pick(r,[`Quem vence ${H.name} x ${A.name}?`,'Seu palpite vale ouro','Vota aí!']),stat:[`${H.short} × ${A.short}`,'quem leva?'],blocks:b,poll:['Quem vence?',[H.name,'Empate',A.name]]};}}
 ];
+/* ---- formatos extras de pós-jogo ---- */
+const posGrp=p=>p.gk?'G':/defens|zag|lateral/i.test(p.posName||'')||p.pos==='DEF'||p.pos==='D'?'D':/atac|centroav|ponta/i.test(p.posName||'')||p.pos==='ATA'||p.pos==='F'?'F':'M';
+const sumP=(c,s,k)=>c.players.filter(p=>p.side===s).reduce((t,p)=>t+(+p[k]||0),0);
+RFORMATS.push(
+{id:'frente',cat:'Tática',name:'Frente a frente',desc:'Todas as estatísticas lado a lado',visual:'Barras comparativas com escudos',need:c=>!!(c.has.shots||c.has.poss),run(c,r){const H=c.H,A=c.A,b=[];let wh=0,wa=0;const cnt=(h,a,low)=>{if(h==null||a==null||h===a)return;((low?h<a:h>a)?wh++:wa++);};
+ if(c.has.poss){b.push({t:`Posse: ${H.name} ${Math.round(H.poss)}% x ${Math.round(A.poss)}% ${A.name}.`});cnt(H.poss,A.poss);}
+ if(c.has.shots){b.push({t:`Finalizações: ${H.shots} a ${A.shots}, com ${H.sot} x ${A.sot} no alvo.`});cnt(H.shots,A.shots);}
+ if(c.has.xg){b.push({t:`xG: ${f2(H.xg)} x ${f2(A.xg)}.`,why:RWHY.xg});cnt(H.xg,A.xg);}
+ if(H.passes!=null){b.push({t:`Passes: ${H.passes} x ${A.passes}${H.acc!=null?`, com ${Math.round(H.acc)}% x ${Math.round(A.acc)}% de acerto`:''}.`});cnt(H.passes,A.passes);}
+ if(H.corners!=null){b.push({t:`Escanteios: ${H.corners} x ${A.corners}.`});cnt(H.corners,A.corners);}
+ if(H.fouls!=null){b.push({t:`Faltas: ${H.fouls} do ${H.name} e ${A.fouls} do ${A.name}.`});cnt(H.fouls,A.fouls,true);}
+ if(H.saves!=null&&A.saves!=null)b.push({t:`Defesas do goleiro: ${H.name} ${H.saves} x ${A.saves} ${A.name}.`});
+ const lead=wh>=wa?H:A;b.push({t:`Placar das estatísticas: ${H.name} ${wh} x ${wa} ${A.name}. Quem venceu mais duelos de números foi o ${lead.name}.`});
+ return {head:pick(r,[`${H.name} x ${A.name}: frente a frente`,'Estatística por estatística','Quem venceu cada duelo de números']),stat:[`${wh} × ${wa}`,'estatísticas vencidas'],blocks:b};}},
+{id:'selecao',cat:'Jogador',name:'Seleção do jogo',desc:'Os melhores de cada setor',visual:'Cards dos jogadores com nota',need:c=>!!(c.has.players&&c.players.filter(p=>p.rating>0).length>=6),run(c,r){const b=[];const best=g=>c.players.filter(p=>p.rating>0&&posGrp(p)===g).sort((x,y)=>y.rating-x.rating);
+ const pick1=(g,lab)=>{const p=best(g)[0];if(p)b.push({t:`${lab}: ${p.name} (${p.tn}), nota ${f1(p.rating)}.`});return p;};
+ const gk=pick1('G','Goleiro');const d=best('D').slice(0,2),m=best('M').slice(0,2),f=best('F').slice(0,2);
+ d.forEach((p,i)=>b.push({t:`Defesa ${i+1}: ${p.name} (${p.tn}), nota ${f1(p.rating)}, ${p.def} ações defensivas.`}));
+ m.forEach((p,i)=>b.push({t:`Meio ${i+1}: ${p.name} (${p.tn}), nota ${f1(p.rating)}, ${p.key} passes-chave.`}));
+ f.forEach((p,i)=>b.push({t:`Ataque ${i+1}: ${p.name} (${p.tn}), nota ${f1(p.rating)}, ${p.goals} gol(s).`}));
+ const all=[gk,...d,...m,...f].filter(Boolean);const avg=all.length?all.reduce((t,p)=>t+p.rating,0)/all.length:0;
+ return {head:pick(r,['A seleção do jogo','Os melhores de cada setor',`O time ideal de ${c.score}`]),stat:[f1(avg),'nota média da seleção'],blocks:b};}},
+{id:'disciplina',cat:'Pós-jogo',name:'Jogo pegado?',desc:'Faltas, cartões e duelos',visual:'Barras de faltas e cartões',need:c=>c.H.fouls!=null&&c.A.fouls!=null,run(c,r){const H=c.H,A=c.A,b=[];
+ b.push({t:`Faltas: ${H.fouls} do ${H.name} e ${A.fouls} do ${A.name}.`});
+ b.push({t:`Cartões: ${(H.yellow||0)+(H.red||0)} x ${(A.yellow||0)+(A.red||0)}.`});
+ if(c.has.players){const dh=sumP(c,'h','duelsW'),da=sumP(c,'a','duelsW');b.push({t:`Duelos vencidos: ${H.name} ${dh} x ${da} ${A.name}.`});
+  const top=maxBy(c.players.filter(p=>p.duels>0),p=>p.duelsW);if(top)b.push({t:`${top.name} venceu ${top.duelsW} de ${top.duels} duelos, o melhor da partida no corpo a corpo.`});}
+ const tot=H.fouls+A.fouls;b.push({t:tot>=28?`${tot} faltas no total: jogo truncado, com muitas interrupções.`:tot<=18?`Só ${tot} faltas no total: jogo limpo e corrido.`:`${tot} faltas no total, dentro da média de um jogo comum.`});
+ return {head:pick(r,['Foi jogo pegado?','O lado físico do jogo',`${c.score}: faltas, cartões e duelos`]),stat:[String(H.fouls+A.fouls),'faltas no jogo'],blocks:b};}},
+{id:'goleiros',cat:'Jogador',name:'Duelo de goleiros',desc:'Quem fechou o gol',visual:'Cards dos dois goleiros',need:c=>c.players.filter(p=>p.gk&&p.rating>0).length>=2,run(c,r){const H=c.H,A=c.A,b=[];const g=s=>maxBy(c.players.filter(p=>p.gk&&p.side===s),p=>p.mins);const gh=g('h'),ga=g('a');
+ [gh,ga].forEach(p=>{if(p)b.push({t:`${p.name} (${p.tn}): nota ${f1(p.rating)} em ${p.mins} minutos.`});});
+ if(H.saves!=null&&A.saves!=null)b.push({t:`Defesas: ${H.name} ${H.saves} x ${A.saves} ${A.name}.`});
+ if(c.has.shots)b.push({t:`Chutes no alvo sofridos: ${H.name} ${A.sot} x ${H.sot} ${A.name}.`});
+ const best=gh&&ga?(gh.rating>=ga.rating?gh:ga):gh||ga;if(best)b.push({t:`Melhor goleiro em campo: ${best.name}, nota ${f1(best.rating)}.`});
+ return {head:pick(r,['Duelo de goleiros','Quem fechou o gol?','Os paredões do jogo']),stat:[best?f1(best.rating):'–',best?`nota de ${lastName(best.name)}`:'nota'],blocks:b};}},
+{id:'dominio',cat:'Tática',name:'Quem mandou no jogo',desc:'Índice de domínio em 4 números',visual:'Barras de domínio por estatística',need:c=>!!(c.has.poss&&c.has.shots),run(c,r){const H=c.H,A=c.A,b=[];const sh=(h,a)=>(h+a)?h/(h+a):.5;
+ const parts=[['Posse',sh(H.poss,A.poss)],['Finalizações',sh(H.shots,A.shots)]];if(H.passes!=null)parts.push(['Passes',sh(H.passes,A.passes)]);if(H.corners!=null)parts.push(['Escanteios',sh(H.corners,A.corners)]);if(c.has.xg)parts.push(['xG',sh(H.xg,A.xg)]);
+ const idx=Math.round(parts.reduce((t,p)=>t+p[1],0)/parts.length*100);const D=idx>=50?H:A,dv=idx>=50?idx:100-idx;
+ b.push({t:`Posse: ${H.name} ${Math.round(H.poss)}% x ${Math.round(A.poss)}% ${A.name}.`});
+ b.push({t:`Finalizações: ${H.shots} a ${A.shots}, com ${H.sot} x ${A.sot} no alvo.`});
+ if(H.passes!=null)b.push({t:`Passes: ${H.passes} x ${A.passes}.`});
+ if(H.corners!=null)b.push({t:`Escanteios: ${H.corners} x ${A.corners}.`});
+ b.push({t:`Índice de domínio TEL.SCORE: ${H.name} ${idx}% x ${100-idx}% ${A.name}. É a média da fatia de cada time em ${parts.map(p=>p[0].toLowerCase()).join(', ')}.`});
+ b.push({t:dv>=60?`O ${D.name} mandou no jogo${(D===H?H.goals<=A.goals:A.goals<=H.goals)?', mas o placar não acompanhou':''}.`:dv>=53?`Leve controle do ${D.name}.`:'Jogo dividido: ninguém dominou de verdade.'});
+ return {head:pick(r,['Quem mandou no jogo?','O índice de domínio',`${c.score}: quem controlou`]),stat:[`${dv}%`,`domínio do ${D.name}`],blocks:b};}},
+{id:'escondidos',cat:'Engajamento',name:'Números que ninguém viu',desc:'5 dados escondidos do jogo',visual:'Cards de jogador com o número em destaque',need:c=>!!(c.has.players&&c.players.length>=10),run(c,r){const b=[];const used=new Set();
+ const add=(fn,txt)=>{const pool=c.players.filter(p=>!used.has(p.id)&&fn(p)>0);if(!pool.length)return;const p=maxBy(pool,fn);used.add(p.id);b.push({t:txt(p)});};
+ add(p=>p.duelsW,p=>`${p.name} venceu ${p.duelsW} duelos, o maior número da partida.`);
+ add(p=>p.key,p=>`${p.name} deu ${p.key} passes-chave, quem mais criou chances.`);
+ add(p=>p.def,p=>`${p.name} somou ${p.def} ações defensivas: desarmes, interceptações e bloqueios.`);
+ add(p=>p.drib,p=>`${p.name} acertou ${p.drib} dribles, mais que qualquer outro em campo.`);
+ add(p=>p.passes,p=>`${p.name} trocou ${p.passes} passes${p.acc?` com ${p.acc}% de acerto`:''}, o motor do time.`);
+ return {head:pick(r,['5 números que ninguém viu','O que a TV não mostrou','Os números escondidos do jogo']),stat:[String(b.length),'números escondidos'],blocks:b};}}
+);
 RFORMATS.forEach(f=>{const n=f.need;f.need=c=>!c.pre&&n(c);});RFORMATS.unshift(...PRE_FORMATS);
 const RFCAT=[...new Set(RFORMATS.map(f=>f.cat))];
 const RTONES=TONES.map(t=>t.id!=='jornalistico'?t:{...t,open:[c=>`${c.H.name} e ${c.A.name} se enfrentaram pela ${c.lg.name}${c.stadium?`, no ${c.stadium}`:''}.`,c=>`Análise | ${c.score}`,c=>`${c.lg.name}: ${c.score}.`],close:[c=>'Os dados ajudam a explicar o resultado e o que vem pela frente.',c=>c.has.ref?`Arbitragem de ${c.ref.name}. Dados: ${c.source}.`:`Dados: ${c.source}.`,c=>`Números TEL.SCORE a partir de dados ${c.source}.`]});
@@ -2881,7 +3110,7 @@ function drawPhoto(ctx,img,cx,cy,r){
 function loadImg(src){return new Promise(res=>{if(!src)return res(null);const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=src;setTimeout(()=>res(i.complete&&i.naturalWidth?i:null),6000);});}
 async function drawLayers(ctx,el,W,H,cta){
  const art=el.querySelector('.sart'),bg=el.querySelector('.sbg');
- if(art){const im=await loadImg(artSVG(art.dataset.art,W,H,cta));if(im)ctx.drawImage(im,0,0,W,H);}
+ if(art){const im=await loadImg(artSVG(art.dataset.art,W,H,cta));if(im){ctx.save();if(el.querySelector('.viz'))ctx.globalAlpha=.4;ctx.drawImage(im,0,0,W,H);ctx.restore();}}
  if(bg){const im=await loadImg(bg.dataset.bg);if(im&&im.naturalWidth){const k=Math.max(W/im.naturalWidth,H/im.naturalHeight),w=im.naturalWidth*k,h=im.naturalHeight*k;ctx.drawImage(im,(W-w)/2,(H-h)/2,w,h);
   const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(12,12,15,.28)');g.addColorStop(.4,'rgba(12,12,15,.6)');g.addColorStop(.72,'rgba(12,12,15,.86)');g.addColorStop(1,'rgba(12,12,15,.96)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   const r=ctx.createRadialGradient(W,0,0,W,0,W*.9);r.addColorStop(0,'rgba(255,37,51,.35)');r.addColorStop(1,'rgba(255,37,51,0)');ctx.fillStyle=r;ctx.fillRect(0,0,W,H);}}
@@ -2891,6 +3120,22 @@ function drawMedia(ctx,el,x,y,maxW){
  if(m.classList.contains('teams')){const cs=[...m.querySelectorAll('.mxc')];cs.forEach((n,i)=>drawCrest(ctx,n,x+56+i*130,y+56,56));return 112;}
  const img=m.querySelector('img'),sp=m.querySelector('span');const nm=sp?sp.childNodes[0].textContent:'',tm=sp&&sp.querySelector('small')?sp.querySelector('small').textContent:'';
  drawPhoto(ctx,img,x+66,y+66,62);ctx.save();ctx.fillStyle='#fff';ctx.textAlign='left';ctx.font=`700 46px ${CV.body}`;ctx.fillText(nm.length>26?nm.slice(0,25)+'…':nm,x+160,y+60);ctx.globalAlpha=.7;ctx.font=`400 36px ${CV.body}`;ctx.fillText(tm,x+160,y+108);ctx.restore();return 132;
+}
+async function drawVizBody(ctx,el,W,P,top,bottom,story){
+ const vz=el.querySelector('.viz');let v;try{v=JSON.parse(vz.dataset.viz);}catch(e){return;}
+ const kick=el.querySelector('.kick'),pEl=el.querySelector('p');const note=pEl&&pEl.querySelector('.note');
+ const main=pEl?[...pEl.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():'';
+ const maxW=W-2*P,vh=vizHeight(v,maxW);
+ const T=main?fitText(ctx,main,CV.body,story?60:52,story?40:36,maxW,story?6:5,500):{s:0,L:[]};const lh=T.s*1.36;
+ const ns=story?36:32;ctx.font=`400 ${ns}px ${CV.mono}`;const NL=note?wrapLines(ctx,note.textContent,maxW).slice(0,story?4:3):[];
+ const kh=kick?72:0,ph=T.L.length*lh,nh=NL.length?NL.length*(ns*1.35)+20:0,gap=T.L.length?54:0;
+ const avail=bottom-top;const k=Math.min(1,Math.max(.55,(avail-kh-gap-ph-nh)/vh));const total=kh+vh*k+gap+ph+nh;
+ let y=top+Math.max(0,(avail-total)/2);
+ if(kick){ctx.save();ctx.fillStyle=CV.red;ctx.font=`700 ${story?40:36}px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(kick.textContent.toUpperCase(),P,y+38);ctx.restore();y+=kh;}
+ ctx.save();ctx.translate(P+(maxW-maxW*k)/2,y);ctx.scale(k,k);await vizDraw(ctx,v,0,0,maxW);ctx.restore();y+=vh*k+gap;
+ ctx.save();ctx.fillStyle='#fff';ctx.textAlign='left';ctx.font=`500 ${T.s}px ${CV.body}`;T.L.forEach(l=>{ctx.fillText(l,P,y+T.s*.9);y+=lh;});
+ if(NL.length){y+=20;ctx.globalAlpha=.7;ctx.font=`400 ${ns}px ${CV.mono}`;NL.forEach(l=>{ctx.fillText(l,P,y+ns);y+=ns*1.35;});}
+ ctx.restore();
 }
 async function drawSlide(el){
  const W=1080,H=1350,P=78,cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');
@@ -2922,6 +3167,8 @@ async function drawSlide(el){
   const block=T.L.length*lh+40+pl.length*82;let y=Math.max(topLimit+T.s,(H-block)/2+T.s*.8);
   ctx.fillStyle='#fff';ctx.font=`900 ${T.s}px ${CV.display}`;T.L.forEach(l=>{ctx.fillText(l,P,y);y+=lh;});y+=40;
   ctx.font=`500 58px ${CV.body}`;pl.forEach(l=>{ctx.fillText(l,P,y);y+=82;});
+ }else if(el.querySelector('.viz')){
+  await drawVizBody(ctx,el,W,P,P+80,H-P-60,false);
  }else if(p){
   const hasM=!!el.querySelector('.smed');const T=fitText(ctx,p.textContent,CV.body,68,40,maxW,hasM?10:12,500);const lh=T.s*1.42;const mh=hasM?150:0;const block=T.L.length*lh+mh;let top=(H-block)/2;
   if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}let y=top+T.s*.8;
@@ -2934,6 +3181,7 @@ async function drawStory(el,idx,total){
  cvBackground(ctx,W,H,false,'bl');await drawLayers(ctx,el,W,H,false);const maxW=W-2*P;
  const bw=(W-2*P-(total-1)*16)/total;for(let i=0;i<total;i++){ctx.fillStyle=i<=idx?'#fff':'rgba(255,255,255,.35)';ctx.fillRect(P+i*(bw+16),P,bw,10);}
  cvLogo(ctx,P,P+40,40);ctx.fillStyle='#fff';ctx.font=`600 44px ${CV.body}`;ctx.textAlign='left';ctx.fillText('tel.score',P+100,P+96);
+ if(el.querySelector('.viz')&&!el.querySelector('.sticker')){await drawVizBody(ctx,el,W,P,P+170,H-P-60,true);return cv;}
  const h5=el.querySelector('h5'),bs=el.querySelector('.bs'),p=el.querySelector('p'),st=el.querySelector('.sticker');
  const lab=bs&&bs.nextElementSibling&&!bs.nextElementSibling.matches('p,.sticker,.pp')?bs.nextElementSibling.textContent:'';
  const mxEl=el.querySelector('.mx');const topLimit=mxEl?drawMx(ctx,mxEl,P,W-P,P+190,100,'#fff')+60:P+190;ctx.textAlign='left';
