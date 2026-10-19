@@ -12,6 +12,7 @@ Navegador  →  /api/football (função na Vercel, guarda a chave)  →  API-Foo
 
 - `index.html`: o site inteiro (visual, telas e lógica).
 - `api/football.js`: função de servidor que chama a API-Football com a chave secreta e devolve só os dados necessários.
+- `api/logo.js`: entrega escudos dos times e fotos dos jogadores (servidor de mídia da API-Football) pelo endereço do próprio site, para que apareçam nos posts e nas imagens baixadas.
 - `api/statsbomb.js`: função de servidor que lê os dados abertos da StatsBomb e transforma os eventos de um jogo (passes, chutes, pressões) em análise tática compacta. Não precisa de chave.
 
 Se a função não responder (site aberto direto do computador, chave ausente ou erro na API), o site entra sozinho em **modo demonstração** e mostra o motivo no topo da página.
