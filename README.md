@@ -12,6 +12,7 @@ Navegador  →  /api/football (função na Vercel, guarda a chave)  →  API-Foo
 
 - `index.html`: o site inteiro (visual, telas e lógica).
 - `api/football.js`: função de servidor que chama a API-Football com a chave secreta e devolve só os dados necessários.
+- `api/statsbomb.js`: função de servidor que lê os dados abertos da StatsBomb e transforma os eventos de um jogo (passes, chutes, pressões) em análise tática compacta. Não precisa de chave.
 
 Se a função não responder (site aberto direto do computador, chave ausente ou erro na API), o site entra sozinho em **modo demonstração** e mostra o motivo no topo da página.
 
@@ -22,7 +23,9 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 | Partidas (hoje, dias anteriores e próximos) | API-Football |
 | Central do jogo: placar, lance a lance, escalações, estatísticas, notas dos jogadores, árbitro | API-Football |
 | Ligas: classificação | API-Football |
-| Análise tática e estúdio de posts | Demonstração (próxima etapa) |
+| Análise tática · jogos atuais (hoje e ontem): linha do tempo, comparativo, destaques, força por setor, radar | API-Football |
+| Análise tática · arquivo histórico: xG por chute, mapa de finalizações, rede de passes, mapa de calor, radar, PPDA, field tilt | StatsBomb Open Data |
+| Estúdio de posts | Demonstração (próxima etapa) |
 
 ## Configuração na Vercel
 
@@ -52,4 +55,5 @@ Estão na lista `RL` dentro do `index.html` (procure por "Ligas acompanhadas"). 
 
 ## Créditos
 
-Dados de partidas: [API-Football](https://www.api-football.com). Escudos e logos servidos pela própria API.
+- Dados de partidas: [API-Football](https://www.api-football.com). Escudos e logos servidos pela própria API.
+- Dados de evento da análise tática: [StatsBomb Open Data](https://github.com/statsbomb/open-data). Pelos termos da StatsBomb, toda análise publicada com esses dados deve citar a StatsBomb como fonte e usar a logo deles (disponível no Media Pack da StatsBomb).
