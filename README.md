@@ -25,7 +25,7 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 | Ligas: classificação | API-Football |
 | Análise tática · jogos atuais (hoje e ontem): linha do tempo, comparativo, destaques, força por setor, radar | API-Football |
 | Análise tática · arquivo histórico: xG por chute, mapa de finalizações, rede de passes, mapa de calor, radar, PPDA, field tilt | StatsBomb Open Data |
-| Estúdio de posts | Demonstração (próxima etapa) |
+| Estúdio de posts: 28 formatos × 6 plataformas × 5 tons, com jogos atuais (últimos 7 dias) e arquivo histórico | API-Football e StatsBomb Open Data |
 
 ## Configuração na Vercel
 
