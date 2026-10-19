@@ -438,6 +438,11 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-bet
 .cm-pick select{min-width:0}
 #lab-comp{max-width:280px}
 @media (max-width:720px){.cm-pick select,#lab-comp{width:100%;max-width:100%}}
+.pre-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.tile-plain b{font-family:var(--f-body);font-size:13px;font-weight:600;display:inline;text-align:right}
+.crew div{flex-wrap:wrap;align-items:center}
+.form{flex-wrap:wrap}
+@media (max-width:720px){.pre-2{grid-template-columns:minmax(0,1fr)}}
 /* ---------- responsivo ---------- */
 @media (max-width:1080px){
   .pd-layout,.lg-layout,.studio,.cm-grid{grid-template-columns:minmax(0,1fr)}
@@ -1677,10 +1682,13 @@ async function renderCentroReal(){
  else if(st.k==='pre'){const mins=Math.max(0,Math.round((new Date(f.fixture.date)-NOW())/60000));rp=`<span style="font-size:13px">Começa em ${durTxt(mins)}. As escalações costumam sair de 20 a 40 minutos antes do jogo.</span>`;}
  else rp=`<span style="font-size:13px">${esc(st.label)} · dados oficiais da API-Football.</span>`;
  $('#cm-replay').innerHTML=`<div class="replay">${rp}${st.k==='live'||st.k==='ft'?`<button class="btn sm primary" data-lvgo="${f.fixture.id}">Análise tática</button><button class="btn sm" data-rpost="api|${f.fixture.id}|resumo|auto">Gerar post</button>`:''}</div>`;
- const tabs=[['lance','Lance a lance'],['escalacoes','Escalações'],['stats','Estatísticas'],['jogadores','Jogadores'],['arbitragem','Arbitragem']];
- if(!tabs.some(t=>t[0]===REAL.tab))REAL.tab='lance';
+ const isPre=st.k==='pre'||st.k==='off';
+ const tabs=isPre?[['previa','Prévia'],['provavel',(f.lineups||[]).length>=2?'Escalações':'Escalação provável'],['temporada','Temporada'],['h2h','Confronto direto'],['arbitragem','Arbitragem']]:[['lance','Lance a lance'],['escalacoes','Escalações'],['stats','Estatísticas'],['jogadores','Jogadores'],['arbitragem','Arbitragem']];
+ if(!tabs.some(t=>t[0]===REAL.tab))REAL.tab=tabs[0][0];
  $('#cm-tabs').innerHTML=tabs.map(([k,l])=>`<button aria-pressed="${REAL.tab===k}" data-rcmt="${k}">${l}</button>`).join('');
  const body=$('#cm-body');
+ if(isPre&&REAL.tab!=='arbitragem'){const tb=REAL.tab;if(!body.dataset.pre||body.dataset.pre!==my+tb)body.innerHTML='<div class="empty">Carregando a prévia…</div>';let html;try{html=await preReal(f,tb);}catch(e){html=`<div class="empty">Não foi possível carregar. ${esc(e.message)}</div>`;}if(view==='centro'&&REAL.tab===tb&&REAL.key===my){body.innerHTML=html;body.dataset.pre=my+tb;}return;}
+ body.dataset.pre='';
  if(REAL.tab==='lance')body.innerHTML=lanceReal(f,sm);
  else if(REAL.tab==='escalacoes')body.innerHTML=lineupReal(f);
  else if(REAL.tab==='stats'){const rows=statRows(sm);body.innerHTML=rows.length?`<div class="card"><div class="card-h"><div><h3>Estatísticas</h3><div class="sub">${esc(h.name)} à esquerda, ${esc(a.name)} à direita</div></div></div>${cmpRows(rows)}</div>`:'<div class="empty">As estatísticas aparecem aqui quando a partida começar.</div>';}
@@ -2337,6 +2345,90 @@ function generateReal(){
 }
 function goStudioReal(src,key,fmt,focus,comp){
  RS.src=src;RS.key=key?String(key):RS.key;if(comp)RS.comp=comp;if(fmt)RS.fmt=fmt;RS.focus=focus||'auto';RS.ver=1;RS.data=null;show('estudio');
+}
+
+/* ================= PRÉ-JOGO REAL (API-Football: predictions, injuries, última escalação) ================= */
+const pctN=v=>v==null?null:parseFloat(String(v).replace('%',''))||0;
+const advicePT=a=>String(a||'').replace(/^Combo /,'Combinação: ').replace(/Double chance\s*:\s*/,'Chance dupla: ').replace(/Winner\s*:\s*/,'Vitória: ').replace(/ or draw/g,' ou empate').replace(/ and target /g,' e ').replace(/\bUnder\b/g,'menos de').replace(/\bOver\b/g,'mais de').replace(/ goals/g,' gols').replace(/(\d)\.(\d)/g,'$1,$2');
+const ouPT=v=>{if(!v)return '';const n=String(v).replace(/^[-+]/,'').replace('.',',');return String(v).startsWith('-')?`menos de ${n} gols`:`mais de ${n} gols`;};
+const INJ_PT={'Missing Fixture':'Fora','Questionable':'Dúvida'};
+const REASON_PT=r=>String(r||'').replace('Knee Injury','lesão no joelho').replace('Ankle Injury','lesão no tornozelo').replace('Hamstring Injury','lesão na coxa (posterior)').replace('Thigh Injury','lesão na coxa').replace('Muscle Injury','lesão muscular').replace('Calf Injury','lesão na panturrilha').replace('Groin Injury','lesão na virilha').replace('Back Injury','lesão nas costas').replace('Foot Injury','lesão no pé').replace('Shoulder Injury','lesão no ombro').replace('Hip Injury','lesão no quadril').replace('Head Injury','lesão na cabeça').replace('Achilles Tendon Injury','lesão no tendão de Aquiles').replace('Red Card','suspenso (vermelho)').replace('Yellow Cards','suspenso (amarelos)').replace('Suspended','suspenso').replace('Illness','doença').replace('Injury','lesão').replace('Knock','pancada').replace('Inactive','inativo').replace('Coach\'s decision','decisão técnica').replace('Personal Reasons','motivos pessoais').replace('Broken','fratura').replace('Lacking Match Fitness','sem ritmo de jogo').replace('International duty','convocação');
+async function preData(f){
+ const id=f.fixture.id;const out={};
+ const [pr,inj]=await Promise.allSettled([apiGet('predictions',{fixture:id},3600000),apiGet('injuries',{fixture:id},1800000)]);
+ out.pred=pr.status==='fulfilled'&&pr.value&&pr.value[0]||null;out.predErr=pr.status==='rejected'?pr.reason.message:null;
+ out.inj=inj.status==='fulfilled'?(inj.value||[]):[];
+ return out;
+}
+async function probableLineups(f){
+ const lu=f.lineups||[];
+ if(lu.length>=2)return {official:true,fx:{teams:f.teams,lineups:lu,players:f.players||[],events:f.events||[]},from:{}};
+ const ids=[f.teams.home.id,f.teams.away.id];
+ const lasts=await Promise.allSettled(ids.map(t=>apiGet('fixtures',{team:t,last:1,timezone:TZ},1800000)));
+ const lastFx=lasts.map(x=>x.status==='fulfilled'&&x.value&&x.value[0]||null);
+ const want=[...new Set(lastFx.filter(Boolean).map(x=>x.fixture.id))];
+ let full=[];if(want.length){try{full=await apiGet('fixtures',{ids:want.join('-'),timezone:TZ},3600000)||[];}catch(e){full=[];}}
+ const L=ids.map((tid,i)=>{const fx=lastFx[i]&&full.find(x=>x.fixture.id===lastFx[i].fixture.id);return fx?(fx.lineups||[]).find(l=>l.team.id===tid)||null:null;});
+ const from=ids.map((tid,i)=>{const x=lastFx[i];if(!x)return null;const opp=x.teams.home.id===tid?x.teams.away:x.teams.home;return `contra ${opp.name}, ${shortDate(new Date(x.fixture.date))}${x.league&&x.league.name?' ('+x.league.name+')':''}`;});
+ return {official:false,fx:{teams:f.teams,lineups:L.filter(Boolean).length===2?L:[],players:[],events:[]},from,partial:L.filter(Boolean).length};
+}
+async function preReal(f,tab){
+ const h=f.teams.home,a=f.teams.away;
+ const D=await preData(f);const P=D.pred;
+ if(tab==='provavel'){
+  const pl=await probableLineups(f);
+  const byTeam=tid=>D.inj.filter(x=>x.team&&x.team.id===tid);
+  const injIds=new Map(D.inj.map(x=>[x.player.id,x]));
+  let html=pl.fx.lineups.length>=2?lineupReal(pl.fx):`<div class="empty">Ainda não há escalação oficial${pl.partial===0?' nem escalações anteriores disponíveis':' e uma das equipes não tem escalação anterior disponível'} na API para este confronto.</div>`;
+  if(!pl.official&&pl.fx.lineups.length>=2){
+   // marca desfalques que aparecem na última escalação
+   const xi=[...pl.fx.lineups[0].startXI,...pl.fx.lineups[1].startXI].map(x=>x.player).filter(p=>injIds.has(p.id));
+   html=`<div class="replay" style="margin-bottom:14px;flex-wrap:wrap"><span class="pill solid">Provável</span><span style="font-size:13px">Base: última escalação de cada time. ${esc(h.name)} ${esc(pl.from[0]||'')} · ${esc(a.name)} ${esc(pl.from[1]||'')}. A oficial costuma sair de 20 a 40 minutos antes do jogo.</span></div>`+(xi.length?`<div class="replay" style="margin-bottom:14px;background:var(--red-soft);border-color:transparent"><span style="font-size:13px"><b>Atenção:</b> ${xi.map(p=>`${esc(p.name)} (${esc((INJ_PT[injIds.get(p.id).player.type]||'Desfalque').toLowerCase())})`).join(', ')} começou a última partida, mas está na lista de desfalques.</span></div>`:'')+html;
+  }else if(pl.official)html=`<div class="replay" style="margin-bottom:14px"><span class="pill live" style="animation:none">Oficial</span><span style="font-size:13px">Escalações confirmadas pelos clubes.</span></div>`+html;
+  const injCard=(t)=>{const L=byTeam(t.id);return `<div class="card"><div class="card-h"><h3>${rCrest(t)} Desfalques · ${esc(t.name)}</h3></div>${L.length?L.map(x=>`<div class="lp"><span class="no" style="background:${x.player.type==='Missing Fixture'?'var(--red)':'var(--yellow)'};color:${x.player.type==='Missing Fixture'?'#fff':'#111'}">${x.player.type==='Missing Fixture'?'✕':'?'}</span><span class="nm">${esc(x.player.name)}<small>${esc(REASON_PT(x.player.reason))}</small></span><span class="ics">${esc(INJ_PT[x.player.type]||x.player.type)}</span></div>`).join(''):'<p style="color:var(--muted);margin:0;font-size:13px">Nenhum desfalque informado.</p>'}</div>`;};
+  return html+`<div class="pre-2">${injCard(h)}${injCard(a)}</div>`;
+ }
+ if(!P)return `<div class="empty">A API ainda não tem a prévia deste jogo${D.predErr?` (${esc(D.predErr)})`:''}. Ela costuma aparecer alguns dias antes da partida.</div>`;
+ const TH=P.teams.home,TA=P.teams.away,pp=P.predictions||{},cmp=P.comparison||{};
+ if(tab==='previa'){
+  const ph=pctN(pp.percent&&pp.percent.home),pd=pctN(pp.percent&&pp.percent.draw),pa=pctN(pp.percent&&pp.percent.away);
+  const don=donut([{v:ph||0,c:'var(--red)',l:h.name},{v:pd||0,c:'var(--line2)',l:'Empate'},{v:pa||0,c:'var(--away)',l:a.name}],140,14,`<text x="50%" y="46%" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="18" fill="var(--ink)">${Math.max(ph,pd,pa)}%</text><text x="50%" y="61%" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="JetBrains Mono, monospace">${ph>=pa&&ph>=pd?esc(teamCode(h.name)):pa>=pd?esc(teamCode(a.name)):'empate'}</text>`);
+  const CMP=[['form','Forma recente'],['att','Ataque'],['def','Defesa'],['poisson_distribution','Modelo de Poisson'],['h2h','Confronto direto'],['goals','Gols'],['total','Avaliação geral']];
+  const rows=CMP.filter(([k])=>cmp[k]).map(([k,l])=>[l+' (%)',pctN(cmp[k].home),pctN(cmp[k].away),0]);
+  const l5=(T,t)=>{const x=T.last_5||{};const g=x.goals||{};return `<div class="tile tile-plain"><span style="display:flex;align-items:center;gap:8px;font-weight:600;color:var(--ink)">${rCrest(t)}${esc(t.name)}</span><div class="crew" style="margin-top:10px"><div><span>Forma</span><b>${esc(x.form||'–')}</b></div><div><span>Ataque</span><b>${esc(x.att||'–')}</b></div><div><span>Defesa</span><b>${esc(x.def||'–')}</b></div><div><span>Gols marcados</span><b>${g.for?`${g.for.total} (${String(g.for.average).replace('.',',')}/jogo)`:'–'}</b></div><div><span>Gols sofridos</span><b>${g.against?`${g.against.total} (${String(g.against.average).replace('.',',')}/jogo)`:'–'}</b></div></div></div>`;};
+  return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">Modelo da API-Football a partir de forma, ataque, defesa e confronto direto</div></div></div>
+  <div class="don-wrap">${don}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(h.name)} ${ph}%</span><span><span class="side-dot" style="background:var(--line2)"></span>Empate ${pd}%</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(a.name)} ${pa}%</span></div></div>
+  <div class="insight" style="margin-top:16px">${pp.advice?`<div class="ins"><span class="ix">${IC.flag}</span><p>Palpite do modelo<small>${esc(advicePT(pp.advice))}</small></p></div>`:''}${pp.winner&&pp.winner.name?`<div class="ins"><span class="ix">${esc(teamCode(pp.winner.name))}</span><p>Favorito: ${esc(pp.winner.name)}<small>${pp.win_or_draw?'Indicado também para vitória ou empate':'Indicado para vencer'}</small></p></div>`:''}${pp.under_over?`<div class="ins"><span class="ix">${esc(String(pp.under_over).replace(/^[-+]/,'').replace('.',','))}</span><p>Linha de gols<small>Tendência de ${esc(ouPT(pp.under_over))} na partida</small></p></div>`:''}</div></div>
+  <div style="display:grid;gap:16px;min-width:0"><div class="card"><div class="card-h"><div><h3>Comparativo</h3><div class="sub">Força relativa de cada time, em porcentagem</div></div></div>${rows.length?cmpRows(rows):'<p style="color:var(--muted);margin:0">Sem comparativo para este jogo.</p>'}</div>
+  <div class="card"><div class="card-h"><h3>Últimos 5 jogos</h3></div><div class="ref-tiles" style="margin-top:0">${l5(TH,h)}${l5(TA,a)}</div></div></div></div>`;
+ }
+ if(tab==='temporada'){
+  const S=T=>T.league||{};const n=v=>v==null?0:+v||0;const avg=v=>parseFloat(v)||0;
+  const sh=S(TH),sa=S(TA);
+  if(!sh.fixtures||!sa.fixtures)return '<div class="empty">Estatísticas da temporada indisponíveis para este jogo.</div>';
+  const pl=s=>n(s.fixtures.played.total)||1;
+  const rows=[['Jogos',n(sh.fixtures.played.total),n(sa.fixtures.played.total),0],['Vitórias',n(sh.fixtures.wins.total),n(sa.fixtures.wins.total),0],['Empates',n(sh.fixtures.draws.total),n(sa.fixtures.draws.total),0],['Derrotas (menos é melhor)',n(sh.fixtures.loses.total),n(sa.fixtures.loses.total),0,true],
+   ['Gols marcados por jogo',avg(sh.goals.for.average.total),avg(sa.goals.for.average.total),2],['Gols sofridos por jogo (menos é melhor)',avg(sh.goals.against.average.total),avg(sa.goals.against.average.total),2,true],
+   ['Jogos sem sofrer gol',n(sh.clean_sheet&&sh.clean_sheet.total),n(sa.clean_sheet&&sa.clean_sheet.total),0],['Jogos sem marcar (menos é melhor)',n(sh.failed_to_score&&sh.failed_to_score.total),n(sa.failed_to_score&&sa.failed_to_score.total),0,true]];
+  const venue=[['Vitórias',n(sh.fixtures.wins.home),n(sa.fixtures.wins.away),0],['Jogos',n(sh.fixtures.played.home),n(sa.fixtures.played.away),0],['Gols marcados por jogo',avg(sh.goals.for.average.home),avg(sa.goals.for.average.away),2],['Gols sofridos por jogo (menos é melhor)',avg(sh.goals.against.average.home),avg(sa.goals.against.average.away),2,true]];
+  const form=s=>String(s.form||'').slice(-10).split('').map(c=>({W:'V',D:'E',L:'D'}[c]||c));
+  const topF=s=>(s.lineups||[]).slice().sort((x,y)=>y.played-x.played).slice(0,2).map(x=>`${x.formation} (${x.played}×)`).join(', ')||'–';
+  const cardsSum=(s,c)=>Object.values((s.cards&&s.cards[c])||{}).reduce((t,x)=>t+(x&&x.total||0),0);
+  const minG=(s)=>{const m=(s.goals&&s.goals.for&&s.goals.for.minute)||{};const e=Object.entries(m).filter(([,v])=>v&&v.total).sort((x,y)=>y[1].total-x[1].total)[0];return e?`${e[0]}' (${e[1].total} gols)`:'–';};
+  const info=(s,t)=>`<div class="card"><div class="card-h"><h3>${rCrest(t)} ${esc(t.name)}</h3></div><div class="crew"><div><span>Forma (últimos 10)</span><span class="form">${form(s).map(x=>`<i class="${x}">${x}</i>`).join('')}</span></div><div><span>Formações mais usadas</span><b>${esc(topF(s))}</b></div><div><span>Período com mais gols</span><b>${esc(minG(s))}</b></div><div><span>Maior vitória</span><b>${esc((s.biggest&&s.biggest.wins&&(s.biggest.wins.home||s.biggest.wins.away))||'–')}</b></div><div><span>Pênaltis convertidos</span><b>${s.penalty&&s.penalty.scored?`${s.penalty.scored.total} (${esc(String(s.penalty.scored.percentage||'').replace(/\.0+%$/,'%').replace('.',','))})`:'–'}</b></div><div><span>Cartões amarelos / vermelhos</span><b>${cardsSum(s,'yellow')} / ${cardsSum(s,'red')}</b></div></div></div>`;
+  return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Temporada na ${esc(lgName(f))}</h3><div class="sub">${esc(h.name)} à esquerda, ${esc(a.name)} à direita</div></div></div>${cmpRows(rows)}</div>
+  <div style="display:grid;gap:16px;min-width:0"><div class="card"><div class="card-h"><div><h3>Mandante em casa x visitante fora</h3><div class="sub">${esc(h.name)} jogando em casa contra ${esc(a.name)} jogando fora</div></div></div>${cmpRows(venue)}</div></div></div>
+  <div class="pre-2">${info(sh,h)}${info(sa,a)}</div>`;
+ }
+ if(tab==='h2h'){
+  const list=(P.h2h||[]).filter(x=>FT_S.includes(x.fixture.status.short)).sort((x,y)=>new Date(y.fixture.date)-new Date(x.fixture.date)).slice(0,10);
+  if(!list.length)return '<div class="empty">Não há confrontos anteriores registrados entre os dois times.</div>';
+  let wh=0,wa=0,dr=0,gh=0,ga=0;list.forEach(x=>{const hs=x.teams.home.id===h.id?x.goals.home:x.goals.away,as=x.teams.home.id===h.id?x.goals.away:x.goals.home;gh+=hs;ga+=as;if(hs>as)wh++;else if(as>hs)wa++;else dr++;});
+  const don=donut([{v:wh,c:'var(--red)',l:h.name},{v:dr,c:'var(--line2)',l:'Empates'},{v:wa,c:'var(--away)',l:a.name}],130,13,`<text x="50%" y="46%" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="18" fill="var(--ink)">${list.length}</text><text x="50%" y="61%" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="JetBrains Mono, monospace">jogos</text>`);
+  return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Últimos confrontos</h3><div class="sub">${list.length} jogos mais recentes entre os dois times</div></div></div><div class="tbl-wrap"><table class="hist"><thead><tr><th>Data</th><th>Competição</th><th>Partida</th><th>Placar</th></tr></thead><tbody>${list.map(x=>`<tr><td>${shortDate(new Date(x.fixture.date))}/${String(new Date(x.fixture.date).getFullYear()).slice(2)}</td><td>${esc(x.league&&x.league.name||'')}</td><td>${esc(x.teams.home.name)} × ${esc(x.teams.away.name)}</td><td class="num">${x.goals.home}–${x.goals.away}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card"><div class="card-h"><h3>Retrospecto</h3></div><div class="don-wrap">${don}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(h.name)}: ${wh} vitória(s)</span><span><span class="side-dot" style="background:var(--line2)"></span>Empates: ${dr}</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(a.name)}: ${wa} vitória(s)</span></div></div><div class="mini-stats">${cmpRows([['Gols no confronto',gh,ga,0],['Média por jogo',gh/list.length,ga/list.length,1]])}</div></div></div>`;
+ }
+ return '';
 }
 
 /* ================= navegação ================= */

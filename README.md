@@ -22,6 +22,7 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 |---|---|
 | Partidas (hoje, dias anteriores e próximos) | API-Football |
 | Central do jogo: placar, lance a lance, escalações, estatísticas, notas dos jogadores, árbitro | API-Football |
+| Pré-jogo (jogos futuros): probabilidades e palpite, escalação provável (última escalação + desfalques), estatísticas da temporada, confronto direto | API-Football (predictions, injuries) |
 | Ligas: classificação | API-Football |
 | Análise tática · jogos atuais (hoje e ontem): linha do tempo, comparativo, destaques, força por setor, radar | API-Football |
 | Análise tática · arquivo histórico: xG por chute, mapa de finalizações, rede de passes, mapa de calor, radar, PPDA, field tilt | StatsBomb Open Data |
