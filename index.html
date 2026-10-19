@@ -1119,7 +1119,7 @@ function momentumSVG(m,d){
  const goals=d.shots.filter(s=>s.goal).map(s=>`<circle cx="${(s.min/95*w).toFixed(1)}" cy="${s.side==='h'?5:h-5}" r="4" fill="${s.side==='h'?'var(--p-home)':'var(--p-away)'}" stroke="var(--stage)" stroke-width="1.5"/>`).join('');
  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Pressão ao longo do jogo"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="rgba(255,255,255,.18)"/><line x1="${w*45/95}" x2="${w*45/95}" y1="0" y2="${h}" stroke="rgba(255,255,255,.15)" stroke-dasharray="3 3"/>${bars}${goals}</svg>`;
 }
-function cmpRows(rows){return `<div class="cmp">${rows.map(([l,a,b,dp,inv])=>{const ta=inv?1/Math.max(a,.01):a,tb=inv?1/Math.max(b,.01):b;const t=(ta+tb)||1;return `<div class="cmp-row"><span class="v" style="color:var(--red-ink)">${dp?f1(a,dp):Math.round(a)}</span><div class="mid"><span class="lab">${l}</span><div class="bars"><span style="flex:${(ta/t)||.5};background:var(--red);opacity:${ta>=tb?1:.4}"></span><span style="flex:${(tb/t)||.5};background:var(--away);opacity:${tb>=ta?1:.35}"></span></div></div><span class="v r">${dp?f1(b,dp):Math.round(b)}</span></div>`;}).join('')}</div>`;}
+function cmpRows(rows){return `<div class="cmp">${rows.map(([l,a,b,dp,inv])=>{const ta=inv?1/Math.max(a,.01):a,tb=inv?1/Math.max(b,.01):b;const t=(ta+tb)||1;return `<div class="cmp-row"><span class="v" style="color:var(--red-ink)">${dp?f1(a,dp):Math.round(a)}</span><div class="mid"><span class="lab">${l}</span><div class="bars"><span style="flex:${(ta/t)||.5};background:var(--red);opacity:${ta>tb?1:ta===tb?.55:.4}"></span><span style="flex:${(tb/t)||.5};background:var(--away);opacity:${tb>ta?1:ta===tb?.5:.35}"></span></div></div><span class="v r">${dp?f1(b,dp):Math.round(b)}</span></div>`;}).join('')}</div>`;}
 
 /* ================= relógio e ticker ================= */
 function renderClock(){const d=NOW();$('#clock').textContent=`${dateTxt(d)} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -2733,7 +2733,7 @@ function ctxPre(f,D,pl){
   return {side:s,id:t.id,name:t.name,short:teamCode(t.name),logo:t.logo||null,goals:0,form:formPT(S.form),season};};
  const H=team(h,'h'),A=team(a,'a');
  const ph=pctN(pp.percent&&pp.percent.home),pd=pctN(pp.percent&&pp.percent.draw),pa=pctN(pp.percent&&pp.percent.away);
- const pct=ph!=null&&pa!=null&&(ph||pa||pd)?{h:Math.round(ph),d:Math.round(pd||0),a:Math.round(pa)}:null;
+ const mpct=ph!=null&&pa!=null&&(ph||pa||pd)?{h:Math.round(ph),d:Math.round(pd||0),a:Math.round(pa)}:null;const O=D&&D.odds;const pct=O?{h:O.h,d:O.d,a:O.a}:mpct;const dis=!!(O&&mpct&&favOf(O)!==favOf(mpct)&&Math.max(O.h,O.a,O.d)>=45);
  const CMPL=[['form','Forma recente'],['att','Ataque'],['def','Defesa'],['h2h','Confronto direto'],['goals','Gols'],['total','Avaliação geral']];
  const cmpRowsPre=CMPL.filter(([k])=>cmp[k]&&cmp[k].home!=null).map(([k,l])=>({k,lab:l,h:Math.round(pctN(cmp[k].home)),a:Math.round(pctN(cmp[k].away))}));
  const h2h=((P&&P.h2h)||[]).filter(x=>FT_S.includes(x.fixture.status.short)).sort((x,y)=>new Date(y.fixture.date)-new Date(x.fixture.date)).slice(0,10).map(x=>{const hs=x.teams.home.id===h.id?x.goals.home:x.goals.away,as=x.teams.home.id===h.id?x.goals.away:x.goals.home;return {date:new Date(x.fixture.date),comp:x.league&&x.league.name||'',home:x.teams.home.name,away:x.teams.away.name,gh:x.goals.home,ga:x.goals.away,hs,as};});
@@ -2745,7 +2745,7 @@ function ctxPre(f,D,pl){
  const c={src:'api',pre:true,id:String(f.fixture.id),source:'API-Football',lg:{name:lgN,short:lgS,tag:tagify(lgS)},m:{off:isToday?0:1,date:d},dateLabel:isToday?'hoje':isTom?'amanhã':shortDate(d),
   kick,whenTxt,isToday,stage:roundTxt(f.league.round),live:false,minute:'',H,A,players,goals:[],cards:[],subs:[],shotsXg:[],has:{},
   stadium:(f.fixture.venue||{}).name||'',city:(f.fixture.venue||{}).city||'',venueImg:(f.fixture.venue&&f.fixture.venue.id)?`https://media.api-sports.io/football/venues/${f.fixture.venue.id}.png`:null,
-  ref:f.fixture.referee?{name:refName(f.fixture.referee)}:null,pct,cmp:cmpRowsPre,advice:pp.advice?advicePT(pp.advice):'',winner:pp.winner&&pp.winner.name||'',winOrDraw:!!pp.win_or_draw,uo:pp.under_over?ouPT(pp.under_over):'',
+  ref:f.fixture.referee?{name:refName(f.fixture.referee)}:null,pct,pctSrc:O?'mercado':'modelo',oddsN:O?O.n:0,mpct,dis,cmp:dis?[]:cmpRowsPre,advice:pp.advice&&!dis?advicePT(pp.advice):'',winner:dis?'':pp.winner&&pp.winner.name||'',winOrDraw:!dis&&!!pp.win_or_draw,uo:pp.under_over?ouPT(pp.under_over):'',
   h2h,inj,lu,favSide,score:`${h.name} x ${a.name}`};
  c.tags=[`#${c.lg.tag}`,`#${tagify(h.name)}`,`#${tagify(a.name)}`,'#PreJogo','#Palpite','#TELSCORE'];
  c.mt={stadium:c.stadium||'estádio',ref:{name:c.ref?c.ref.name:'arbitragem'}};
@@ -2765,7 +2765,7 @@ const injList=(c,s)=>c.inj.filter(x=>x.side===s);
 const PRE_FORMATS=[
 {id:'pre-previa',pre:true,cat:'Pré-jogo',name:'Prévia do jogo',desc:'Tudo o que importa antes do apito',visual:'Escudos frente a frente com probabilidades',need:c=>!!c.pre,run(c,r){const H=c.H,A=c.A,b=[];
  b.push({t:`${c.lg.name}${c.stage?` · ${c.stage}`:''}: ${H.name} x ${A.name}, ${c.whenTxt}${c.stadium?`, no ${c.stadium}`:''}.`});
- if(c.pct)b.push({t:`Probabilidades do modelo: ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, ${A.name} ${c.pct.a}%.`});
+ if(c.pct)b.push({t:`Probabilidades ${c.pctSrc==='mercado'?'do mercado':'do modelo'}: ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, ${A.name} ${c.pct.a}%.`});
  if(H.form||A.form)b.push({t:`Últimos 5 jogos: ${H.name} ${H.form||'sem dados'} · ${A.name} ${A.form||'sem dados'} (V vitória, E empate, D derrota).`});
  if(H.season&&A.season)b.push({t:`Na temporada, o ${H.name} marca ${numPT(H.season.gf)} e sofre ${numPT(H.season.ga)} gols por jogo; o ${A.name}, ${numPT(A.season.gf)} e ${numPT(A.season.ga)}.`});
  if(c.h2h.length){const R=preRec(c);b.push({t:`Confronto direto (últimos ${R.n}): ${H.name} ${R.wh} vitória(s), ${R.dr} empate(s), ${A.name} ${R.wa}.`});}
@@ -2773,13 +2773,14 @@ const PRE_FORMATS=[
  if(c.advice)b.push({t:`Palpite do modelo: ${c.advice}.`});
  return {head:pick(r,[`Prévia: ${H.name} x ${A.name}`,`${H.name} x ${A.name}: o que esperar`,`Tudo sobre ${H.name} x ${A.name}`]),stat:[c.kick,`${c.dateLabel}${c.stadium?' · '+c.stadium:''}`],blocks:b};}},
 {id:'pre-palpite',pre:true,cat:'Pré-jogo',name:'Quem vence? O palpite',desc:'Probabilidades e tendência do jogo',visual:'Barras de probabilidade por resultado',need:c=>!!(c.pre&&c.pct),run(c,r){const H=c.H,A=c.A,F=preFav(c),b=[];
- b.push({t:`Pelo modelo da API-Football: vitória do ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, vitória do ${A.name} ${c.pct.a}%.`});
+ b.push({t:`${c.pctSrc==='mercado'?`Pelo mercado (média de ${c.oddsN} casa(s) de apostas)`:'Pelo modelo da API-Football'}: vitória do ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, vitória do ${A.name} ${c.pct.a}%.`});
+ if(c.dis&&c.mpct)b.push({t:`O modelo estatístico da API discorda: ${H.name} ${c.mpct.h}%, empate ${c.mpct.d}%, ${A.name} ${c.mpct.a}%. Ele olha só a forma recente e não mede a força dos elencos.`});
  const big=c.cmp.filter(x=>x.k!=='total').map(x=>({...x,dif:Math.abs(x.h-x.a)})).sort((x,y)=>y.dif-x.dif)[0];
  if(big)b.push({t:`Maior diferença entre os dois: ${big.lab.toLowerCase()}, ${big.h}% x ${big.a}% a favor do ${big.h>=big.a?H.name:A.name}.`});
  const tot=c.cmp.find(x=>x.k==='total');if(tot)b.push({t:`Avaliação geral do modelo: ${H.name} ${tot.h}% x ${tot.a}% ${A.name}.`});
  if(c.uo)b.push({t:`Linha de gols: tendência de ${c.uo}.`});
  if(c.advice)b.push({t:`Palpite: ${c.advice}${c.winOrDraw&&c.winner?` (o modelo também aceita vitória ou empate do ${c.winner})`:''}.`});
- b.push({t:'Lembrete: probabilidade não é certeza. É a chance estimada a partir de forma, ataque, defesa e retrospecto.'});
+ b.push({t:c.pctSrc==='mercado'?'Lembrete: probabilidade não é certeza. É a chance implícita nas odds, sem a margem das casas. Não é recomendação de aposta.':'Lembrete: probabilidade não é certeza. É a chance estimada a partir de forma, ataque, defesa e retrospecto.'});
  return {head:pick(r,[`Quem vence ${H.name} x ${A.name}?`,`${H.name} x ${A.name}: o palpite dos números`,`O favorito de ${H.name} x ${A.name}`]),stat:[`${F.v}%`,F.k==='d'?'chance de empate':`chance de vitória do ${F.name}`],blocks:b,poll:['Quem vence?',[H.name,'Empate',A.name]]};}},
 {id:'pre-escalacao',pre:true,cat:'Pré-jogo',name:'Escalação provável',desc:'Os 11 de cada time e quem está fora',visual:'Campinho com as duas formações',need:c=>!!(c.pre&&c.lu),run(c,r){const H=c.H,A=c.A,L=c.lu,b=[];
  const xi=s=>L[s].xi.map(p=>p.name).join(', ');
@@ -2825,7 +2826,7 @@ const PRE_FORMATS=[
 {id:'pre-enquete',pre:true,cat:'Pré-jogo',name:'Enquete: quem vence?',desc:'Post de engajamento com votação',visual:'Escudos com enquete de três opções',need:c=>!!c.pre,run(c,r){const H=c.H,A=c.A,b=[];
  b.push({t:`Vote: quem vence ${H.name} x ${A.name}, ${c.whenTxt}?`});
  b.push({t:'Deixa nos comentários o seu placar exato.'});
- if(c.pct)b.push({t:`Para comparar com o seu palpite: o modelo dá ${c.pct.h}% para o ${H.name}, ${c.pct.d}% para o empate e ${c.pct.a}% para o ${A.name}.`});
+ if(c.pct)b.push({t:`Para comparar com o seu palpite: o ${c.pctSrc} dá ${c.pct.h}% para o ${H.name}, ${c.pct.d}% para o empate e ${c.pct.a}% para o ${A.name}.`});
  b.push({t:'O resultado da enquete sai no pós-jogo, junto com a análise.'});
  return {head:pick(r,[`Quem vence ${H.name} x ${A.name}?`,'Seu palpite vale ouro','Vota aí!']),stat:[`${H.short} × ${A.short}`,'quem leva?'],blocks:b,poll:['Quem vence?',[H.name,'Empate',A.name]]};}}
 ];
@@ -2969,13 +2970,19 @@ function goStudioReal(src,key,fmt,focus,comp){
 
 /* ================= PRÉ-JOGO REAL (API-Football: predictions, injuries, última escalação) ================= */
 const pctN=v=>v==null?null:parseFloat(String(v).replace('%',''))||0;
-const advicePT=a=>String(a||'').replace(/^Combo /,'Combinação: ').replace(/Double chance\s*:\s*/,'Chance dupla: ').replace(/Winner\s*:\s*/,'Vitória: ').replace(/ or draw/g,' ou empate').replace(/ and target /g,' e ').replace(/\bUnder\b/g,'menos de').replace(/\bOver\b/g,'mais de').replace(/ goals/g,' gols').replace(/(\d)\.(\d)/g,'$1,$2');
+const advicePT=a=>String(a||'').replace(/\bdraw or\b/gi,'empate ou').replace(/\bor draw\b/gi,'ou empate').replace(/^Combo /,'Combinação: ').replace(/Double chance\s*:\s*/,'Chance dupla: ').replace(/Winner\s*:\s*/,'Vitória: ').replace(/ or draw/g,' ou empate').replace(/ and target /g,' e ').replace(/\bUnder\b/g,'menos de').replace(/\bOver\b/g,'mais de').replace(/ goals/g,' gols').replace(/(\d)\.(\d)/g,'$1,$2');
 const ouPT=v=>{if(!v)return '';const n=String(v).replace(/^[-+]/,'').replace('.',',');return String(v).startsWith('-')?`menos de ${n} gols`:`mais de ${n} gols`;};
 const INJ_PT={'Missing Fixture':'Fora','Questionable':'Dúvida'};
 const REASON_PT=r=>String(r||'').replace('Knee Injury','lesão no joelho').replace('Ankle Injury','lesão no tornozelo').replace('Hamstring Injury','lesão na coxa (posterior)').replace('Thigh Injury','lesão na coxa').replace('Muscle Injury','lesão muscular').replace('Calf Injury','lesão na panturrilha').replace('Groin Injury','lesão na virilha').replace('Back Injury','lesão nas costas').replace('Foot Injury','lesão no pé').replace('Shoulder Injury','lesão no ombro').replace('Hip Injury','lesão no quadril').replace('Head Injury','lesão na cabeça').replace('Achilles Tendon Injury','lesão no tendão de Aquiles').replace('Red Card','suspenso (vermelho)').replace('Yellow Cards','suspenso (amarelos)').replace('Suspended','suspenso').replace('Illness','doença').replace('Injury','lesão').replace('Knock','pancada').replace('Inactive','inativo').replace('Coach\'s decision','decisão técnica').replace('Personal Reasons','motivos pessoais').replace('Broken','fratura').replace('Lacking Match Fitness','sem ritmo de jogo').replace('International duty','convocação');
+// Probabilidades do mercado: média das casas de apostas, tirando a margem de cada uma
+function oddsProb(resp){const r=resp&&resp[0];if(!r||!Array.isArray(r.bookmakers))return null;const ps=[];
+ r.bookmakers.forEach(bk=>{const bet=(bk.bets||[]).find(b=>b.id===1||/match winner/i.test(b.name||''));if(!bet)return;const g=n=>{const v=(bet.values||[]).find(x=>String(x.value).toLowerCase()===n);return v?parseFloat(v.odd):NaN;};const h=g('home'),d=g('draw'),a=g('away');if(!(h>1&&d>1&&a>1))return;const s=1/h+1/d+1/a;ps.push([1/h/s,1/d/s,1/a/s]);});
+ if(!ps.length)return null;const avg=k=>ps.reduce((t,p)=>t+p[k],0)/ps.length;let h=Math.round(avg(0)*100),d=Math.round(avg(1)*100),a=Math.round(avg(2)*100);const fix=100-h-d-a;if(fix){if(h>=a&&h>=d)h+=fix;else if(a>=d)a+=fix;else d+=fix;}return {h,d,a,n:ps.length};}
+const favOf=p=>p.h>=p.a&&p.h>=p.d?'h':p.a>=p.d?'a':'d';
 async function preData(f){
  const id=f.fixture.id;const out={};
- const [pr,inj]=await Promise.allSettled([apiGet('predictions',{fixture:id},3600000),apiGet('injuries',{fixture:id},1800000)]);
+ const [pr,inj,od]=await Promise.allSettled([apiGet('predictions',{fixture:id},3600000),apiGet('injuries',{fixture:id},1800000),apiGet('odds',{fixture:id,bet:1},3600000)]);
+ out.odds=od.status==='fulfilled'?oddsProb(od.value):null;
  out.pred=pr.status==='fulfilled'&&pr.value&&pr.value[0]||null;out.predErr=pr.status==='rejected'?pr.reason.message:null;
  out.inj=inj.status==='fulfilled'?(inj.value||[]):[];
  return out;
@@ -3008,18 +3015,20 @@ async function preReal(f,tab){
   const injCard=(t)=>{const L=byTeam(t.id);return `<div class="card"><div class="card-h"><h3>${rCrest(t)} Desfalques · ${esc(t.name)}</h3></div>${L.length?L.map(x=>`<div class="lp">${lpPh(x.player.id,x.player.photo,x.player.type==='Missing Fixture'?'✕':'?','',`background:${x.player.type==='Missing Fixture'?'var(--red)':'var(--yellow)'};color:${x.player.type==='Missing Fixture'?'#fff':'#111'}`)}<span class="nm">${esc(x.player.name)}<small>${esc(REASON_PT(x.player.reason))}</small></span><span class="ics">${esc(INJ_PT[x.player.type]||x.player.type)}</span></div>`).join(''):'<p style="color:var(--muted);margin:0;font-size:13px">Nenhum desfalque informado.</p>'}</div>`;};
   return html+`<div class="pre-2">${injCard(h)}${injCard(a)}</div>`;
  }
+ if(!P&&tab==='previa'&&D.odds){const O=D.odds;const don=donut([{v:O.h,c:'var(--red)',l:h.name},{v:O.d,c:'var(--line2)',l:'Empate'},{v:O.a,c:'var(--away)',l:a.name}],140,14,`<text x="50%" y="55%" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="18" fill="var(--ink)">${Math.max(O.h,O.d,O.a)}%</text>`);return `<div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">Mercado: média de ${O.n} casa(s) de apostas, sem a margem delas. Não é recomendação de aposta.</div></div></div><div class="don-wrap">${don}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(h.name)} ${O.h}%</span><span><span class="side-dot" style="background:var(--line2)"></span>Empate ${O.d}%</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(a.name)} ${O.a}%</span></div></div></div>`;}
  if(!P)return `<div class="empty">A API ainda não tem a prévia deste jogo${D.predErr?` (${esc(D.predErr)})`:''}. Ela costuma aparecer alguns dias antes da partida.</div>`;
  const TH=P.teams.home,TA=P.teams.away,pp=P.predictions||{},cmp=P.comparison||{};
  if(tab==='previa'){
-  const ph=pctN(pp.percent&&pp.percent.home),pd=pctN(pp.percent&&pp.percent.draw),pa=pctN(pp.percent&&pp.percent.away);
+  const mph=pctN(pp.percent&&pp.percent.home),mpd=pctN(pp.percent&&pp.percent.draw),mpa=pctN(pp.percent&&pp.percent.away);const MP={h:Math.round(mph||0),d:Math.round(mpd||0),a:Math.round(mpa||0)};const O=D.odds;const dis=!!(O&&favOf(O)!==favOf(MP)&&Math.max(O.h,O.a,O.d)>=45);
+  const ph=O?O.h:MP.h,pd=O?O.d:MP.d,pa=O?O.a:MP.a;
   const don=donut([{v:ph||0,c:'var(--red)',l:h.name},{v:pd||0,c:'var(--line2)',l:'Empate'},{v:pa||0,c:'var(--away)',l:a.name}],140,14,`<text x="50%" y="46%" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="18" fill="var(--ink)">${Math.max(ph,pd,pa)}%</text><text x="50%" y="61%" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="JetBrains Mono, monospace">${ph>=pa&&ph>=pd?esc(teamCode(h.name)):pa>=pd?esc(teamCode(a.name)):'empate'}</text>`);
   const CMP=[['form','Forma recente'],['att','Ataque'],['def','Defesa'],['poisson_distribution','Modelo de Poisson'],['h2h','Confronto direto'],['goals','Gols'],['total','Avaliação geral']];
   const rows=CMP.filter(([k])=>cmp[k]).map(([k,l])=>[l+' (%)',pctN(cmp[k].home),pctN(cmp[k].away),0]);
   const l5=(T,t)=>{const x=T.last_5||{};const g=x.goals||{};return `<div class="tile tile-plain"><span style="display:flex;align-items:center;gap:8px;font-weight:600;color:var(--ink)">${rCrest(t)}${esc(t.name)}</span><div class="crew" style="margin-top:10px"><div><span>Forma</span><b>${esc(x.form||'–')}</b></div><div><span>Ataque</span><b>${esc(x.att||'–')}</b></div><div><span>Defesa</span><b>${esc(x.def||'–')}</b></div><div><span>Gols marcados</span><b>${g.for?`${g.for.total} (${String(g.for.average).replace('.',',')}/jogo)`:'–'}</b></div><div><span>Gols sofridos</span><b>${g.against?`${g.against.total} (${String(g.against.average).replace('.',',')}/jogo)`:'–'}</b></div></div></div>`;};
-  return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">Modelo da API-Football a partir de forma, ataque, defesa e confronto direto</div></div></div>
+  return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">${O?`Mercado: média de ${O.n} casa(s) de apostas, sem a margem delas. Não é recomendação de aposta.`:'Modelo estatístico da API-Football (forma recente, ataque, defesa e confronto direto). Pode errar em jogos de copa entre times de ligas diferentes.'}</div></div></div>
   <div class="don-wrap">${don}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(h.name)} ${ph}%</span><span><span class="side-dot" style="background:var(--line2)"></span>Empate ${pd}%</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(a.name)} ${pa}%</span></div></div>
-  <div class="insight" style="margin-top:16px">${pp.advice?`<div class="ins"><span class="ix">${IC.flag}</span><p>Palpite do modelo<small>${esc(advicePT(pp.advice))}</small></p></div>`:''}${pp.winner&&pp.winner.name?`<div class="ins"><span class="ix">${esc(teamCode(pp.winner.name))}</span><p>Favorito: ${esc(pp.winner.name)}<small>${pp.win_or_draw?'Indicado também para vitória ou empate':'Indicado para vencer'}</small></p></div>`:''}${pp.under_over?`<div class="ins"><span class="ix">${esc(String(pp.under_over).replace(/^[-+]/,'').replace('.',','))}</span><p>Linha de gols<small>Tendência de ${esc(ouPT(pp.under_over))} na partida</small></p></div>`:''}</div></div>
-  <div style="display:grid;gap:16px;min-width:0"><div class="card"><div class="card-h"><div><h3>Comparativo</h3><div class="sub">Força relativa de cada time, em porcentagem</div></div></div>${rows.length?cmpRows(rows):'<p style="color:var(--muted);margin:0">Sem comparativo para este jogo.</p>'}</div>
+  <div class="insight" style="margin-top:16px">${O?(()=>{const fk=favOf(O);const nm=fk==='h'?h.name:fk==='a'?a.name:'Empate';const v=fk==='h'?O.h:fk==='a'?O.a:O.d;return `<div class="ins"><span class="ix">${fk==='d'?'=':esc(teamCode(nm))}</span><p>${fk==='d'?'Mercado vê empate como o mais provável':`Favorito do mercado: ${esc(nm)}`}<small>${v}% de chance, pela média de ${O.n} casa(s) de apostas</small></p></div>`;})():''}${dis?`<div class="ins"><span class="ix">${IC.flag}</span><p>O modelo da API discorda<small>Ele dá ${esc(h.name)} ${Math.round(mph||0)}%, empate ${Math.round(mpd||0)}% e ${esc(a.name)} ${Math.round(mpa||0)}%. Esse modelo olha a forma recente e não mede a força dos elencos, por isso aqui vale o mercado.</small></p></div>`:`${pp.advice?`<div class="ins"><span class="ix">${IC.flag}</span><p>Palpite do modelo da API<small>${esc(advicePT(pp.advice))}</small></p></div>`:''}${!O&&pp.winner&&pp.winner.name?`<div class="ins"><span class="ix">${esc(teamCode(pp.winner.name))}</span><p>Favorito: ${esc(pp.winner.name)}<small>${pp.win_or_draw?'Indicado também para vitória ou empate':'Indicado para vencer'}</small></p></div>`:''}`}${pp.under_over?`<div class="ins"><span class="ix">${esc(String(pp.under_over).replace(/^[-+]/,'').replace('.',','))}</span><p>Linha de gols<small>Tendência de ${esc(ouPT(pp.under_over))} na partida</small></p></div>`:''}</div></div>
+  <div style="display:grid;gap:16px;min-width:0"><div class="card"><div class="card-h"><div><h3>Comparativo</h3><div class="sub">Modelo estatístico da API, em porcentagem. Baseado na forma recente: não mede a força dos elencos.</div></div></div>${rows.length?cmpRows(rows):'<p style="color:var(--muted);margin:0">Sem comparativo para este jogo.</p>'}</div>
   <div class="card"><div class="card-h"><h3>Últimos 5 jogos</h3></div><div class="ref-tiles" style="margin-top:0">${l5(TH,h)}${l5(TA,a)}</div></div></div></div>`;
  }
  if(tab==='temporada'){
@@ -3277,7 +3286,7 @@ function videoScenes(c,f,out,blocks,tone,close){
  if(c.pre&&c.cmp)c.cmp.forEach(x=>rows.push({lab:x.lab,h:x.h,a:x.a,u:'%'}));
  const R=rows.slice(0,5);
  const bars=R.length>=2?{k:'bars',name:c.pre?'Comparativo':'Estatísticas',title:c.pre?'COMPARATIVO':'OS NÚMEROS',dur:+(2.2+R.length*.5+1.4).toFixed(1),rows:R}:null;
- const probs=c.pre&&c.pct?{k:'probs',name:'Quem vence?',dur:4.8,h:c.pct.h,d:c.pct.d,a:c.pct.a}:null;
+ const probs=c.pre&&c.pct?{k:'probs',name:'Quem vence?',dur:4.8,h:c.pct.h,d:c.pct.d,a:c.pct.a,src:c.pctSrc}:null;
  let sc={h:0,a:0};
  const G=(c.goals||[]).slice().sort((x,y)=>x.m-y.m).slice(0,8).map(g=>{sc[g.side]=(sc[g.side]||0)+1;return {m:+g.m||0,label:g.label||`${Math.floor(g.m)}'`,side:g.side,player:g.player||'',pen:g.type==='pênalti',og:g.type==='gol contra',sc:`${sc.h}–${sc.a}`};});
  const tl=G.length?{k:'timeline',name:'Linha do tempo',dur:+Math.min(8,3.4+G.length*.7).toFixed(1),goals:G,max:Math.max(90,...G.map(g=>g.m))}:null;
@@ -3352,7 +3361,7 @@ const VDRAW={
  },
  probs(ctx,s,lt,d,I,M,A){
   const W2=VW-2*VPD;vAl(ctx,A,vseg(lt,0,.4));ctx.fillStyle='#fff';ctx.textAlign='left';ctx.font=`900 74px ${CV.display}`;ctx.fillText('QUEM VENCE?',VPD,400);
-  ctx.globalAlpha=A*vseg(lt,.2,.6)*.7;ctx.font=`400 36px ${CV.mono}`;ctx.fillText('probabilidades do modelo',VPD,460);
+  ctx.globalAlpha=A*vseg(lt,.2,.6)*.7;ctx.font=`400 36px ${CV.mono}`;ctx.fillText(s.src==='mercado'?'probabilidades do mercado':'probabilidades do modelo',VPD,460);
   const mx=Math.max(s.h,s.d,s.a);const rows=[{lab:M.h.name,v:s.h,img:I.h,code:M.h.code},{lab:'Empate',v:s.d,img:null,code:'='},{lab:M.a.name,v:s.a,img:I.a,code:M.a.code}];
   rows.forEach((rw,i)=>{const y=640+i*320;const p=vEo(vseg(lt,.5+i*.4,1.5+i*.4));if(p<=0)return;vAl(ctx,A,p);
    if(rw.code==='='){ctx.fillStyle='rgba(255,255,255,.14)';ctx.beginPath();ctx.arc(VPD+56,y,56,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font=`900 50px ${CV.display}`;ctx.textAlign='center';ctx.fillText('=',VPD+56,y+18);}

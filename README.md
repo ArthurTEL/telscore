@@ -23,7 +23,7 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 |---|---|
 | Partidas (hoje, dias anteriores e próximos) | API-Football |
 | Central do jogo: placar, lance a lance, escalações, estatísticas, notas dos jogadores, árbitro | API-Football |
-| Pré-jogo (jogos futuros): probabilidades e palpite, escalação provável (última escalação + desfalques), estatísticas da temporada, confronto direto | API-Football (predictions, injuries) |
+| Pré-jogo (jogos futuros): probabilidades do mercado (média das casas de apostas, sem a margem; o modelo estatístico da API aparece só como referência), escalação provável (última escalação + desfalques), estatísticas da temporada, confronto direto | API-Football (odds, predictions, injuries) |
 | Ligas: classificação dos campeonatos; Champions, Europa League, Libertadores e Sul-Americana com fase de liga/grupos e chaveamento do mata-mata | API-Football |
 | Análise tática · jogos atuais (hoje e ontem): linha do tempo, comparativo, destaques, força por setor, radar | API-Football |
 | Análise tática · arquivo histórico: xG por chute, mapa de finalizações, rede de passes, mapa de calor, radar, PPDA, field tilt | StatsBomb Open Data |
