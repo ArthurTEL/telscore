@@ -11,7 +11,8 @@ const ALLOWED = {
   predictions: ['fixture'],
   injuries: ['fixture', 'team', 'season', 'date'],
   standings: ['league', 'season'],
-  'fixtures/headtohead': ['h2h', 'last', 'timezone']
+  'fixtures/headtohead': ['h2h', 'last', 'timezone'],
+  odds: ['fixture', 'bookmaker', 'bet']
 };
 
 const LIVE = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE', 'INT', 'SUSP']);
@@ -71,6 +72,7 @@ module.exports = async (req, res) => {
     else if (endpoint === 'status') ttl = 60;
     else if (endpoint === 'standings') ttl = 3600;
     else if (endpoint === 'predictions') ttl = 3600;
+    else if (endpoint === 'odds') ttl = 3600;
     else if (endpoint === 'injuries') ttl = 1800;
     else if (endpoint === 'fixtures/headtohead') ttl = 21600;
     else if (endpoint === 'fixtures') {
