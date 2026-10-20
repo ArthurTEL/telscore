@@ -36,6 +36,19 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 
 Nos jogos que ainda vão acontecer, a prévia mostra um cálculo único da TEL.SCORE que junta: mercado (média das casas de apostas, sem a margem), xG dos últimos 5 jogos, forma recente, campanha na temporada, titulares lesionados ou suspensos, força do elenco (nível estimado da liga, tabela `LG_TIER` no `index.html`, e posição na tabela) e mando de campo. O resultado aparece na aba Prévia da Central e no formato "Análise TEL.SCORE" do Estúdio. Sem odds disponíveis, o cálculo usa só os dados.
 
+## Contexto do jogo (análises coerentes)
+
+Antes de escrever qualquer texto, o site monta o contexto da partida e todas as análises partem dele:
+
+- **Competição e fase:** liga, copa, continental ou seleções; rodada, fase de grupos ou mata-mata; final.
+- **Força dos times:** posição e zona na tabela (líder, G4, rebaixamento) e, nas copas e competições continentais, o nível da liga de cada clube.
+- **Expectativa:** quem era favorito antes do jogo (pelo mercado; sem odds, pela campanha na tabela ou pelo nível das ligas) e se o resultado confirmou, foi surpresa ou zebra.
+- **Como o jogo foi:** virada, goleada, gol no fim, empate buscado, decisão por pênaltis e expulsões (com o minuto, porque jogar 30 minutos com um a menos muda a leitura).
+- **Desempenho x placar:** quem criou mais (xG ou finalizações), com limites para não chamar de "domínio" uma diferença pequena.
+- **Ao vivo:** os textos ficam no presente e falam em "até aqui", sem afirmar quem venceu.
+
+Esse contexto aparece nos posts do Estúdio, na Prévia (pré-jogo) e no card "Leitura TEL.SCORE", na aba Estatísticas da Central do jogo.
+
 ## Tabelas das ligas
 
 A classificação marca as zonas de cada liga com a descrição oficial que vem da API-Football: Libertadores, Pré-Libertadores, Sul-Americana, Champions, Europa League, Conference League, acesso, playoff e rebaixamento. A cor aparece na posição e na faixa à esquerda da linha, e a legenda embaixo mostra só as zonas daquela tabela. No celular a tabela fica resumida (posição, clube, jogos, saldo e pontos).
@@ -71,6 +84,8 @@ O plano grátis da API-Football permite 100 requisições por dia. Graças ao ca
 | Partida encerrada (central) | 24 h |
 | Classificação | 1 h |
 | Histórico do árbitro (jogos da temporada) | 12 h |
+| Contexto do jogo: odds e tabela (Estúdio e Leitura TEL.SCORE) | 1 h |
+| Nível da liga dos clubes em copas e competições continentais | 30 min |
 
 O plano grátis serve para testar. Para acompanhar rodadas inteiras ao vivo, o plano Pro dá folga.
 
