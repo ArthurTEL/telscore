@@ -36,6 +36,14 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 
 Nos jogos que ainda vão acontecer, a prévia mostra um cálculo único da TEL.SCORE que junta: mercado (média das casas de apostas, sem a margem), xG dos últimos 5 jogos, forma recente, campanha na temporada, titulares lesionados ou suspensos, força do elenco (nível estimado da liga, tabela `LG_TIER` no `index.html`, e posição na tabela) e mando de campo. O resultado aparece na aba Prévia da Central e no formato "Análise TEL.SCORE" do Estúdio. Sem odds disponíveis, o cálculo usa só os dados.
 
+## Tabelas das ligas
+
+A classificação marca as zonas de cada liga com a descrição oficial que vem da API-Football: Libertadores, Pré-Libertadores, Sul-Americana, Champions, Europa League, Conference League, acesso, playoff e rebaixamento. A cor aparece na posição e na faixa à esquerda da linha, e a legenda embaixo mostra só as zonas daquela tabela. No celular a tabela fica resumida (posição, clube, jogos, saldo e pontos).
+
+## Revisão de texto
+
+Todo texto do site passa por um revisor automático: plural certo ("1 gol", "3 gols", em vez de "gol(s)"), artigo feminino para seleções como Argentina e Itália ("a Argentina", "da Argentina"), nomes de times corrigidos (ex.: "Vasco da Gama", "São Paulo") e país do árbitro em português.
+
 ## Celular
 
 No celular, as seções ficam numa barra fixa embaixo (Jogos, Central, Ligas, Análise, Estúdio), como num app. O cabeçalho fica compacto, os filtros deslizam para o lado e os jogos aparecem com um time por linha.
