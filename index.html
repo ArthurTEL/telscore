@@ -385,6 +385,22 @@ svg.chart text{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
 .slide.cta{background:var(--p-home);color:#fff}
 .slide .rule{height:4px;width:42px;border-radius:9px;background:var(--p-home);margin:12px 0}
 .slide p.rt,.story p.rt{font-weight:600;text-wrap:pretty}
+.facts{list-style:none;margin:6px 0 auto;padding:0;display:grid;gap:5px}
+.facts li{display:grid;gap:1px;padding-top:5px;border-top:1px solid rgba(255,255,255,.13);font-size:11px;line-height:1.35;font-weight:600}
+.facts li:first-child{border-top:0;padding-top:0}
+.facts li small{font-family:var(--f-mono);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--p-home);font-weight:700}
+.facts li.bl{position:relative;padding-left:11px}
+.facts li.bl::before{content:"";position:absolute;left:0;top:calc(5px + .45em);width:5px;height:5px;border-radius:50%;background:var(--p-home)}
+.facts li.bl:first-child::before{top:.45em}
+.facts .hl{font-style:normal;color:var(--p-home);font-weight:800}
+.facts.big{margin:auto 0;gap:9px}.facts.big li{font-size:14px;padding-top:9px}.facts.big li small{font-size:8.5px}
+.sbrand{align-items:center}.sbrand .sbr{display:flex;align-items:center;gap:6px;opacity:1}
+.sbrand .avatar{width:18px;height:18px;flex:none}.sbrand b{font-family:var(--f-brand);font-weight:800;font-size:10px;letter-spacing:.04em}.sbrand b em{font-style:normal;color:var(--p-home)}
+.slide.cover .cvb{margin-top:auto;display:grid;gap:7px}.slide.cover h5{margin:0}
+.slide .ckick{justify-self:start;font-family:var(--f-mono);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;background:var(--p-home);color:#fff;padding:4px 8px;border-radius:999px}
+.slide.cover .bsrow{margin-top:2px}
+.slide.cover .foot{margin-top:10px;padding-top:7px;border-top:2px solid var(--p-home)}
+.slide.cover .bs{font-size:32px}.slide.cover h5{font-size:16px}.slide.cover .mx{margin-top:8px}.slide.cover .mxc img,.slide.cover .mxc i{width:34px;height:34px}.slide.cover .mxs{font-size:22px}
 .slide p.rt.sm{font-size:12px;line-height:1.4;opacity:.92;margin-top:4px}
 .slide p.rt.big{font-size:16px;line-height:1.38;font-weight:700}
 .slide p .hl,.story p .hl{font-style:normal;color:var(--p-home);font-weight:800}
@@ -1793,7 +1809,7 @@ function vizFor(c,text,fmtName,fmtId){
  // pré-jogo
  if(c.pre){
   if(c.deep&&/^(Dados TEL\.SCORE|Probabilidades TEL\.SCORE|Pela análise TEL\.SCORE)/i.test(t)){const P=c.deep.final;return {kick:'Análise TEL.SCORE',v:{k:'bars3',max:100,rows:[{e:vzTeam(c,'h'),lab:H.name,v:P.h,txt:P.h+'%'},{lab:'Empate',v:P.d,txt:P.d+'%',sym:'='},{e:vzTeam(c,'a'),lab:A.name,v:P.a,txt:P.a+'%'}]},t:c.read?c.read.verdict:body};}
-  if(c.read&&/^Leitura TEL\.SCORE/i.test(t))return {kick:'Leitura TEL.SCORE',v:{k:'quote',es:[vzTeam(c,'h'),vzTeam(c,'a')]},t:c.read.verdict+(c.read.reasons[0]?' '+c.read.reasons[0]:'')};
+  if(c.read&&/^Leitura TEL\.SCORE/i.test(t))return {kick:'Leitura TEL.SCORE',v:{k:'quote',es:[vzTeam(c,'h'),vzTeam(c,'a')]},t:c.read.verdict+(c.read.reasons.filter(noMkt)[0]?' '+c.read.reasons.filter(noMkt)[0]:'')};
   if(c.kick&&t.includes(c.kick)&&!/\d+%/.test(t))return {kick:kick||(c.isToday?'Hoje':'Quando'),v:{k:'big',txt:c.kick,lab:`${c.dateLabel}${c.stadium?' · '+c.stadium:''}`},t:body};
   if(c.pct&&/probabilidade|pelo modelo|vitória do .*%/i.test(t))return R(kick||'Probabilidades',{k:'bars3',max:100,rows:[{e:vzTeam(c,'h'),lab:H.name,v:c.pct.h,txt:c.pct.h+'%'},{lab:'Empate',v:c.pct.d,txt:c.pct.d+'%',sym:'='},{e:vzTeam(c,'a'),lab:A.name,v:c.pct.a,txt:c.pct.a+'%'}]});
   if(/últimos 5/i.test(t)&&(H.form||A.form))return R(kick||'Forma recente',{k:'form',rows:[{e:vzTeam(c,'h'),form:H.form},{e:vzTeam(c,'a'),form:A.form}]});
@@ -1841,7 +1857,7 @@ function vizFor(c,text,fmtName,fmtId){
  const mm=t.match(/^(\d{1,3}(?:\+\d+)?)'/);if(mm){const p=PL[0];const side=/\bdo ([^:,.]+)/.exec(t);const s=side&&side[1]===A.name?'a':side&&side[1]===H.name?'h':null;return {kick:/Gol/i.test(t)?'Gol':/Expuls|vermelho/i.test(t)?'Expulsão':/Amarelo|amarelo/.test(t)?'Cartão':'Lance',v:{k:'big',txt:mm[1]+"'",lab:'',e:p?vzPl(c,p):s?vzTeam(c,s):null},t:t.replace(/^\d{1,3}(?:\+\d+)?'\s*·?\s*/,'')};}
  // time citado com dois números: comparação
  const hi=t.indexOf(H.name),ai=t.indexOf(A.name);
- const nums=[...t.matchAll(/(-?\d+(?:,\d+)?)(%?)/g)].filter(m=>!/^\d{4}$/.test(m[1])&&!/^['º°ª+]|^x\d/.test(t.slice(m.index+m[0].length))&&!/\d[x+]$/.test(t.slice(0,m.index)));
+ const nums=[...t.matchAll(/(-?\d+(?:,\d+)?)(%?)/g)].filter(m=>!/^\d{4}$/.test(m[1])&&!/^['º°ª+\/]|^x\d|^:\d/.test(t.slice(m.index+m[0].length))&&!/(\d[x+]|\/|:)$/.test(t.slice(0,m.index)));
  if(hi>=0&&ai>=0&&nums.length>=2&&!PL.length){const a1=nums.find(n=>n.index>hi),a2=nums.find(n=>n.index>ai);if(a1&&a2&&a1!==a2){const n=s=>parseFloat(s.replace(',','.'));return R(kick||'Comparativo',cmpV('',n(a1[1]),n(a2[1]),v=>(String(v).replace('.',','))+(a1[2]||'')));}}
  // um número em destaque
  const sc=t.match(/\b(\d+x\d+)\b/);
@@ -1860,14 +1876,23 @@ function vizItems(c,blocks,fmtName,max,fmtId,bviz){
 }
 /* texto dos slides: frase principal em destaque, complemento mais leve e números na cor da marca */
 function splitLead(t){t=String(t||'').replace(/\s+/g,' ').trim();const m=t.match(/^(.{12,125}?[.!?])\s+(\S.*)$/);if(m)return [m[1],m[2]];return t.length<=125?[t,'']:['',t];}
-const hlNums=s=>esc(s).replace(/(^|[\s(~+−-])(\d+(?:[.,]\d+)?(?:%|º|ª)?)(?=[\s.,;:)!?]|$)/g,'$1<em class="hl">$2</em>');
+const hlNums=s=>esc(s).replace(/(^|[\s(~+−-])(\d+(?:[.,]\d+)?(?:%|º|ª)?)(?=[\s.,;)!?]|:(?!\d)|$)/g,'$1<em class="hl">$2</em>');
 const richHTML=t=>hlNums(t);
 // texto curto: a 1ª frase (ou as 2 primeiras, até ~170 caracteres), sem cortar no meio da ideia
 const sentN=(t,n,mx)=>{mx=mx||170;t=String(t||'').replace(/\s+/g,' ').trim();const S=t.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g)||[t];let out='';for(const x of S.slice(0,n)){const y=x.trim();if(out&&out.length+y.length>mx)break;out=(out?out+' ':'')+y;}if(out.length>150&&n===1){const k=out.lastIndexOf(',',130);if(k>50)out=out.slice(0,k)+'.';}return out;};
 const isDataLine=t=>/^[^:]{2,40}:\s/.test(String(t||''))&&/\d/.test(t)&&!/[.!?]\s+\S/.test(String(t).trim());
 function captionOf(x){const body=String(x.t||'').trim();let c=body;if(x.v&&isDataLine(x.src)&&String(x.src).includes(body.slice(0,24)))c='';return c?sentN(c,2,125):'';}
 const rtP=(t,cls,extra)=>{t=sing1(String(t||''));return `<p class="rt${cls?' '+cls:''}" data-t="${esc(t)}">${richHTML(t)}${extra||''}</p>`;};
-const vizBlockHTML=(x,story)=>{const cap=captionOf(x);return `${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${x.v?`<div class="viz" data-viz="${esc(JSON.stringify(x.v))}">${vizSVG(x.v)}</div>`:''}${cap?rtP(cap,x.v?'sm':''):''}`;};
+// texto organizado: cada informação numa linha, com etiqueta quando o texto já traz uma ("Posse: ...", "Ataque: ...")
+const cap1=x=>x?x.charAt(0).toUpperCase()+x.slice(1):x;
+function factsOf(t,max){t=sing1(String(t||'')).replace(/\s+/g,' ').trim();if(!t)return [];
+ let parts=t.split(/(?<=[a-zà-ú0-9)%º][.!?])\s+(?=[A-ZÀ-Ú0-9"“])|;\s+|\s+·\s+/).map(x=>x.trim().replace(/[.;]+$/,'')).filter(Boolean);
+ const rows=[];parts.forEach(p=>{const m=p.match(/^([^:]{2,26}):\s+(.+)$/);if(m&&!/\d{2}/.test(m[1])&&m[1].split(' ').length<=4)rows.push({l:m[1],v:cap1(m[2])});else rows.push({l:'',v:cap1(p)});});
+ return rows.slice(0,max||3);}
+const factsHTML=(rows,big)=>rows.length?`<ul class="facts${big?' big':''}" data-f="${esc(JSON.stringify(rows))}">${rows.map(r=>`<li class="${r.l?'lb':'bl'}">${r.l?`<small>${esc(r.l)}</small>`:''}<span>${hlNums(r.v)}</span></li>`).join('')}</ul>`:'';
+function factsFor(x){const body=String(x.t||'').trim();let t=body;if(x.v&&isDataLine(x.src)&&String(x.src).includes(body.slice(0,24)))t='';if(!x.v&&!t)t=x.src||'';return factsOf(t,x.v?3:4);}
+const vizBlockHTML=(x,story)=>`${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${x.v?`<div class="viz" data-viz="${esc(JSON.stringify(x.v))}">${vizSVG(x.v)}</div>`:''}${factsHTML(factsFor(x),!x.v)}`;
+const SBRAND=(right)=>`<div class="sn sbrand"><span class="sbr">${AV}<b>TEL<em>.</em>SCORE</b></span><span>${right}</span></div>`;
 
 /* ---- escudos e fotos nos posts ---- */
 const prox=u=>!u?'':/^https:\/\/media\.api-sports\.io\//.test(u)?'/api/logo?u='+encodeURIComponent(u):/^data:image\//.test(u)?u:'';
@@ -1886,8 +1911,8 @@ function compose(c,f,tone,plat,r){
  let html='',text='';
  if(plat==='ig'){
   const its=vizItems(c,blocks,f.name,5,f.id,bviz);const sl=its.map(x=>x.src+(x.note?' '+x.note:''));const N=its.length+2;
-  const ph=featPhoto(c,f),cvi=coverImage(c),aseed=f.id+(c.id||c.score);const st0=String(out.stat[0]||''),showSt=/\d/.test(st0)&&st0.length<=14;html=`<div class="slides"><div class="slide cover">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}<div class="sn"><span>${esc(c.lg.short)} · ${dt}</span><span>1/${N}</span></div>${mxHTML(c)}<h5>${esc(out.head)}</h5><div class="bsrow"><div style="min-width:0">${showSt?`<div class="bs num">${esc(st0)}</div>`:''}<div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div>${ph?`<img class="pp" src="${esc(ph)}" alt="" crossorigin="anonymous">`:''}</div><div class="rule"></div><div class="foot"><span>@tel.score</span><span>arraste →</span></div></div>
-   ${its.map((x,i)=>`<div class="slide${x.v?' vz':''}">${artDiv(x.v&&/^(tbl|games)$/.test(x.v.k)?'lights':artKindFor(aseed,i),false)}<div class="sn"><span>${esc(f.name)}</span><span>${i+2}/${N}</span></div>${x.v?vizBlockHTML(x):`${mediaFor(c,x.src)}${rtP(sentN(x.src,2),'big')}`}<div class="foot"><span>@tel.score</span><span>${esc(c.score)}</span></div></div>`).join('')}
+  const ph=featPhoto(c,f),cvi=coverImage(c),aseed=f.id+(c.id||c.score);const st0=String(out.stat[0]||''),showSt=/\d/.test(st0)&&st0.length<=14;const phase=c.tab?'Tabela':c.pre?'Pré-jogo':c.live?'Ao vivo':'Pós-jogo';html=`<div class="slides"><div class="slide cover">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}${SBRAND(`${esc(c.lg.short)} · ${dt}`)}${mxHTML(c)}<div class="cvb"><span class="ckick">${esc(phase)}</span><h5>${esc(out.head)}</h5><div class="bsrow"><div style="min-width:0">${showSt?`<div class="bs num">${esc(st0)}</div>`:''}<div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div>${ph?`<img class="pp" src="${esc(ph)}" alt="" crossorigin="anonymous">`:''}</div></div><div class="foot"><span>@tel.score</span><span>arraste →</span></div></div>
+   ${its.map((x,i)=>`<div class="slide${x.v?' vz':''}">${artDiv(x.v&&/^(tbl|games)$/.test(x.v.k)?'lights':artKindFor(aseed,i),false)}${SBRAND(`${i+2}/${N}`)}${x.v?vizBlockHTML(x):`${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${mediaFor(c,x.src)}${factsHTML(factsOf((x.t||x.src)+(x.note?' '+x.note:''),4),true)}`}<div class="foot"><span>@tel.score</span><span>${esc(c.score)}</span></div></div>`).join('')}
    <div class="slide cta">${artDiv('ball',true)}<div class="sn"><span>TEL.SCORE</span><span>${N}/${N}</span></div>${mxHTML(c)}<h5>${tone.emoji?'Curtiu? Salva e manda pro grupo':'Salve para consultar depois'}</h5><p style="margin:0 0 auto;font-size:13.5px">${esc(close)}</p><div class="foot"><span>@tel.score</span><span>placar · análise</span></div></div></div>`;
   const cap=[open,out.head+em(),blocks[0],tone.emoji?'Arraste para ver tudo ➡️':'Arraste para ver a análise completa.',close,'',tags].filter((x,i)=>x||i===5).join('\n');
   html+=`<div class="caption"><div class="who">${AV}tel.score</div>${esc(cap)}</div>`;
@@ -1895,7 +1920,7 @@ function compose(c,f,tone,plat,r){
  } else if(plat==='story'){
   const poll=out.poll||[pick(r,['Concorda com a análise?','Você viu esse jogo?','Esse número te surpreendeu?']),['Sim','Não']];
   const sits=vizItems(c,blocks,f.name,6,f.id,bviz);const fr=[{h:out.head,s:out.stat},{p:sits[0]?sits[0].src:blocks[0],it:sits[0]},{p:blocks[Math.min(2,blocks.length-1)],poll},{h:tone.emoji?'Análise completa no feed 👆':'Análise completa no feed'}];
-  const cvi=coverImage(c),aseed=f.id+(c.id||c.score);html=`<div class="stories">${fr.map((x,i)=>`<div class="story">${i===0?artDiv('lights',false,true)+coverBgDiv(cvi):artDiv(i===fr.length-1?'ball':artKindFor(aseed,i,true),false,true)}<div class="bars">${fr.map((_,j)=>`<i class="${j<=i?'on':''}"></i>`).join('')}</div><div style="display:flex;align-items:center;gap:6px;font-size:11px">${AV.replace('class="avatar"','class="avatar" style="width:22px;height:22px"')}tel.score</div>${i===0?mxHTML(c):''}${x.h?`<h5>${esc(x.h)}</h5>`:''}${x.s?`<div class="bs num">${esc(x.s[0])}</div><div style="font-family:var(--f-mono);font-size:10px;opacity:.75">${esc(x.s[1])}</div>`:''}${i===0&&featPhoto(c,f)?`<img class="pp" src="${esc(featPhoto(c,f))}" alt="" crossorigin="anonymous">`:''}${x.it&&x.it.v?vizBlockHTML(x.it,true):x.p?`${mediaFor(c,x.p)}${rtP(sentN(x.p,2),'big')}`:''}${x.poll?`<div class="sticker"><b>${esc(x.poll[0])}</b>${x.poll[1].slice(0,4).map(o=>`<span>${esc(o)}</span>`).join('')}</div>`:''}</div>`).join('')}</div>`;
+  const cvi=coverImage(c),aseed=f.id+(c.id||c.score);html=`<div class="stories">${fr.map((x,i)=>`<div class="story">${i===0?artDiv('lights',false,true)+coverBgDiv(cvi):artDiv(i===fr.length-1?'ball':artKindFor(aseed,i,true),false,true)}<div class="bars">${fr.map((_,j)=>`<i class="${j<=i?'on':''}"></i>`).join('')}</div><div style="display:flex;align-items:center;gap:6px;font-size:11px">${AV.replace('class="avatar"','class="avatar" style="width:22px;height:22px"')}tel.score</div>${i===0?mxHTML(c):''}${x.h?`<h5>${esc(x.h)}</h5>`:''}${x.s?`<div class="bs num">${esc(x.s[0])}</div><div style="font-family:var(--f-mono);font-size:10px;opacity:.75">${esc(x.s[1])}</div>`:''}${i===0&&featPhoto(c,f)?`<img class="pp" src="${esc(featPhoto(c,f))}" alt="" crossorigin="anonymous">`:''}${x.it&&x.it.v?vizBlockHTML(x.it,true):x.p?`${mediaFor(c,x.p)}${factsHTML(factsOf(x.p,4),true)}`:''}${x.poll?`<div class="sticker"><b>${esc(x.poll[0])}</b>${x.poll[1].slice(0,4).map(o=>`<span>${esc(o)}</span>`).join('')}</div>`:''}</div>`).join('')}</div>`;
   text=fr.map((x,i)=>`STORY ${i+1}: ${x.h||''}${x.s?' | '+x.s[0]+' ('+x.s[1]+')':''}${x.p?x.p:''}${x.poll?`\n  [Enquete] ${x.poll[0]} → ${x.poll[1].join(' / ')}`:''}`).join('\n');
  } else if(plat==='x'){
   const tw=[[open,out.head+(tone.emoji?' 🧵':''),`${out.stat[0]}: ${out.stat[1]}${liveNote}`].filter(Boolean).join('\n\n'),...blocks.map(b=>b+em()),[close,tags].filter(Boolean).join('\n\n')];
@@ -2890,6 +2915,7 @@ const PRE_TONE={
  didatico:{open:[c=>'Como ler uma prévia com dados, passo a passo:',c=>'Antes do jogo, os números já contam uma história:',c=>'Vamos entender este confronto pelos dados.'],close:[c=>'Probabilidade não é certeza: 60% de chance ainda deixa 40% para o outro lado.',c=>'Ficou dúvida em alguma métrica? Pergunte nos comentários.',c=>'Salve e compare com o resultado depois do jogo.']}
 };
 const preTone=t=>PRE_TONE[t.id]?{...t,...PRE_TONE[t.id]}:t;
+const noMkt=x=>!/mercado|aposta|odds/i.test(String(x||''));
 const preRec=c=>{let wh=0,dr=0,wa=0,gh=0,ga=0;c.h2h.forEach(x=>{gh+=x.hs;ga+=x.as;if(x.hs>x.as)wh++;else if(x.as>x.hs)wa++;else dr++;});return {wh,dr,wa,gh,ga,n:c.h2h.length};};
 const preFav=c=>{if(!c.pct)return null;const m=Math.max(c.pct.h,c.pct.d,c.pct.a);return m===c.pct.d&&c.pct.d>c.pct.h&&c.pct.d>c.pct.a?{k:'d',v:c.pct.d,name:'empate'}:c.pct.h>=c.pct.a?{k:'h',v:c.pct.h,name:c.H.name}:{k:'a',v:c.pct.a,name:c.A.name};};
 const injList=(c,s)=>c.inj.filter(x=>x.side===s);
@@ -2897,7 +2923,7 @@ const PRE_FORMATS=[
 {id:'pre-analise',pre:true,cat:'Pré-jogo',name:'Análise TEL.SCORE',desc:'Favorito, fatores e números que pesam no jogo',visual:'Barras de probabilidade e fatores a favor de cada time',need:c=>!!(c.pre&&c.deep),run(c,r){const H=c.H,A=c.A,X=c.deep,R=c.read,[th,ta]=X.T,b=[];
  const b3=P=>({k:'bars3',max:100,rows:[{e:vzTeam(c,'h'),lab:H.name,v:P.h,txt:P.h+'%'},{lab:'Empate',v:P.d,txt:P.d+'%',sym:'='},{e:vzTeam(c,'a'),lab:A.name,v:P.a,txt:P.a+'%'}]});
  b.push({t:`Probabilidades TEL.SCORE: ${H.name} ${X.final.h}%, empate ${X.final.d}%, ${A.name} ${X.final.a}%.`,viz:{kick:'Análise TEL.SCORE',v:b3(X.final),t:R.verdict}});
- b.push({t:`O que pesa no jogo: ${X.F.map(f=>`${/^xG/.test(f.lab)?f.lab:f.lab[0].toLowerCase()+f.lab.slice(1)} (${Math.abs(f.v)<.03?'neutro':f.v>0?H.name:A.name})`).join(', ')}.`,viz:{kick:'O que pesa no jogo',v:{k:'factors',hc:tCode(H),ac:tCode(A),hn:H.name,an:A.name,rows:X.F.slice().sort((p,q)=>Math.abs(q.v)-Math.abs(p.v)).slice(0,6).map(f=>({lab:f.lab,v:f.v}))},t:R.alert||(R.reasons[0]||'')}});
+ const FP=X.F.filter(f=>f.k!=='mercado');b.push({t:`O que pesa no jogo: ${FP.map(f=>`${/^xG/.test(f.lab)?f.lab:f.lab[0].toLowerCase()+f.lab.slice(1)} (${Math.abs(f.v)<.03?'neutro':f.v>0?H.name:A.name})`).join(', ')}.`,viz:{kick:'O que pesa no jogo',v:{k:'factors',hc:tCode(H),ac:tCode(A),hn:H.name,an:A.name,rows:FP.slice().sort((p,q)=>Math.abs(q.v)-Math.abs(p.v)).slice(0,6).map(f=>({lab:f.lab,v:f.v}))},t:(noMkt(R.alert)&&R.alert)||(R.reasons.filter(noMkt)[0]||'')}});
  if(th.xgF!=null&&ta.xgF!=null){const dh=th.xgF-th.xgA,da=ta.xgF-ta.xgA;b.push({t:`xG nos últimos 5: ${H.name} cria ${numPT(th.xgF,2)} e cede ${numPT(th.xgA,2)}; ${A.name} cria ${numPT(ta.xgF,2)} e cede ${numPT(ta.xgA,2)}.`,viz:{kick:'xG nos últimos 5 jogos',v:{k:'cmp',h:{...vzTeam(c,'h'),v:th.xgF,txt:numPT(th.xgF,2),lab:'criado por jogo'},a:{...vzTeam(c,'a'),v:ta.xgF,txt:numPT(ta.xgF,2),lab:'criado por jogo'},sub:`cedido por jogo: ${numPT(th.xgA,2)} x ${numPT(ta.xgA,2)}`},t:`Saldo de xG por jogo: ${H.name} ${dh>=0?'+':''}${numPT(dh,2)}, ${A.name} ${da>=0?'+':''}${numPT(da,2)}. ${Math.abs(dh-da)<.25?'Produção parecida nas últimas partidas.':`Quem vem jogando melhor é o ${dh>da?H.name:A.name}.`}`}});}
  if(th.form||ta.form)b.push({t:`Forma: ${H.name} ${th.form} · ${A.name} ${ta.form}.`,viz:{kick:'Últimos 5 jogos',v:{k:'form',rows:[{e:vzTeam(c,'h'),form:th.form},{e:vzTeam(c,'a'),form:ta.form}]},t:`${H.name} somou ${th.pts} de ${th.n*3} pontos; ${A.name}, ${ta.pts} de ${ta.n*3}.`}});
  if(th.season&&ta.season)b.push({t:`Temporada: ${H.name} ${numPT(th.season.gf)} gols marcados e ${numPT(th.season.ga)} sofridos por jogo; ${A.name} ${numPT(ta.season.gf)} e ${numPT(ta.season.ga)}.`,viz:{kick:'Campanha na temporada',v:{k:'cmp',h:{...vzTeam(c,'h'),v:th.season.gf,txt:numPT(th.season.gf),lab:'gols marcados/jogo'},a:{...vzTeam(c,'a'),v:ta.season.gf,txt:numPT(ta.season.gf),lab:'gols marcados/jogo'},sub:`sofridos por jogo: ${numPT(th.season.ga)} x ${numPT(ta.season.ga)}`},t:`${H.name}: ${th.season.w} vitórias, ${th.season.dr} empates e ${th.season.l} derrotas. ${A.name}: ${ta.season.w}, ${ta.season.dr} e ${ta.season.l}.`}});
@@ -2905,10 +2931,10 @@ const PRE_FORMATS=[
  if(!X.sameLg&&th.tier!=null&&ta.tier!=null)b.push({t:`Força do elenco: ${lgNm(th)} x ${lgNm(ta)}.`,viz:{kick:'Força do elenco',v:{k:'cmp',h:{...vzTeam(c,'h'),v:tierPct(th.tier),txt:String(tierPct(th.tier)),lab:lgNm(th)},a:{...vzTeam(c,'a'),v:tierPct(ta.tier),txt:String(tierPct(ta.tier)),lab:lgNm(ta)},sub:'nível estimado da liga, de 0 a 100'},t:`${H.name}${th.rank?` é ${th.rank}º na ${lgNm(th)}`:` disputa a ${lgNm(th)}`}; ${A.name}${ta.rank?` é ${ta.rank}º na ${lgNm(ta)}`:` disputa a ${lgNm(ta)}`}. ${Math.abs(th.tier-ta.tier)>=.3?'A diferença de nível entre as ligas pesa bastante.':'Ligas de nível parecido.'}`}});
  else if(th.rank&&ta.rank)b.push({t:`Tabela: ${H.name} ${th.rank}º, ${A.name} ${ta.rank}º.`,viz:{kick:'Força do elenco',v:{k:'cmp',low:true,nobar:true,h:{...vzTeam(c,'h'),v:th.rank,txt:th.rank+'º',lab:H.name},a:{...vzTeam(c,'a'),v:ta.rank,txt:ta.rank+'º',lab:A.name},sub:`na ${lgNm(th)}`},t:`${th.rank<ta.rank?H.name:A.name} está ${pl(Math.abs(th.rank-ta.rank),'posição(ões)')} acima na tabela.`}});
  const fk=favOf(X.final),fn=fk==='h'?H.name:fk==='a'?A.name:'empate';
- return {head:pick(r,[`Análise TEL.SCORE: ${H.name} x ${A.name}`,`${H.name} x ${A.name}: quem chega melhor`,'Tudo o que pesa antes do jogo']),stat:[`${X.final[fk]}%`,fk==='d'?'chance de empate':`chance de vitória do ${fn}`],blocks:b};}},
+ return {head:pick(r,[`${H.name} x ${A.name}`,`${H.name} x ${A.name}: quem chega melhor`,`${H.name} x ${A.name}: o que pesa no jogo`]),stat:[`${X.final[fk]}%`,fk==='d'?'chance de empate':`chance de vitória do ${fn}`],blocks:b};}},
 {id:'pre-previa',pre:true,cat:'Pré-jogo',name:'Prévia do jogo',desc:'Tudo o que importa antes do apito',visual:'Escudos frente a frente com probabilidades',need:c=>!!c.pre,run(c,r){const H=c.H,A=c.A,b=[];
  {const lt=`${c.lead}${c.stadium?` Local: ${c.stadium}${c.city?`, ${c.city}`:''}.`:''}`;b.push({t:lt,viz:{kick:c.cx&&c.cx.comp&&c.cx.comp.stage?c.cx.comp.stage:'O jogo',v:ctxViz(c),t:lt}});}
- if(c.pct)b.push({t:`Probabilidades ${c.pctSrc==='tel'?'TEL.SCORE':c.pctSrc==='mercado'?'do mercado':'do modelo'}: ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, ${A.name} ${c.pct.a}%.`});
+ if(c.pct)b.push({t:`Probabilidades ${c.pctSrc==='modelo'?'do modelo':'TEL.SCORE'}: ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, ${A.name} ${c.pct.a}%.`});
  if(c.read)b.push({t:`Leitura TEL.SCORE: ${c.read.verdict}`});
  if(H.form||A.form)b.push({t:`Últimos 5 jogos: ${H.name} ${H.form||'sem dados'} · ${A.name} ${A.form||'sem dados'} (V vitória, E empate, D derrota).`});
  if(H.season&&A.season)b.push({t:`Na temporada, o ${H.name} marca ${numPT(H.season.gf)} e sofre ${numPT(H.season.ga)} gols por jogo; o ${A.name}, ${numPT(A.season.gf)} e ${numPT(A.season.ga)}.`});
@@ -2917,15 +2943,16 @@ const PRE_FORMATS=[
  if(c.advice)b.push({t:`Palpite do modelo: ${c.advice}.`});
  return {head:pick(r,[`Prévia: ${H.name} x ${A.name}`,`${H.name} x ${A.name}: o que esperar`,`Tudo sobre ${H.name} x ${A.name}`]),stat:[c.kick,`${c.dateLabel}${c.stadium?' · '+c.stadium:''}`],blocks:b};}},
 {id:'pre-palpite',pre:true,cat:'Pré-jogo',name:'Quem vence? O palpite',desc:'Probabilidades e tendência do jogo',visual:'Barras de probabilidade por resultado',need:c=>!!(c.pre&&c.pct),run(c,r){const H=c.H,A=c.A,F=preFav(c),b=[];
- b.push({t:`${c.pctSrc==='tel'?`Pela análise TEL.SCORE (${c.deep&&c.deep.odds?'mercado, ':''}xG, forma, temporada, desfalques e força do elenco)`:c.pctSrc==='mercado'?`Pelo mercado (média de ${pl(c.oddsN,'casa(s)')} de apostas)`:'Pelo modelo da API-Football'}: vitória do ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, vitória do ${A.name} ${c.pct.a}%.`});
- if(c.read){b.push({t:c.read.verdict});c.read.reasons.slice(0,2).forEach(x=>b.push({t:x}));if(c.read.alert)b.push({t:c.read.alert});}
- if(c.dis&&c.mpct)b.push({t:`O modelo estatístico da API discorda: ${H.name} ${c.mpct.h}%, empate ${c.mpct.d}%, ${A.name} ${c.mpct.a}%. Ele olha só a forma recente e não mede a força dos elencos.`});
- const big=c.cmp.filter(x=>x.k!=='total').map(x=>({...x,dif:Math.abs(x.h-x.a)})).sort((x,y)=>y.dif-x.dif)[0];
- if(big)b.push({t:`Maior diferença entre os dois: ${big.lab.toLowerCase()}, ${big.h}% x ${big.a}% a favor do ${big.h>=big.a?H.name:A.name}.`});
- const tot=c.cmp.find(x=>x.k==='total');if(tot)b.push({t:`Avaliação geral do modelo: ${H.name} ${tot.h}% x ${tot.a}% ${A.name}.`});
- if(c.uo)b.push({t:`Linha de gols: tendência de ${c.uo}.`});
- if(c.advice)b.push({t:`Palpite: ${c.advice}${c.winOrDraw&&c.winner?` (o modelo também aceita vitória ou empate do ${c.winner})`:''}.`});
- b.push({t:c.pctSrc==='tel'?`Lembrete: probabilidade não é certeza. É a chance calculada pela TEL.SCORE com dados${c.deep&&c.deep.odds?' e mercado':''}. Não é recomendação de aposta.`:c.pctSrc==='mercado'?'Lembrete: probabilidade não é certeza. É a chance implícita nas odds, sem a margem das casas. Não é recomendação de aposta.':'Lembrete: probabilidade não é certeza. É a chance estimada a partir de forma, ataque, defesa e retrospecto.'});
+ const P=c.pct,b3=({k:'bars3',max:100,rows:[{e:vzTeam(c,'h'),lab:H.name,v:P.h,txt:P.h+'%'},{lab:'Empate',v:P.d,txt:P.d+'%',sym:'='},{e:vzTeam(c,'a'),lab:A.name,v:P.a,txt:P.a+'%'}]});
+ const fav=F.k==='d'?'O empate é o resultado mais provável':`Favorito: ${F.name}, com ${F.v}% de chance de vitória`;
+ b.push({t:`Probabilidades TEL.SCORE: ${H.name} ${P.h}%, empate ${P.d}%, ${A.name} ${P.a}%.`,viz:{kick:'Quem vence?',v:b3,t:`${fav}. Empate: ${P.d}%`}});
+ const X=c.deep;
+ if(X){b.push({t:`Gols esperados: ${H.name} ${numPT(X.lh)} x ${numPT(X.la)} ${A.name}. Placar mais provável: ${X.score[0]} x ${X.score[1]}.`,viz:{kick:'Gols esperados',v:{k:'cmp',h:{...vzTeam(c,'h'),v:X.lh,txt:numPT(X.lh),lab:H.name},a:{...vzTeam(c,'a'),v:X.la,txt:numPT(X.la),lab:A.name},sub:`placar mais provável: ${X.score[0]} x ${X.score[1]}`},t:`Placar mais provável: ${X.score[0]} x ${X.score[1]}. Tendência de ${X.lh+X.la>=2.6?'mais':'menos'} de 2,5 gols`}});
+  const FP=X.F.filter(f=>f.k!=='mercado');const why=c.read?c.read.reasons.filter(noMkt).slice(0,2):[];
+  b.push({t:`O que pesa: ${why.join(' ')}`,viz:{kick:'O que pesa no jogo',v:{k:'factors',hc:tCode(H),ac:tCode(A),hn:H.name,an:A.name,rows:FP.slice().sort((p,q)=>Math.abs(q.v)-Math.abs(p.v)).slice(0,5).map(f=>({lab:f.lab,v:f.v}))},t:why.join(' ')}});
+  if(c.read&&c.read.alert&&noMkt(c.read.alert))b.push({t:c.read.alert,viz:{kick:'Ponto de atenção',v:null,t:c.read.alert.replace(/^Ponto de atenção:\s*/,'')}});}
+ else{if(c.uo)b.push({t:`Linha de gols: tendência de ${c.uo}.`});if(c.advice)b.push({t:`Palpite do modelo: ${c.advice}.`});}
+ b.push({t:'Probabilidade não é certeza.',viz:{kick:'Lembrete',v:null,t:c.pctSrc==='modelo'?'Probabilidade não é certeza. É a chance estimada a partir de forma, ataque, defesa e retrospecto.':'Probabilidade não é certeza. É a chance calculada pela análise TEL.SCORE.'}});
  return {head:pick(r,[`Quem vence ${H.name} x ${A.name}?`,`${H.name} x ${A.name}: o palpite dos números`,`O favorito de ${H.name} x ${A.name}`]),stat:[`${F.v}%`,F.k==='d'?'chance de empate':`chance de vitória do ${F.name}`],blocks:b,poll:['Quem vence?',[H.name,'Empate',A.name]]};}},
 {id:'pre-escalacao',pre:true,cat:'Pré-jogo',name:'Escalação provável',desc:'Os 11 de cada time e quem está fora',visual:'Campinho com as duas formações',need:c=>!!(c.pre&&c.lu),run(c,r){const H=c.H,A=c.A,L=c.lu,b=[];
  const xi=s=>L[s].xi.map(p=>p.name).join(', ');
@@ -2972,7 +2999,7 @@ const PRE_FORMATS=[
 {id:'pre-enquete',pre:true,cat:'Pré-jogo',name:'Enquete: quem vence?',desc:'Post de engajamento com votação',visual:'Escudos com enquete de três opções',need:c=>!!c.pre,run(c,r){const H=c.H,A=c.A,b=[];
  b.push({t:`Vote: quem vence ${H.name} x ${A.name}, ${c.whenTxt}?`});
  b.push({t:'Deixa nos comentários o seu placar exato.'});
- if(c.pct)b.push({t:`Para comparar com o seu palpite: ${c.pctSrc==='tel'?'a análise TEL.SCORE':`o ${c.pctSrc}`} dá ${c.pct.h}% para o ${H.name}, ${c.pct.d}% para o empate e ${c.pct.a}% para o ${A.name}.`});
+ if(c.pct)b.push({t:`Para comparar com o seu palpite: ${c.pctSrc==='modelo'?'o modelo':'a análise TEL.SCORE'} dá ${c.pct.h}% para o ${H.name}, ${c.pct.d}% para o empate e ${c.pct.a}% para o ${A.name}.`});
  b.push({t:'O resultado da enquete sai no pós-jogo, junto com a análise.'});
  return {head:pick(r,[`Quem vence ${H.name} x ${A.name}?`,'Seu palpite vale ouro','Vota aí!']),stat:[`${H.short} × ${A.short}`,'quem leva?'],blocks:b,poll:['Quem vence?',[H.name,'Empate',A.name]]};}}
 ];
@@ -3360,7 +3387,7 @@ async function domLeague(tid,skipId){
  const L=[...cnt.values()].sort((a,b)=>(b.lg.id in LG_TIER)-(a.lg.id in LG_TIER)||b.n-a.n)[0];return L?{lg:L.lg,tier:tierOfLg(L.lg),name:lgNamePT(L.lg)}:null;
 }
 const tPos=t=>!t?'':t.rank===1?'líder':t.n&&t.rank===t.n?'lanterna':`${t.rank}º colocado`;
-const srcPT={mercado:'pelo mercado',tabela:'pela campanha na tabela',liga:'pelo nível das ligas',tel:'pela análise TEL.SCORE'};
+const srcPT={mercado:'pela análise TEL.SCORE',tabela:'pela campanha na tabela',liga:'pelo nível das ligas',tel:'pela análise TEL.SCORE'};
 // parte síncrona: só com o que aconteceu em campo (serve também para o arquivo histórico)
 function cxBase(c){
  const fin=!c.live;const G=c.goals.slice().sort((x,y)=>x.m-y.m);const s={h:0,a:0},tr={h:false,a:false},ld={h:false,a:false};
@@ -3503,7 +3530,7 @@ function deepRead(X,hn,an){
  if(fk==='d'){out.verdict=`Jogo muito equilibrado: o empate é o resultado mais provável (${P.d}%). Placar mais provável: ${sc}.`;out.tone='down';}
  else{const v=P[fk];const lab=v>=65?'favorito claro':v>=50?'favorito':'leve favorito';out.verdict=`O ${nm(fk)} é ${lab}: ${v}% de chance de vitória, contra ${P.d}% de empate e ${P[fk==='h'?'a':'h']}% do ${nm(fk==='h'?'a':'h')}. Placar mais provável: ${sc}.`;out.tone=v>=65?'up':v>=50?'ok':'down';}
  const txt=f=>{const side=f.v>=0?hn:an;
-  if(f.k==='mercado'&&X.odds){const mk=favOf(X.odds);return mk==='d'?'Mercado: as casas de apostas veem jogo equilibrado.':`Mercado: as casas de apostas apontam o ${nm(mk)} (${X.odds[mk]}%).`;}
+  if(f.k==='mercado'&&X.odds){const mk=favOf(X.odds);return mk==='d'?'Análise de mercado: jogo equilibrado.':`Análise de mercado: favorece o ${nm(mk)} (${X.odds[mk]}%).`;}
   if(f.k==='elenco')return X.sameLg?(th.rank&&ta.rank?`Força do elenco: ${hn} ${th.rank}º e ${an} ${ta.rank}º na ${lgNm(th)}.`:''):`Força do elenco: ${lgNm(th)||'liga não identificada'}${th.rank?` (${th.rank}º)`:''} x ${lgNm(ta)||'liga não identificada'}${ta.rank?` (${ta.rank}º)`:''}. Pesa a favor do ${side}.`;
   if(f.k==='xg'&&th.xgF!=null&&ta.xgF!=null)return `${th.proxy||ta.proxy?'Chances (estimadas pelos chutes)':'xG'} nos últimos 5: ${hn} cria ${numPT(th.xgF)} e cede ${numPT(th.xgA)} por jogo; ${an} cria ${numPT(ta.xgF)} e cede ${numPT(ta.xgA)}.`;
   if(f.k==='forma')return `Forma: ${hn} ${th.form||'–'} (${th.pts} de ${th.n*3} pontos) · ${an} ${ta.form||'–'} (${ta.pts} de ${ta.n*3}).`;
@@ -3513,7 +3540,7 @@ function deepRead(X,hn,an){
  const ranked=X.F.slice().sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
  out.reasons=ranked.map(txt).filter(Boolean).slice(0,4);
  if(fk!=='d'){const sign=fk==='h'?1:-1;const opp=ranked.find(f=>f.k!=='mando'&&f.v*sign<-.12);if(opp){const t=txt(opp),ok=fk==='h'?'a':'h',o=nm(ok),f=nm(fk),T=ok==='h'?th:ta,F=fk==='h'?th:ta,rk=x=>x.rank?` (${x.rank}º)`:'';
-   const al={mercado:()=>X.odds?`o mercado aponta o ${o} (${X.odds[ok]}%)`:'',elenco:()=>X.sameLg?(T.rank&&F.rank?`o ${o} está mais bem colocado na tabela (${T.rank}º contra ${F.rank}º)`:''):`a força do elenco favorece o ${o}, pelo nível da liga (${lgNm(T)||'liga não identificada'}${rk(T)} contra ${lgNm(F)||'liga não identificada'}${rk(F)})`,
+   const al={mercado:()=>X.odds?`a análise de mercado favorece o ${o} (${X.odds[ok]}%)`:'',elenco:()=>X.sameLg?(T.rank&&F.rank?`o ${o} está mais bem colocado na tabela (${T.rank}º contra ${F.rank}º)`:''):`a força do elenco favorece o ${o}, pelo nível da liga (${lgNm(T)||'liga não identificada'}${rk(T)} contra ${lgNm(F)||'liga não identificada'}${rk(F)})`,
     xg:()=>T.xgF!=null?`o xG recente favorece o ${o}, que cria ${numPT(T.xgF)} e cede ${numPT(T.xgA)} por jogo`:'',forma:()=>`o ${o} chega em melhor forma: ${T.pts} de ${T.n*3} pontos nos últimos ${T.n} jogos`,
     temporada:()=>T.season?`a campanha do ${o} na temporada é melhor: marca ${numPT(T.season.gf)} e sofre ${numPT(T.season.ga)} por jogo`:'',desfalques:()=>F.out.length?`o ${f} tem mais desfalques: ${F.out.join(', ')}`:''}[opp.k];
    const a=al?al():'';if(a){out.alert=`Ponto de atenção: ${a}.`;out.reasons=out.reasons.filter(r=>r!==t);}}}
@@ -3538,7 +3565,7 @@ function deepCard0(X,h,a){
  <div class="dp-read ${RD.tone}"><b>${icon}</b><div><strong>${esc(RD.verdict)}</strong>${RD.reasons.length?`<ul>${RD.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:''}${RD.alert?`<p class="dp-alert">${esc(RD.alert)}</p>`:''}</div></div>
  <div class="tf"><div class="tf-h"><span>O que pesa no jogo</span></div><div class="tf-row tf-axis"><span></span><div class="tf-ax"><span>← ${esc(h.name)}</span><span>${esc(a.name)} →</span></div><span></span></div>${fac}</div>
  ${rows.length?`<div class="dp-cmp-h"><span><i style="background:var(--red)"></i>${esc(h.name)}</span><b>Números lado a lado</b><span>${esc(a.name)}<i style="background:var(--away)"></i></span></div><div class="dp-cmp">${cmpRows(rows)}</div>`:''}
- <p class="chart-note">${th.proxy||ta.proxy?'Sem xG oficial em alguns jogos: as chances foram estimadas pelos chutes. ':''}A força do elenco usa o nível estimado da liga e a posição na tabela. Probabilidade não é certeza e nada aqui é recomendação de aposta.</p></div>`;
+ <p class="chart-note">${th.proxy||ta.proxy?'Sem xG oficial em alguns jogos: as chances foram estimadas pelos chutes. ':''}A força do elenco usa o nível estimado da liga e a posição na tabela. Probabilidade é uma estimativa, não uma certeza.</p></div>`;
 }
 async function preReal(f,tab){
  const D=await preData(f);
@@ -3563,7 +3590,7 @@ async function preRealBase(f,tab,D){
   const injCard=(t)=>{const L=byTeam(t.id);return `<div class="card"><div class="card-h"><h3>${rCrest(t)} Desfalques · ${esc(t.name)}</h3></div>${L.length?L.map(x=>`<div class="lp">${lpPh(x.player.id,x.player.photo,x.player.type==='Missing Fixture'?'✕':'?','',`background:${x.player.type==='Missing Fixture'?'var(--red)':'var(--yellow)'};color:${x.player.type==='Missing Fixture'?'#fff':'#111'}`)}<span class="nm">${esc(x.player.name)}<small>${esc(REASON_PT(x.player.reason))}</small></span><span class="ics">${esc(INJ_PT[x.player.type]||x.player.type)}</span></div>`).join(''):'<p style="color:var(--muted);margin:0;font-size:13px">Nenhum desfalque informado.</p>'}</div>`;};
   return html+`<div class="pre-2">${injCard(h)}${injCard(a)}</div>`;
  }
- if(!P&&tab==='previa'&&D.odds){const O=D.odds;const don=donut([{v:O.h,c:'var(--red)',l:h.name},{v:O.d,c:'var(--line2)',l:'Empate'},{v:O.a,c:'var(--away)',l:a.name}],140,14,`<text x="50%" y="55%" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="18" fill="var(--ink)">${Math.max(O.h,O.d,O.a)}%</text>`);return `<div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">Mercado: média de ${pl(O.n,'casa(s)')} de apostas, sem a margem delas. Não é recomendação de aposta.</div></div></div><div class="don-wrap">${don}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(h.name)} ${O.h}%</span><span><span class="side-dot" style="background:var(--line2)"></span>Empate ${O.d}%</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(a.name)} ${O.a}%</span></div></div></div>`;}
+ if(!P&&tab==='previa'&&D.odds){const O=D.odds;const don=donut([{v:O.h,c:'var(--red)',l:h.name},{v:O.d,c:'var(--line2)',l:'Empate'},{v:O.a,c:'var(--away)',l:a.name}],140,14,`<text x="50%" y="55%" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="18" fill="var(--ink)">${Math.max(O.h,O.d,O.a)}%</text>`);return `<div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">Análise de mercado TEL.SCORE. Probabilidade é uma estimativa, não uma certeza.</div></div></div><div class="don-wrap">${don}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(h.name)} ${O.h}%</span><span><span class="side-dot" style="background:var(--line2)"></span>Empate ${O.d}%</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(a.name)} ${O.a}%</span></div></div></div>`;}
  if(!P)return `<div class="empty">A API ainda não tem a prévia deste jogo${D.predErr?` (${esc(D.predErr)})`:''}. Ela costuma aparecer alguns dias antes da partida.</div>`;
  const TH=P.teams.home,TA=P.teams.away,pp=P.predictions||{},cmp=P.comparison||{};
  if(tab==='previa'){
@@ -3573,9 +3600,9 @@ async function preRealBase(f,tab,D){
   const CMP=[['form','Forma recente'],['att','Ataque'],['def','Defesa'],['poisson_distribution','Modelo de Poisson'],['h2h','Confronto direto'],['goals','Gols'],['total','Avaliação geral']];
   const rows=CMP.filter(([k])=>cmp[k]).map(([k,l])=>[l+' (%)',pctN(cmp[k].home),pctN(cmp[k].away),0]);
   const l5=(T,t)=>{const x=T.last_5||{};const g=x.goals||{};return `<div class="tile tile-plain"><span style="display:flex;align-items:center;gap:8px;font-weight:600;color:var(--ink)">${rCrest(t)}${esc(t.name)}</span><div class="crew" style="margin-top:10px"><div><span>Forma</span><b>${esc(x.form||'–')}</b></div><div><span>Ataque</span><b>${esc(x.att||'–')}</b></div><div><span>Defesa</span><b>${esc(x.def||'–')}</b></div><div><span>Gols marcados</span><b>${g.for?`${g.for.total} (${String(g.for.average).replace('.',',')}/jogo)`:'–'}</b></div><div><span>Gols sofridos</span><b>${g.against?`${g.against.total} (${String(g.against.average).replace('.',',')}/jogo)`:'–'}</b></div></div></div>`;};
-  return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">${O?`Mercado: média de ${pl(O.n,'casa(s)')} de apostas, sem a margem delas. Não é recomendação de aposta.`:'Modelo estatístico da API-Football (forma recente, ataque, defesa e confronto direto). Pode errar em jogos de copa entre times de ligas diferentes.'}</div></div></div>
+  return `<div class="cm-grid"><div class="card"><div class="card-h"><div><h3>Probabilidades</h3><div class="sub">${O?`Análise de mercado TEL.SCORE. Probabilidade é uma estimativa, não uma certeza.`:'Modelo estatístico da API-Football (forma recente, ataque, defesa e confronto direto). Pode errar em jogos de copa entre times de ligas diferentes.'}</div></div></div>
   <div class="don-wrap">${don}<div class="don-leg"><span><span class="side-dot" style="background:var(--red)"></span>${esc(h.name)} ${ph}%</span><span><span class="side-dot" style="background:var(--line2)"></span>Empate ${pd}%</span><span><span class="side-dot" style="background:var(--away)"></span>${esc(a.name)} ${pa}%</span></div></div>
-  <div class="insight" style="margin-top:16px">${O?(()=>{const fk=favOf(O);const nm=fk==='h'?h.name:fk==='a'?a.name:'Empate';const v=fk==='h'?O.h:fk==='a'?O.a:O.d;return `<div class="ins"><span class="ix">${fk==='d'?'=':esc(teamCode(nm))}</span><p>${fk==='d'?'Mercado vê empate como o mais provável':`Favorito do mercado: ${esc(nm)}`}<small>${v}% de chance, pela média de ${pl(O.n,'casa(s)')} de apostas</small></p></div>`;})():''}${dis?`<div class="ins"><span class="ix">${IC.flag}</span><p>O modelo da API discorda<small>Ele dá ${esc(h.name)} ${Math.round(mph||0)}%, empate ${Math.round(mpd||0)}% e ${esc(a.name)} ${Math.round(mpa||0)}%. Esse modelo olha a forma recente e não mede a força dos elencos, por isso aqui vale o mercado.</small></p></div>`:`${pp.advice?`<div class="ins"><span class="ix">${IC.flag}</span><p>Palpite do modelo da API<small>${esc(advicePT(pp.advice))}</small></p></div>`:''}${!O&&pp.winner&&pp.winner.name?`<div class="ins"><span class="ix">${esc(teamCode(pp.winner.name))}</span><p>Favorito: ${esc(pp.winner.name)}<small>${pp.win_or_draw?'Indicado também para vitória ou empate':'Indicado para vencer'}</small></p></div>`:''}`}${pp.under_over?`<div class="ins"><span class="ix">${esc(String(pp.under_over).replace(/^[-+]/,'').replace('.',','))}</span><p>Linha de gols<small>Tendência de ${esc(ouPT(pp.under_over))} na partida</small></p></div>`:''}</div></div>
+  <div class="insight" style="margin-top:16px">${O?(()=>{const fk=favOf(O);const nm=fk==='h'?h.name:fk==='a'?a.name:'Empate';const v=fk==='h'?O.h:fk==='a'?O.a:O.d;return `<div class="ins"><span class="ix">${fk==='d'?'=':esc(teamCode(nm))}</span><p>${fk==='d'?'A análise de mercado vê empate como o mais provável':`Favorito na análise de mercado: ${esc(nm)}`}<small>${v}% de chance</small></p></div>`;})():''}${dis?`<div class="ins"><span class="ix">${IC.flag}</span><p>O modelo da API discorda<small>Ele dá ${esc(h.name)} ${Math.round(mph||0)}%, empate ${Math.round(mpd||0)}% e ${esc(a.name)} ${Math.round(mpa||0)}%. Esse modelo olha a forma recente e não mede a força dos elencos, por isso aqui vale a análise de mercado.</small></p></div>`:`${pp.advice?`<div class="ins"><span class="ix">${IC.flag}</span><p>Palpite do modelo da API<small>${esc(advicePT(pp.advice))}</small></p></div>`:''}${!O&&pp.winner&&pp.winner.name?`<div class="ins"><span class="ix">${esc(teamCode(pp.winner.name))}</span><p>Favorito: ${esc(pp.winner.name)}<small>${pp.win_or_draw?'Indicado também para vitória ou empate':'Indicado para vencer'}</small></p></div>`:''}`}${pp.under_over?`<div class="ins"><span class="ix">${esc(String(pp.under_over).replace(/^[-+]/,'').replace('.',','))}</span><p>Linha de gols<small>Tendência de ${esc(ouPT(pp.under_over))} na partida</small></p></div>`:''}</div></div>
   <div style="display:grid;gap:16px;min-width:0"><div class="card"><div class="card-h"><div><h3>Comparativo</h3><div class="sub">Modelo estatístico da API, em porcentagem. Baseado na forma recente: não mede a força dos elencos.</div></div></div>${rows.length?cmpRows(rows):'<p style="color:var(--muted);margin:0">Sem comparativo para este jogo.</p>'}</div>
   <div class="card"><div class="card-h"><h3>Últimos 5 jogos</h3></div><div class="ref-tiles" style="margin-top:0">${l5(TH,h)}${l5(TA,a)}</div></div></div></div>`;
  }
@@ -3636,7 +3663,7 @@ async function cvFonts(){try{await Promise.all(['900 80px Orbitron','800 80px Or
 function wrapLines(ctx,text,maxW){const words=String(text||'').split(/\s+/).filter(Boolean);const lines=[];let line='';for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;}if(line)lines.push(line);return lines;}
 function fitText(ctx,text,font,size,minSize,maxW,maxLines,weight){let s=size;for(;s>=minSize;s-=4){ctx.font=`${weight} ${s}px ${font}`;const L=wrapLines(ctx,text,maxW);if(L.length<=maxLines)return {s,L};}ctx.font=`${weight} ${minSize}px ${font}`;return {s:minSize,L:wrapLines(ctx,text,maxW)};}
 // texto rico no PNG: frase principal em negrito, complemento mais leve, números em vermelho e barra lateral da marca
-function richTokens(t){const a=String(t||''),b='';const tk=[];const push=(x,ld)=>String(x||'').split(/\s+/).filter(Boolean).forEach(w=>{const m=w.match(/^(\(?)([~+−-]?\d+(?:[.,]\d+)?(?:%|º|ª)?)(.*)$/);tk.push({w,ld,pre:m?m[1]:'',num:m?m[2]:'',rest:m?m[3]:''});});push(a,true);if(a&&b)tk.push({br:true});push(b,false);return tk;}
+function richTokens(t){const a=String(t||''),b='';const tk=[];const push=(x,ld)=>String(x||'').split(/\s+/).filter(Boolean).forEach(w=>{const m=w.match(/^(\(?)([~+−-]?\d+(?:[.,]\d+)?(?:%|º|ª)?)(.*)$/);const isT=m&&/^[:\/]\d/.test(m[3]);tk.push({w,ld,pre:m&&!isT?m[1]:'',num:m&&!isT?m[2]:'',rest:m&&!isT?m[3]:''});});push(a,true);if(a&&b)tk.push({br:true});push(b,false);return tk;}
 function richLayout(ctx,tk,size,maxW){const lines=[[]];let w=0;const sp=size*.3;tk.forEach(t=>{if(t.br){if(lines[lines.length-1].length){lines.push([]);lines[lines.length-1].gap=true;}w=0;return;}ctx.font=`${t.ld?700:500} ${size}px ${CV.body}`;const tw=ctx.measureText(t.w).width;if(w&&w+sp+tw>maxW){const g=false;lines.push([]);lines[lines.length-1].gap=g;w=0;}const x=w?w+sp:0;lines[lines.length-1].push({...t,x});w=x+tw;});return lines.filter(l=>l.length);}
 
 function fitRich(ctx,t,maxW,maxS,minS,maxL){const tk=richTokens(t);let s=maxS,L=richLayout(ctx,tk,s,maxW);while(L.length>maxL&&s>minS){s-=2;L=richLayout(ctx,tk,s,maxW);}if(L.length>maxL)L=L.slice(0,maxL);return {s,L,lh:s*1.34,h:L.length*s*1.34+L.filter(l=>l.gap).length*s*.35};}
@@ -3645,6 +3672,19 @@ function drawRich(ctx,R,x,y,bar){ctx.save();ctx.textAlign='left';const y0=y;R.L.
   else{ctx.fillStyle='#fff';ctx.fillText(t.w,x+t.x,by);}});y+=R.lh;});
  if(bar){ctx.globalAlpha=1;ctx.fillStyle=CV.red;ctx.beginPath();ctx.roundRect?ctx.roundRect(x-34,y0+R.s*.12,9,y-y0-R.s*.22,5):ctx.rect(x-34,y0,9,y-y0);ctx.fill();}
  ctx.restore();return y;}
+// fichas de texto no PNG: etiqueta vermelha + valor, ou marcador; uma informação por linha
+function factsLayout(ctx,rows,maxW,s){const out=[];let h=0;rows.forEach((r,i)=>{const ind=r.l?0:Math.round(s*.75);const tk=richTokens(r.v);const L=richLayout(ctx,tk,s,maxW-ind);const lab=r.l?Math.round(s*.62):0;const rh=(i?s*.55+2:0)+(lab?lab*1.45:0)+L.length*s*1.3;out.push({r,L,ind,lab,rh});h+=rh;});return {rows:out,h,s};}
+function fitFacts(ctx,rows,maxW,maxS,minS,maxH){let s=maxS,F=factsLayout(ctx,rows,maxW,s);while(F.h>maxH&&s>minS){s-=2;F=factsLayout(ctx,rows,maxW,s);}return F;}
+function drawFacts(ctx,F,x,y){const s=F.s;ctx.save();ctx.textAlign='left';F.rows.forEach((o,i)=>{if(i){y+=s*.27;ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x,y,4000>0?Math.min(2000,ctx.canvas.width-2*x):0,2);y+=s*.28+2;}
+  if(o.lab){ctx.font=`700 ${o.lab}px ${CV.mono}`;ctx.fillStyle=CV.red;ctx.fillText(o.r.l.toUpperCase(),x,y+o.lab);y+=o.lab*1.45;}
+  else{ctx.fillStyle=CV.red;ctx.beginPath();ctx.arc(x+s*.22,y+s*.62,s*.16,0,Math.PI*2);ctx.fill();}
+  o.L.forEach(l=>{l.forEach(t=>{const by=y+s*.95,bx=x+o.ind+t.x;ctx.font=`600 ${s}px ${CV.body}`;if(t.num){let px=bx;if(t.pre){ctx.fillStyle='#fff';ctx.fillText(t.pre,px,by);px+=ctx.measureText(t.pre).width;}ctx.font=`800 ${s}px ${CV.body}`;ctx.fillStyle=CV.red;ctx.fillText(t.num,px,by);px+=ctx.measureText(t.num).width;ctx.font=`600 ${s}px ${CV.body}`;ctx.fillStyle='#fff';if(t.rest)ctx.fillText(t.rest,px,by);}else{ctx.fillStyle='#fff';ctx.fillText(t.w,bx,by);}});y+=s*1.3;});});
+ ctx.restore();return y;}
+function factsOfEl(el){const u=el.querySelector('.facts');if(!u)return null;try{return JSON.parse(u.dataset.f);}catch(e){return null;}}
+function drawBrandHead(ctx,el,W,P,y){const sn=[...el.querySelectorAll('.sn > span')].map(x=>x.textContent);const brand=!!el.querySelector('.sn .avatar');ctx.save();ctx.textBaseline='alphabetic';
+ if(brand){cvLogo(ctx,P,y-34,26);ctx.font=`800 34px ${CV.display}`;ctx.fillStyle='#fff';ctx.textAlign='left';ctx.fillText('TEL',P+66,y+4);const w1=ctx.measureText('TEL').width;ctx.fillStyle=CV.red;ctx.fillText('.',P+66+w1,y+4);const w2=ctx.measureText('.').width;ctx.fillStyle='#fff';ctx.fillText('SCORE',P+66+w1+w2,y+4);}
+ else{ctx.globalAlpha=.72;ctx.font=`400 36px ${CV.mono}`;ctx.fillStyle='#fff';ctx.textAlign='left';ctx.fillText(sn[0]||'',P,y);}
+ ctx.globalAlpha=.72;ctx.font=`400 32px ${CV.mono}`;ctx.fillStyle='#fff';ctx.textAlign='right';ctx.fillText(sn[1]||'',W-P,y);ctx.restore();}
 function cvBackground(ctx,W,H,cta,corner){
  if(cta){ctx.fillStyle=CV.red;ctx.fillRect(0,0,W,H);return;}
  ctx.fillStyle=CV.dark;ctx.fillRect(0,0,W,H);
@@ -3691,16 +3731,16 @@ function drawMedia(ctx,el,x,y,maxW){
 async function drawVizBody(ctx,el,W,P,top,bottom,story){
  const vz=el.querySelector('.viz');let v;try{v=JSON.parse(vz.dataset.viz);}catch(e){return;}
  const kick=el.querySelector('.kick'),pEl=el.querySelector('p');const note=pEl&&pEl.querySelector('.note');
- const main=pEl?(pEl.dataset.t||[...pEl.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('')).trim():'';
+ const FR=factsOfEl(el)||[];
  const maxW=W-2*P,vh=vizHeight(v,maxW);
- const T=main?fitRich(ctx,main,maxW,story?54:46,story?38:34,story?4:3):{s:0,L:[],h:0};
+ const T=FR.length?fitFacts(ctx,FR,maxW,story?50:44,story?36:32,story?460:340):{s:0,rows:[],h:0};T.L=T.rows;
  const ns=story?36:32;ctx.font=`400 ${ns}px ${CV.mono}`;const NL=note?wrapLines(ctx,note.textContent,maxW).slice(0,story?4:3):[];
  const kh=kick?72:0,ph=T.h,nh=NL.length?NL.length*(ns*1.35)+20:0,gap=T.L.length?54:0;
  const avail=bottom-top;const k=Math.min(1,Math.max(.55,(avail-kh-gap-ph-nh)/vh));const total=kh+vh*k+gap+ph+nh;
  let y=top+Math.max(0,(avail-total)/2);
  if(kick){ctx.save();ctx.fillStyle=CV.red;ctx.font=`700 ${story?40:36}px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(kick.textContent.toUpperCase(),P,y+38);ctx.restore();y+=kh;}
  ctx.save();ctx.translate(P+(maxW-maxW*k)/2,y);ctx.scale(k,k);await vizDraw(ctx,v,0,0,maxW);ctx.restore();y+=vh*k+gap;
- if(T.L.length)y=drawRich(ctx,T,P,y,false);
+ if(T.rows.length)y=drawFacts(ctx,T,P,y);
  ctx.save();ctx.fillStyle='#fff';ctx.textAlign='left';
  if(NL.length){y+=20;ctx.globalAlpha=.7;ctx.font=`400 ${ns}px ${CV.mono}`;NL.forEach(l=>{ctx.fillText(l,P,y+ns);y+=ns*1.35;});}
  ctx.restore();
@@ -3711,29 +3751,24 @@ async function drawSlide(el){
  const sn=[...el.querySelectorAll('.sn span')].map(x=>x.textContent),foot=[...el.querySelectorAll('.foot span')].map(x=>x.textContent);
  const h5=el.querySelector('h5'),bs=el.querySelector('.bs'),bl=el.querySelector('.bl'),p=el.querySelector('p');
  const ink=cta?'#fff':CV.white;ctx.textBaseline='alphabetic';
- ctx.fillStyle=ink;ctx.globalAlpha=.72;ctx.font=`400 36px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(sn[0]||'',P,P+30);ctx.textAlign='right';ctx.fillText(sn[1]||'',W-P,P+30);
- ctx.globalAlpha=.6;ctx.font=`400 32px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(foot[0]||'',P,H-P);ctx.textAlign='right';const ft=(foot[1]||'');ctx.fillText(ft.length>34?ft.slice(0,33)+'…':ft,W-P,H-P);
+ if(el.querySelector('.sn .avatar'))drawBrandHead(ctx,el,W,P,P+30);else{ctx.fillStyle=ink;ctx.globalAlpha=.72;ctx.font=`400 36px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(sn[0]||'',P,P+30);ctx.textAlign='right';ctx.fillText(sn[1]||'',W-P,P+30);}
+ ctx.fillStyle=ink;ctx.globalAlpha=.6;ctx.font=`400 32px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(foot[0]||'',P,H-P);ctx.textAlign='right';const ft=(foot[1]||'');ctx.fillText(ft.length>34?ft.slice(0,33)+'…':ft,W-P,H-P);
  ctx.globalAlpha=1;ctx.textAlign='left';const maxW=W-2*P;
  const mxEl=el.querySelector('.mx');const topLimit=mxEl?drawMx(ctx,mxEl,P,W-P,P+80,cta?84:78,ink)+30:P+80;ctx.textAlign='left';
  const ppEl=el.querySelector('.pp');const hasPh=!!(ppEl&&ppEl.complete&&ppEl.naturalWidth);const PR=135;
  if(h5&&!cta&&el.classList.contains('cover')&&el.querySelector('.cvb')){
-  const kEl=el.querySelector('.ckick'),bEl=el.querySelector('.cbadge b'),sEl=el.querySelector('.cbadge span'),chips=[...el.querySelectorAll('.cnext i')].map(x=>x.textContent);
-  const T=fitText(ctx,UPX(h5.textContent),CV.display,84,52,maxW,mxEl?4:5,900);const lh=T.s*1.12;
-  const kTxt=kEl?kEl.textContent.toUpperCase():'';const kh=kTxt?58:0;
-  const hasB=!!(bEl||hasPh);const bR=58;const bh=hasB?156:0;let bS=null,bL=[];
-  if(bEl){bS=fitText(ctx,bEl.textContent,CV.display,96,56,maxW*.45,1,900);ctx.font=`400 32px ${CV.mono}`;const bw=ctx.measureText(bEl.textContent).width;}
-  ctx.font=`600 30px ${CV.body}`;const rows=[];let rw=0;chips.forEach(c=>{const w=ctx.measureText(c).width+44;if(!rows.length||rw+w+12>maxW){rows.push([]);rw=0;}rows[rows.length-1].push({c,w,x:rw});rw+=w+12;});
-  const nh=chips.length?44+rows.length*68:0;
-  const block=kh+(kh?26:0)+T.L.length*lh+(hasB?30+bh:0)+(nh?40+nh:0);
-  let cur=Math.max(topLimit,H-P-70-block);
-  if(kTxt){ctx.font=`700 28px ${CV.mono}`;const kw=ctx.measureText(kTxt).width+48;ctx.fillStyle=CV.red;ctx.beginPath();ctx.roundRect?ctx.roundRect(P,cur,Math.min(kw,maxW),kh,29):ctx.rect(P,cur,kw,kh);ctx.fill();ctx.fillStyle='#fff';ctx.textAlign='left';ctx.fillText(kTxt,P+24,cur+39);cur+=kh+26;}
+  const kEl=el.querySelector('.ckick');const kTxt=kEl?kEl.textContent.toUpperCase():'';const kh=kTxt?60:0;
+  const T=fitText(ctx,UPX(h5.textContent),CV.display,86,52,maxW,mxEl?4:5,900);const lh=T.s*1.1;
+  const bsTxt=bs?bs.textContent:'';const S=bsTxt?fitText(ctx,bsTxt,CV.display,170,86,hasPh?maxW-2*PR-40:maxW,1,900):null;
+  ctx.font=`400 38px ${CV.mono}`;const blL=bl?wrapLines(ctx,bl.textContent,hasPh?maxW-2*PR-40:maxW).slice(0,2):[];
+  const rowH=Math.max(S?S.s:0,hasPh?2*PR:0);
+  const block=kh+(kh?28:0)+T.L.length*lh+(rowH?30+rowH:0)+(blL.length?16+blL.length*48:0);
+  let cur=Math.max(topLimit,H-P-120-block);
+  if(kTxt){ctx.font=`700 28px ${CV.mono}`;const kw=Math.min(maxW,ctx.measureText(kTxt).width+52);ctx.fillStyle=CV.red;ctx.beginPath();ctx.roundRect?ctx.roundRect(P,cur,kw,kh,30):ctx.rect(P,cur,kw,kh);ctx.fill();ctx.fillStyle='#fff';ctx.textAlign='left';ctx.fillText(kTxt,P+26,cur+40);cur+=kh+28;}
   ctx.fillStyle=ink;ctx.font=`900 ${T.s}px ${CV.display}`;T.L.forEach((l,i)=>ctx.fillText(l,P,cur+T.s*.85+i*lh));cur+=T.L.length*lh;
-  if(hasB){cur+=30;ctx.save();ctx.fillStyle='rgba(255,255,255,.07)';ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect?ctx.roundRect(P,cur,maxW,bh,36):ctx.rect(P,cur,maxW,bh);ctx.fill();ctx.stroke();ctx.restore();
-   let x=P+34;if(bS){ctx.fillStyle=CV.red;ctx.font=`900 ${bS.s}px ${CV.display}`;ctx.textAlign='left';ctx.fillText(bS.L[0]||bEl.textContent,x,cur+bh/2+bS.s*.36);x+=ctx.measureText(bS.L[0]||bEl.textContent).width+30;}
-   const rx=hasPh?P+maxW-34-bR*2-20:P+maxW-34;if(sEl){ctx.font=`400 32px ${CV.mono}`;const L=wrapLines(ctx,sEl.textContent,rx-x).slice(0,3);ctx.fillStyle=ink;ctx.globalAlpha=.82;L.forEach((l,i)=>ctx.fillText(l,x,cur+bh/2-(L.length-1)*21+i*42+11));ctx.globalAlpha=1;}
-   if(hasPh)drawPhoto(ctx,ppEl,P+maxW-34-bR,cur+bh/2,bR);cur+=bh;}
-  if(nh){cur+=40;ctx.fillStyle=ink;ctx.globalAlpha=.6;ctx.font=`400 26px ${CV.mono}`;ctx.fillText('NESTE POST',P,cur+26);ctx.globalAlpha=1;cur+=44;
-   rows.forEach((r,ri)=>{r.forEach(o=>{const y=cur+ri*68;ctx.strokeStyle='rgba(255,255,255,.32)';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect?ctx.roundRect(P+o.x,y,o.w,54,27):ctx.rect(P+o.x,y,o.w,54);ctx.stroke();ctx.fillStyle=ink;ctx.font=`600 30px ${CV.body}`;ctx.fillText(o.c,P+o.x+22,y+37);});});}
+  if(rowH){cur+=30;if(hasPh)drawPhoto(ctx,ppEl,W-P-PR,cur+rowH/2+(blL.length*48)/2,PR);if(S){ctx.fillStyle=CV.red;ctx.font=`900 ${S.s}px ${CV.display}`;ctx.fillText(S.L[0]||bsTxt,P,cur+(rowH-S.s)/2+S.s*.82);}cur+=rowH;}
+  if(blL.length){ctx.fillStyle=ink;ctx.globalAlpha=.8;ctx.font=`400 38px ${CV.mono}`;blL.forEach((l,i)=>ctx.fillText(l,P,cur+16+38+i*48));ctx.globalAlpha=1;}
+  ctx.fillStyle=CV.red;ctx.fillRect(P,H-P-58,maxW,5);
  }else if(h5&&!cta){
   const T=fitText(ctx,UPX(h5.textContent),CV.display,84,52,maxW,mxEl?4:5,900);const lh=T.s*1.12;
   const bsTxt=bs?bs.textContent:'';const S=bsTxt?fitText(ctx,bsTxt,CV.display,190,90,hasPh?maxW-2*PR-40:maxW,1,900):null;
@@ -3759,6 +3794,11 @@ async function drawSlide(el){
   const hasM=!!el.querySelector('.smed');const T=fitRich(ctx,p.dataset.t||p.textContent,maxW,70,46,hasM?7:8);const mh=hasM?150:0;const block=T.h+mh;let top=(H-block)/2;
   if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}
   drawRich(ctx,T,P,top,false);
+ }else if(el.querySelector('.facts')){
+  const FR=factsOfEl(el)||[];const kick=el.querySelector('.kick');const hasM=!!el.querySelector('.smed');const mh=hasM?150:0,kh=kick?80:0;const F=fitFacts(ctx,FR,maxW,62,40,H-2*P-260-mh-kh);let top=(H-(F.h+mh+kh))/2;
+  if(kick){ctx.save();ctx.fillStyle=CV.red;ctx.font=`700 36px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(kick.textContent.toUpperCase(),P,top+38);ctx.restore();top+=kh;}
+  if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}
+  drawFacts(ctx,F,P,top);
  }
  return cv;
 }
@@ -3780,8 +3820,9 @@ async function drawStory(el,idx,total){
   if(S){y+=40-lh+S.s*.85;ctx.fillStyle=CV.red;ctx.font=`900 ${S.s}px ${CV.display}`;ctx.fillText(S.L[0],P,y);}
   if(lab){y+=80;ctx.fillStyle='rgba(255,255,255,.8)';ctx.font=`400 52px ${CV.mono}`;ctx.fillText(lab,P,y);}
   if(hasPh)drawPhoto(ctx,ppEl,P+170,y+80+170,170);}
- if(p){const hasM=!!el.querySelector('.smed');const T=fitRich(ctx,p.dataset.t||p.textContent,maxW,80,50,hasM?8:9);const stH=st?260+st.querySelectorAll('span').length*120:0;const mh=hasM?170:0;
-  const block=T.h+(stH?60+stH:0)+mh;let top=(H-block)/2;if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}y=drawRich(ctx,T,P,top,false);
+ const FRs=!p?factsOfEl(el):null;
+ if(p||FRs){const hasM=!!el.querySelector('.smed');const stH=st?260+st.querySelectorAll('span').length*120:0;const mh=hasM?170:0;const T=FRs?fitFacts(ctx,FRs,maxW,66,42,H-2*P-400-mh-(stH?60+stH:0)):fitRich(ctx,p.dataset.t||p.textContent,maxW,80,50,hasM?8:9);
+  const block=T.h+(stH?60+stH:0)+mh;let top=(H-block)/2;if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}y=FRs?drawFacts(ctx,T,P,top):drawRich(ctx,T,P,top,false);
   if(st){y+=30;const opts=[...st.querySelectorAll('span')].map(x=>x.textContent);const q=st.querySelector('b')?st.querySelector('b').textContent:'';
    const Q=fitText(ctx,q,CV.body,52,36,maxW-100,3,700);const qlh=Q.s*1.25;const bh=60+Q.L.length*qlh+30+opts.length*120;
    ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect?ctx.roundRect(P,y,maxW,bh,48):ctx.rect(P,y,maxW,bh);ctx.fill();
@@ -3938,7 +3979,7 @@ const VDRAW={
  },
  probs(ctx,s,lt,d,I,M,A){
   const W2=VW-2*VPD;vAl(ctx,A,vseg(lt,0,.4));ctx.fillStyle='#fff';ctx.textAlign='left';ctx.font=`900 74px ${CV.display}`;ctx.fillText('QUEM VENCE?',VPD,400);
-  ctx.globalAlpha=A*vseg(lt,.2,.6)*.7;ctx.font=`400 36px ${CV.mono}`;ctx.fillText(s.src==='tel'?'probabilidades TEL.SCORE':s.src==='mercado'?'probabilidades do mercado':'probabilidades do modelo',VPD,460);
+  ctx.globalAlpha=A*vseg(lt,.2,.6)*.7;ctx.font=`400 36px ${CV.mono}`;ctx.fillText(s.src==='tel'?'probabilidades TEL.SCORE':s.src==='mercado'?'probabilidades TEL.SCORE':'probabilidades do modelo',VPD,460);
   const mx=Math.max(s.h,s.d,s.a);const rows=[{lab:M.h.name,v:s.h,img:I.h,code:M.h.code},{lab:'Empate',v:s.d,img:null,code:'='},{lab:M.a.name,v:s.a,img:I.a,code:M.a.code}];
   rows.forEach((rw,i)=>{const y=640+i*320;const p=vEo(vseg(lt,.5+i*.4,1.5+i*.4));if(p<=0)return;vAl(ctx,A,p);
    if(rw.code==='='){ctx.fillStyle='rgba(255,255,255,.14)';ctx.beginPath();ctx.arc(VPD+56,y,56,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font=`900 50px ${CV.display}`;ctx.textAlign='center';ctx.fillText('=',VPD+56,y+18);}

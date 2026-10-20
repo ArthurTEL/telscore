@@ -23,7 +23,7 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 |---|---|
 | Partidas (hoje, dias anteriores e próximos) | API-Football |
 | Central do jogo: placar, lance a lance, escalações, estatísticas, notas dos jogadores, árbitro | API-Football |
-| Pré-jogo (jogos futuros): probabilidades do mercado (média das casas de apostas, sem a margem; o modelo estatístico da API aparece só como referência), escalação provável (última escalação + desfalques), estatísticas da temporada, confronto direto | API-Football (odds, predictions, injuries) |
+| Pré-jogo (jogos futuros): probabilidades da análise de mercado (sem margem; o modelo estatístico da API aparece só como referência), escalação provável (última escalação + desfalques), estatísticas da temporada, confronto direto | API-Football (odds, predictions, injuries) |
 | Ligas: classificação dos campeonatos; Champions, Europa League, Libertadores e Sul-Americana com fase de liga/grupos e chaveamento do mata-mata | API-Football |
 | Análise tática · jogos atuais (hoje e ontem): linha do tempo, comparativo, destaques, força por setor, radar | API-Football |
 | Análise tática · arquivo histórico: xG por chute, mapa de finalizações, rede de passes, mapa de calor, radar, PPDA, field tilt | StatsBomb Open Data |
@@ -34,7 +34,7 @@ Se a função não responder (site aberto direto do computador, chave ausente ou
 
 ## Análise TEL.SCORE
 
-Nos jogos que ainda vão acontecer, a prévia mostra um cálculo único da TEL.SCORE que junta: mercado (média das casas de apostas, sem a margem), xG dos últimos 5 jogos, forma recente, campanha na temporada, titulares lesionados ou suspensos, força do elenco (nível estimado da liga, tabela `LG_TIER` no `index.html`, e posição na tabela) e mando de campo. O resultado aparece na aba Prévia da Central e no formato "Análise TEL.SCORE" do Estúdio. Sem odds disponíveis, o cálculo usa só os dados.
+Nos jogos que ainda vão acontecer, a prévia mostra um cálculo único da TEL.SCORE que junta: análise de mercado, xG dos últimos 5 jogos, forma recente, campanha na temporada, titulares lesionados ou suspensos, força do elenco (nível estimado da liga, tabela `LG_TIER` no `index.html`, e posição na tabela) e mando de campo. O resultado aparece na aba Prévia da Central e no formato "Análise TEL.SCORE" do Estúdio. Sem odds disponíveis, o cálculo usa só os dados.
 
 ## Contexto do jogo (análises coerentes)
 
@@ -59,10 +59,15 @@ Enquanto a escalação oficial não sai, o site monta a provável assim:
 
 A Central do jogo (aba Escalação provável) e o post "Escalação provável" do Estúdio mostram a base usada, as trocas feitas e as dúvidas.
 
+## Linguagem dos posts
+
+Nos posts não aparecem as palavras "mercado", "aposta" ou "casas de apostas". As probabilidades aparecem sempre como **análise TEL.SCORE** (que, por dentro, considera mercado, xG, forma, desfalques e força do elenco). No site, fora dos posts, o card da Análise TEL.SCORE pode citar a "análise de mercado" como um dos fatores. As capas mostram só o confronto (ex.: "Real Madrid x Barcelona"), sem o nome do formato.
+
 ## Visual dos posts
 
-- **Capa:** escudos com placar ou horário, título e o número principal em destaque (só aparece quando é um número de verdade).
-- **Slides:** cada slide tem um título curto, um visual (comparativo, barras, tabela, card do jogador) e uma legenda de no máximo duas frases curtas, com os números na cor da marca. Quando o visual já mostra o dado, a legenda não repete. O carrossel tem no máximo 5 slides de conteúdo; o texto completo continua na legenda do post.
+- **Identidade:** todo slide tem no topo o logo e o nome TEL.SCORE, e a capa fecha com uma faixa vermelha da marca.
+- **Capa:** marca no topo com a liga e a data, escudos com placar ou horário, etiqueta com a fase e o formato, título e o número principal em destaque.
+- **Slides:** título curto em vermelho, o visual (comparativo, barras, tabela, card do jogador) e, embaixo, o texto em fichas: uma informação por linha, com etiqueta vermelha quando existe ("Pontaria", "Contra a expectativa", "Local") ou marcador, e números em vermelho. No máximo 3 linhas por slide; o texto completo fica na legenda do post.
 
 ## Posts das tabelas de classificação
 
