@@ -49,6 +49,16 @@ Antes de escrever qualquer texto, o site monta o contexto da partida e todas as 
 
 Esse contexto aparece nos posts do Estúdio, na Prévia (pré-jogo) e no card "Leitura TEL.SCORE", na aba Estatísticas da Central do jogo.
 
+## Escalação provável
+
+Enquanto a escalação oficial não sai, o site monta a provável assim:
+
+1. **Base na mesma competição:** usa a última escalação do time **na competição do jogo**. Se o Vasco pega o Boca pela Sul-Americana, vale a última escalação do Vasco na Sul-Americana, e não a do Brasileirão. Só quando o time ainda não jogou aquela competição na temporada é que vale a última partida de qualquer competição (e o site avisa).
+2. **Desfalques aplicados:** quem está fora (lesão ou suspensão, pela lista da API) sai do time. No lugar entra o jogador da mesma posição que mais foi titular nos últimos jogos, com peso maior para os jogos da mesma competição; se não houver, o reserva que mais jogou na partida-base.
+3. **Dúvidas:** jogadores com status de dúvida continuam na escalação, mas aparecem destacados.
+
+A Central do jogo (aba Escalação provável) e o post "Escalação provável" do Estúdio mostram a base usada, as trocas feitas e as dúvidas.
+
 ## Posts das tabelas de classificação
 
 No Estúdio, a fonte "Tabelas" gera posts a partir da classificação de cada liga (também dá para abrir pelo botão "Gerar post da tabela", na página Ligas). Escolha a liga, o formato, a plataforma e o tom:

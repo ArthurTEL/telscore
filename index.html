@@ -2651,7 +2651,7 @@ const RFORMATS=[
  if(c.goals.length)b.push({t:`Gols: ${c.goals.slice().sort((x,y)=>x.m-y.m).map(g=>goalTxt(g)).join('; ')}.`});
  if(c.star)b.push({t:`Melhor em campo: ${c.star.name} (${c.star.tn}), nota ${f1(c.star.rating)}.`,why:RWHY.rating});
  b.push({t:c.verdict});if(c.expect&&!c.lead)b.push({t:c.expect});
- if(c.lead)b.unshift({t:c.lead+(c.expect?' '+c.expect:c.stakes?' '+c.stakes:'')});
+ if(c.lead){const lt=c.lead+(c.expect?' '+c.expect:c.stakes?' '+c.stakes:'');b.unshift({t:lt,viz:{kick:'Contexto',v:ctxViz(c),t:lt}});}
  return {head:pick(r,c.live?[`${c.score}: o jogo em números até aqui`,`Os números de ${c.score} até agora`]:[`${c.score}: o jogo em números`,`Os números por trás de ${c.score}`,`${c.score} explicado em dados`]),stat:c.has.xg?[`${f2(H.xg)} × ${f2(A.xg)}`,'xG do jogo']:c.has.shots?[`${H.shots} × ${A.shots}`,'finalizações']:[`${H.goals}–${A.goals}`,'placar final'],blocks:b};}},
 {id:'placar-mentiu',cat:'Pós-jogo',name:'O placar mentiu?',desc:'Placar contra xG',visual:'Mapa de finalizações com círculos por xG',need:c=>c.has.xg,run(c,r){const H=c.H,A=c.A;const gd=H.goals-A.goals,xd=H.xg-A.xg;const P=c.cx.perf;const lie=(c.res!=='d'&&P.side&&P.side!==c.res&&P.lvl!=='eq')||(c.res==='d'&&P.lvl==='claro')||Math.abs(gd-xd)>2;
  const conv=s=>s.shots?Math.round(s.goals/s.shots*100):0;const b=[{t:`Placar: ${c.score}. xG: ${f2(H.xg)} x ${f2(A.xg)}.`,why:RWHY.xg}];
@@ -2835,7 +2835,7 @@ function ctxPre(f,D,pl,X){
  const cmpRowsPre=CMPL.filter(([k])=>cmp[k]&&cmp[k].home!=null).map(([k,l])=>({k,lab:l,h:Math.round(pctN(cmp[k].home)),a:Math.round(pctN(cmp[k].away))}));
  const h2h=((P&&P.h2h)||[]).filter(x=>FT_S.includes(x.fixture.status.short)).sort((x,y)=>new Date(y.fixture.date)-new Date(x.fixture.date)).slice(0,10).map(x=>{const hs=x.teams.home.id===h.id?x.goals.home:x.goals.away,as=x.teams.home.id===h.id?x.goals.away:x.goals.home;return {date:new Date(x.fixture.date),comp:x.league&&x.league.name||'',home:x.teams.home.name,away:x.teams.away.name,gh:x.goals.home,ga:x.goals.away,hs,as};});
  const inj=(D&&D.inj||[]).map(x=>({id:x.player.id,name:x.player.name,photo:x.player.photo,side:x.team&&x.team.id===h.id?'h':'a',type:INJ_PT[x.player.type]||'Desfalque',reason:REASON_PT(x.player.reason)}));
- let lu=null;if(pl&&pl.fx&&pl.fx.lineups&&pl.fx.lineups.length>=2){const L=s=>{const t=s==='h'?h:a;const x=pl.fx.lineups.find(l=>l.team.id===t.id)||pl.fx.lineups[s==='h'?0:1];return {formation:x.formation||'',coach:x.coach&&x.coach.name||'',xi:(x.startXI||[]).map(y=>y.player)};};lu={official:!!pl.official,h:L('h'),a:L('a'),from:pl.from||[]};}
+ const c0lg=lgName(f);let lu=null;if(pl&&pl.fx&&pl.fx.lineups&&pl.fx.lineups.length>=2){const L=s=>{const t=s==='h'?h:a;const x=pl.fx.lineups.find(l=>l.team.id===t.id)||pl.fx.lineups[s==='h'?0:1];return {formation:x.formation||'',coach:x.coach&&x.coach.name||'',xi:(x.startXI||[]).map(y=>y.player)};};lu={official:!!pl.official,h:L('h'),a:L('a'),from:pl.from||[],same:pl.same||[false,false],changes:pl.changes||[[],[]],doubts:pl.doubts||[[],[]],comp:pl.comp||c0lg};}
  const players=[];if(lu)['h','a'].forEach(s=>lu[s].xi.forEach(p=>players.push({id:p.id,name:p.name,side:s,tn:s==='h'?h.name:a.name,photo:`https://media.api-sports.io/football/players/${p.id}.png`,pos:POS_PT[p.pos]||p.pos||'',rating:0})));
  const favSide=pct?(pct.h>=pct.a?'h':'a'):(cmp.total&&pctN(cmp.total.away)>pctN(cmp.total.home)?'a':'h');
  const lgN=lgName(f),lgS=lgShort(f);
@@ -2877,7 +2877,7 @@ const PRE_FORMATS=[
  const fk=favOf(X.final),fn=fk==='h'?H.name:fk==='a'?A.name:'empate';
  return {head:pick(r,[`Análise TEL.SCORE: ${H.name} x ${A.name}`,`${H.name} x ${A.name}: quem chega melhor`,'Tudo o que pesa antes do jogo']),stat:[`${X.final[fk]}%`,fk==='d'?'chance de empate':`chance de vitória do ${fn}`],blocks:b};}},
 {id:'pre-previa',pre:true,cat:'Pré-jogo',name:'Prévia do jogo',desc:'Tudo o que importa antes do apito',visual:'Escudos frente a frente com probabilidades',need:c=>!!c.pre,run(c,r){const H=c.H,A=c.A,b=[];
- b.push({t:`${c.lead}${c.stadium?` Local: ${c.stadium}${c.city?`, ${c.city}`:''}.`:''}`});
+ {const lt=`${c.lead}${c.stadium?` Local: ${c.stadium}${c.city?`, ${c.city}`:''}.`:''}`;b.push({t:lt,viz:{kick:c.cx&&c.cx.comp&&c.cx.comp.stage?c.cx.comp.stage:'O jogo',v:ctxViz(c),t:lt}});}
  if(c.pct)b.push({t:`Probabilidades ${c.pctSrc==='tel'?'TEL.SCORE':c.pctSrc==='mercado'?'do mercado':'do modelo'}: ${H.name} ${c.pct.h}%, empate ${c.pct.d}%, ${A.name} ${c.pct.a}%.`});
  if(c.read)b.push({t:`Leitura TEL.SCORE: ${c.read.verdict}`});
  if(H.form||A.form)b.push({t:`Últimos 5 jogos: ${H.name} ${H.form||'sem dados'} · ${A.name} ${A.form||'sem dados'} (V vitória, E empate, D derrota).`});
@@ -2901,9 +2901,10 @@ const PRE_FORMATS=[
  const xi=s=>L[s].xi.map(p=>p.name).join(', ');
  b.push({t:`${H.name}${L.h.formation?` (${L.h.formation})`:''}: ${xi('h')}.`});
  b.push({t:`${A.name}${L.a.formation?` (${L.a.formation})`:''}: ${xi('a')}.`});
- if(!L.official)b.push({t:`Base: última escalação de cada time${L.from[0]?` (${H.name} ${L.from[0]}`:''}${L.from[1]?`; ${A.name} ${L.from[1]})`:L.from[0]?')':''}. A oficial sai perto do início do jogo.`});
+ if(!L.official){const bt=(T,i)=>`o ${T.name} ${L.same[i]?`parte da última escalação pela ${L.comp}`:`ainda não jogou a ${L.comp}, então vale a última partida`}${L.from[i]?` (${L.same[i]?L.from[i].replace(/ \([^)]*\)$/,''):L.from[i]})`:''}`;b.push({t:`Base da escalação provável: ${bt(H,0)}; ${bt(A,1)}. A oficial sai perto do início do jogo.`});
+  const ch=[[H,0],[A,1]].flatMap(([T,i])=>L.changes[i].map(x=>`${T.name} sem ${x.out}${x.why?` (${x.why})`:''}${x.in?`: entra ${x.in}`:''}`));if(ch.length)b.push({t:`Mudanças por desfalque: ${ch.join('; ')}.`});
+  const db=[[H,0],[A,1]].flatMap(([T,i])=>L.doubts[i].map(x=>`${x.name} (${T.name})`));if(db.length)b.push({t:`Dúvidas mantidas na escalação: ${db.join(', ')}.`});}
  else b.push({t:'Escalações oficiais, confirmadas pelos clubes.'});
- const out=c.inj.filter(x=>[...L.h.xi,...L.a.xi].some(p=>p.id===x.id));if(out.length)b.push({t:`Atenção: ${out.map(x=>`${x.name} (${x.type.toLowerCase()})`).join(', ')} começou a última partida, mas está na lista de desfalques.`});
  if(L.h.coach||L.a.coach)b.push({t:`Técnicos: ${L.h.coach||'não informado'} (${H.name}) e ${L.a.coach||'não informado'} (${A.name}).`});
  return {head:pick(r,[L.official?`Escalações de ${H.name} x ${A.name}`:`Prováveis escalações: ${H.name} x ${A.name}`,L.official?'Saíram as escalações':`Como ${H.name} e ${A.name} devem entrar`]),stat:[`${L.h.formation||'?'} × ${L.a.formation||'?'}`,L.official?'formações oficiais':'formações prováveis'],blocks:b};}},
 {id:'pre-desfalques',pre:true,cat:'Pré-jogo',name:'Desfalques',desc:'Lesionados, suspensos e dúvidas',visual:'Fotos dos jogadores com selo de fora ou dúvida',need:c=>!!(c.pre&&c.inj.length),run(c,r){const H=c.H,A=c.A,b=[];
@@ -3200,7 +3201,7 @@ async function loadStudioMatch(){
   try{
    if(src==='tab'){RS.data=await ctxTab(my);}
    else if(src==='api'){const arr=await apiGet('fixtures',{id:my,timezone:TZ});if(!arr||!arr[0])throw new Error('Partida não encontrada.');const fx=arr[0];
-    if(rStatus(fx).k==='pre'){$('#st-preview').innerHTML='<p style="color:var(--muted);margin:0">Carregando prévia, escalação provável e desfalques…</p>';const [D,pl]=await Promise.all([preData(fx).catch(()=>({pred:null,inj:[]})),probableLineups(fx).catch(()=>null)]);const X=await preDeep(fx,D).catch(()=>null);RS.data=ctxPre(fx,D,pl,X);}
+    if(rStatus(fx).k==='pre'){$('#st-preview').innerHTML='<p style="color:var(--muted);margin:0">Carregando prévia, escalação provável e desfalques…</p>';const D=await preData(fx).catch(()=>({pred:null,inj:[]}));const [pl,X]=await Promise.all([probableLineups(fx,D.inj).catch(()=>null),preDeep(fx,D).catch(()=>null)]);RS.data=ctxPre(fx,D,pl,X);}
     else{const cc=ctxFromApi(fx);await enrichCtx(cc,fx).catch(e=>console.warn('contexto',e));RS.data=cc;}}
    else{const [cid,sid]=RS.comp.split(':');RS.data=ctxFromSB(await sbGet({type:'match',competition_id:cid,season_id:sid,match_id:my},86400000));}
   }catch(e){if(RS.key===my)$('#st-preview').innerHTML=`<div class="empty">Não foi possível carregar ${src==='tab'?'a tabela':'a partida'}. ${esc(e.message)}</div>`;return;}
@@ -3249,7 +3250,7 @@ const pctN=v=>v==null?null:parseFloat(String(v).replace('%',''))||0;
 const advicePT=a=>String(a||'').replace(/\bdraw or\b/gi,'empate ou').replace(/\bor draw\b/gi,'ou empate').replace(/^Combo /,'Combinação: ').replace(/Double chance\s*:\s*/,'Chance dupla: ').replace(/Winner\s*:\s*/,'Vitória: ').replace(/ or draw/g,' ou empate').replace(/ and target /g,' e ').replace(/\bUnder\b/g,'menos de').replace(/\bOver\b/g,'mais de').replace(/ goals/g,' gols').replace(/(\d)\.(\d)/g,'$1,$2');
 const ouPT=v=>{if(!v)return '';const n=String(v).replace(/^[-+]/,'').replace('.',',');return String(v).startsWith('-')?`menos de ${n} gols`:`mais de ${n} gols`;};
 const INJ_PT={'Missing Fixture':'Fora','Questionable':'Dúvida'};
-const REASON_PT=r=>String(r||'').replace('Knee Injury','lesão no joelho').replace('Ankle Injury','lesão no tornozelo').replace('Hamstring Injury','lesão na coxa (posterior)').replace('Thigh Injury','lesão na coxa').replace('Muscle Injury','lesão muscular').replace('Calf Injury','lesão na panturrilha').replace('Groin Injury','lesão na virilha').replace('Back Injury','lesão nas costas').replace('Foot Injury','lesão no pé').replace('Shoulder Injury','lesão no ombro').replace('Hip Injury','lesão no quadril').replace('Head Injury','lesão na cabeça').replace('Achilles Tendon Injury','lesão no tendão de Aquiles').replace('Red Card','suspenso (vermelho)').replace('Yellow Cards','suspenso (amarelos)').replace('Suspended','suspenso').replace('Illness','doença').replace('Injury','lesão').replace('Knock','pancada').replace('Inactive','inativo').replace('Coach\'s decision','decisão técnica').replace('Personal Reasons','motivos pessoais').replace('Broken','fratura').replace('Lacking Match Fitness','sem ritmo de jogo').replace('International duty','convocação');
+const REASON_PT=r=>String(r||'').replace('Knee Injury','lesão no joelho').replace('Ankle Injury','lesão no tornozelo').replace('Hamstring Injury','lesão na parte posterior da coxa').replace('Thigh Injury','lesão na coxa').replace('Muscle Injury','lesão muscular').replace('Calf Injury','lesão na panturrilha').replace('Groin Injury','lesão na virilha').replace('Back Injury','lesão nas costas').replace('Foot Injury','lesão no pé').replace('Shoulder Injury','lesão no ombro').replace('Hip Injury','lesão no quadril').replace('Head Injury','lesão na cabeça').replace('Achilles Tendon Injury','lesão no tendão de Aquiles').replace('Red Card','suspenso (vermelho)').replace('Yellow Cards','suspenso (amarelos)').replace('Suspended','suspenso').replace('Illness','doença').replace('Injury','lesão').replace('Knock','pancada').replace('Inactive','inativo').replace('Coach\'s decision','decisão técnica').replace('Personal Reasons','motivos pessoais').replace('Broken','fratura').replace('Lacking Match Fitness','sem ritmo de jogo').replace('International duty','convocação');
 // Probabilidades do mercado: média das casas de apostas, tirando a margem de cada uma
 function oddsProb(resp){const r=resp&&resp[0];if(!r||!Array.isArray(r.bookmakers))return null;const ps=[];
  r.bookmakers.forEach(bk=>{const bet=(bk.bets||[]).find(b=>b.id===1||/match winner/i.test(b.name||''));if(!bet)return;const g=n=>{const v=(bet.values||[]).find(x=>String(x.value).toLowerCase()===n);return v?parseFloat(v.odd):NaN;};const h=g('home'),d=g('draw'),a=g('away');if(!(h>1&&d>1&&a>1))return;const s=1/h+1/d+1/a;ps.push([1/h/s,1/d/s,1/a/s]);});
@@ -3263,17 +3264,38 @@ async function preData(f){
  out.inj=inj.status==='fulfilled'?(inj.value||[]):[];
  return out;
 }
-async function probableLineups(f){
+async function probableLineups(f,inj){
  const lu=f.lineups||[];
- if(lu.length>=2)return {official:true,fx:{teams:f.teams,lineups:lu,players:f.players||[],events:f.events||[]},from:{}};
- const ids=[f.teams.home.id,f.teams.away.id];
- const lasts=await Promise.allSettled(ids.map(t=>apiGet('fixtures',{team:t,last:1,timezone:TZ},1800000)));
- const lastFx=lasts.map(x=>x.status==='fulfilled'&&x.value&&x.value[0]||null);
- const want=[...new Set(lastFx.filter(Boolean).map(x=>x.fixture.id))];
+ if(lu.length>=2)return {official:true,fx:{teams:f.teams,lineups:lu,players:f.players||[],events:f.events||[]},from:{},same:[true,true],changes:[[],[]],doubts:[[],[]]};
+ const ids=[f.teams.home.id,f.teams.away.id],kick=new Date(f.fixture.date),lgId=f.league.id;
+ const lasts=await Promise.allSettled(ids.map(t=>apiGet('fixtures',{team:t,last:10,timezone:TZ},1800000)));
+ const recent=lasts.map(x=>(x.status==='fulfilled'&&x.value||[]).filter(g=>FT_S.includes(g.fixture.status.short)&&new Date(g.fixture.date)<kick).sort((p,q)=>new Date(q.fixture.date)-new Date(p.fixture.date)));
+ // base: a última partida do time NESTA competição; só usa outra competição se ele ainda não jogou esta
+ const base=recent.map(R=>R.find(g=>g.league&&g.league.id===lgId)||R[0]||null);
+ const same=base.map(g=>!!(g&&g.league&&g.league.id===lgId));
+ // outros jogos recentes (primeiro da mesma competição) para achar quem entra no lugar de um desfalque
+ const extra=recent.map((R,i)=>R.filter(g=>!base[i]||g.fixture.id!==base[i].fixture.id).sort((p,q)=>((q.league&&q.league.id===lgId)-(p.league&&p.league.id===lgId))||new Date(q.fixture.date)-new Date(p.fixture.date)).slice(0,3));
+ const want=[...new Set([...base.filter(Boolean),...extra.flat()].map(x=>x.fixture.id))].slice(0,20);
  let full=[];if(want.length){try{full=await apiGet('fixtures',{ids:want.join('-'),timezone:TZ},3600000)||[];}catch(e){full=[];}}
- const L=ids.map((tid,i)=>{const fx=lastFx[i]&&full.find(x=>x.fixture.id===lastFx[i].fixture.id);return fx?(fx.lineups||[]).find(l=>l.team.id===tid)||null:null;});
- const from=ids.map((tid,i)=>{const x=lastFx[i];if(!x)return null;const opp=x.teams.home.id===tid?x.teams.away:x.teams.home;return `contra ${opp.name}, ${shortDate(new Date(x.fixture.date))}${x.league&&x.league.name?' ('+x.league.name+')':''}`;});
- return {official:false,fx:{teams:f.teams,lineups:L.filter(Boolean).length===2?L:[],players:[],events:[]},from,partial:L.filter(Boolean).length};
+ const byId=new Map(full.map(x=>[x.fixture.id,x]));
+ const INJ=inj||[];const changes=[[],[]],doubts=[[],[]];
+ const L=ids.map((tid,i)=>{const fx=base[i]&&byId.get(base[i].fixture.id);const lu0=fx?(fx.lineups||[]).find(l=>l.team.id===tid):null;if(!lu0)return null;
+  const lu1=JSON.parse(JSON.stringify(lu0));const mine=INJ.filter(x=>x.team&&x.team.id===tid);const outIds=new Set(mine.filter(x=>x.player.type==='Missing Fixture').map(x=>x.player.id));const dbt=new Map(mine.filter(x=>x.player.type!=='Missing Fixture').map(x=>[x.player.id,x]));
+  const used=new Set(lu1.startXI.map(x=>x.player.id));
+  // candidatos: titulares em outros jogos recentes (peso maior na mesma competição) e reservas que entraram na partida-base
+  const cand=new Map();const addC=(p,w)=>{if(!p||!p.id||outIds.has(p.id))return;const c=cand.get(p.id)||{p,w:0};c.w+=w;cand.set(p.id,c);};
+  extra[i].forEach(g=>{const G=byId.get(g.fixture.id);const l=G&&(G.lineups||[]).find(x=>x.team.id===tid);if(l)(l.startXI||[]).forEach(x=>addC(x.player,g.league&&g.league.id===lgId?2:1));});
+  const mins={};(fx.players||[]).filter(t=>t.team&&t.team.id===tid).forEach(t=>(t.players||[]).forEach(x=>{const st=x.statistics&&x.statistics[0];mins[x.player.id]=st&&st.games&&st.games.minutes||0;}));
+  (lu1.substitutes||[]).forEach(x=>addC(x.player,(mins[x.player.id]||0)/90));
+  lu1.startXI.forEach((x,k)=>{const p=x.player;if(!outIds.has(p.id)){if(dbt.has(p.id))doubts[i].push({name:p.name,reason:REASON_PT(dbt.get(p.id).player.reason)});return;}
+   const pool=[...cand.values()].filter(c=>!used.has(c.p.id)).map(c=>({...c,sc:c.w+(c.p.pos&&c.p.pos===p.pos?3:0)})).sort((a,b)=>b.sc-a.sc);const pick1=pool.find(c=>c.p.pos===p.pos)||pool[0];
+   const why=REASON_PT(mine.find(y=>y.player.id===p.id).player.reason);
+   if(pick1){used.add(pick1.p.id);lu1.startXI[k]={player:{id:pick1.p.id,name:pick1.p.name,number:pick1.p.number,pos:p.pos,grid:p.grid}};changes[i].push({out:p.name,in:pick1.p.name,why});}
+   else changes[i].push({out:p.name,in:null,why});});
+  if(lu1.substitutes)lu1.substitutes=lu1.substitutes.filter(x=>!used.has(x.player.id)&&!outIds.has(x.player.id));
+  return lu1;});
+ const from=ids.map((tid,i)=>{const x=base[i];if(!x)return null;const opp=x.teams.home.id===tid?x.teams.away:x.teams.home;return `contra ${opp.name}, ${shortDate(new Date(x.fixture.date))}${x.league&&x.league.name?' ('+((RLmap[x.league.id]||{}).name||x.league.name)+')':''}`;});
+ return {official:false,fx:{teams:f.teams,lineups:L.filter(Boolean).length===2?L:[],players:[],events:[]},from,same,changes,doubts,partial:L.filter(Boolean).length,comp:(RLmap[lgId]||{}).name||f.league.name};
 }
 /* ================= ANÁLISE TEL.SCORE (um único cálculo com todos os fatores) ================= */
 // Nível estimado de cada liga, em saldo de gols por jogo contra um time médio da Premier League.
@@ -3362,6 +3384,9 @@ function cxExpect(c){
  return F.v>=60?V(`Zebra: o ${dog} venceu um ${fav} que tinha ${F.v}% de chance de vitória ${src}.`,`Zebra em andamento: o ${dog} vence um ${fav} que tinha ${F.v}% de chance de vitória ${src}.`):V(`Resultado contra a expectativa: o ${fav} era o favorito (${F.v}% ${src}) e perdeu.`,`Contra a expectativa: o ${fav} era o favorito (${F.v}% ${src}) e está perdendo.`);
 }
 const COMP_PT=n=>String(n).replace(/^FIFA World Cup$/,'Copa do Mundo').replace(/^UEFA Euro$/,'Eurocopa').replace(/^Copa America$/,'Copa América').replace(/^FIFA Women's World Cup$/,'Copa do Mundo Feminina').replace(/^UEFA Women's Euro$/,'Eurocopa Feminina').replace(/^Women's World Cup$/,'Copa do Mundo Feminina');
+// visual do contexto: as duas linhas da tabela (quando é jogo de liga) ou os dois escudos
+function ctxViz(c){const T=c.cx&&c.cx.tbl;if(T&&T.h&&T.a&&T.h.rank&&T.a.rank){const row=(s,t)=>({pos:t.rank,e:vzTeam(c,s),name:sName(c,s),vals:t.pts!=null?[t.pts]:[`${t.rank}º`],zc:t.zone?t.zone.c:null,hl:false});const rs=[row('h',T.h),row('a',T.a)].sort((x,y)=>x.pos-y.pos);return {k:'tbl',cols:[T.h.pts!=null?'PTS':'POS'],rows:rs,legend:[T.h.zone,T.a.zone].filter(Boolean).filter((z,i,a)=>a.findIndex(y=>y.k===z.k)===i).map(z=>({c:z.c,l:z.l}))};}
+ const D=c.cx&&c.cx.dom;return {k:'cmp',nobar:true,h:{...vzTeam(c,'h'),v:0,txt:'',lab:D&&D.h?`${c.H.name} · ${D.h.name}`:c.H.name},a:{...vzTeam(c,'a'),v:0,txt:'',lab:D&&D.a?`${c.A.name} · ${D.a.name}`:c.A.name},sub:null};}
 function cxLead(c){
  const cx=c.cx,K=cx.comp||{},V=(p,l)=>pastLive(c,p,l);const T=cx.tbl,D=cx.dom;
  const lgN=COMP_PT(K.short||K.name||'');const art=/^(Brasileirão|Campeonato|Paulistão|Carioca)/.test(lgN)?'do':'da';const st=String(K.stage||'');let m;
@@ -3397,7 +3422,7 @@ async function enrichCtx(c,f){
 }
 async function preDeep(f,D){
  const ids=[f.teams.home.id,f.teams.away.id];const kick=new Date(f.fixture.date);
- const lasts=await Promise.allSettled(ids.map(t=>apiGet('fixtures',{team:t,last:5,timezone:TZ},1800000)));
+ const lasts=await Promise.allSettled(ids.map(t=>apiGet('fixtures',{team:t,last:10,timezone:TZ},1800000)));
  const L=lasts.map(x=>x.status==='fulfilled'?(x.value||[]).filter(g=>FT_S.includes(g.fixture.status.short)&&new Date(g.fixture.date)<kick):[]);
  const want=[...new Set(L.flat().map(g=>g.fixture.id))].slice(0,20);
  let full=[];if(want.length){try{full=await apiGet('fixtures',{ids:want.join('-'),timezone:TZ},86400000)||[];}catch(e){full=[];}}
@@ -3489,14 +3514,16 @@ async function preRealBase(f,tab,D){
  const h=f.teams.home,a=f.teams.away;
  const P=D.pred;
  if(tab==='provavel'){
-  const pl=await probableLineups(f);
+  const pl=await probableLineups(f,D.inj);
   const byTeam=tid=>D.inj.filter(x=>x.team&&x.team.id===tid);
-  const injIds=new Map(D.inj.map(x=>[x.player.id,x]));
   let html=pl.fx.lineups.length>=2?lineupReal(pl.fx):`<div class="empty">Ainda não há escalação oficial${pl.partial===0?' nem escalações anteriores disponíveis':' e uma das equipes não tem escalação anterior disponível'} na API para este confronto.</div>`;
   if(!pl.official&&pl.fx.lineups.length>=2){
-   // marca desfalques que aparecem na última escalação
-   const xi=[...pl.fx.lineups[0].startXI,...pl.fx.lineups[1].startXI].map(x=>x.player).filter(p=>injIds.has(p.id));
-   html=`<div class="replay" style="margin-bottom:14px;flex-wrap:wrap"><span class="pill solid">Provável</span><span style="font-size:13px">Base: última escalação de cada time. ${esc(h.name)} ${esc(pl.from[0]||'')} · ${esc(a.name)} ${esc(pl.from[1]||'')}. A oficial costuma sair de 20 a 40 minutos antes do jogo.</span></div>`+(xi.length?`<div class="replay" style="margin-bottom:14px;background:var(--red-soft);border-color:transparent"><span style="font-size:13px"><b>Atenção:</b> ${xi.map(p=>`${esc(p.name)} (${esc((INJ_PT[injIds.get(p.id).player.type]||'Desfalque').toLowerCase())})`).join(', ')} começou a última partida, mas está na lista de desfalques.</span></div>`:'')+html;
+   const T=[h,a];const baseTxt=i=>`<b>${esc(T[i].name)}:</b> ${pl.same[i]?`última escalação na ${esc(pl.comp)}`:`última escalação disponível (ainda não jogou a ${esc(pl.comp)} nesta temporada)`}, ${esc(pl.same[i]?(pl.from[i]||'').replace(/ \([^)]*\)$/,''):(pl.from[i]||''))}`;
+   const chg=[0,1].flatMap(i=>pl.changes[i].map(x=>`<li><b>${esc(T[i].name)}:</b> sai ${esc(x.out)}${x.why?` (${esc(x.why)})`:''}${x.in?`, entra ${esc(x.in)}`:', sem substituto claro nos últimos jogos'}</li>`));
+   const dbt=[0,1].flatMap(i=>pl.doubts[i].map(x=>`${esc(x.name)} (${esc(T[i].name)}${x.reason?`, ${esc(x.reason)}`:''})`));
+   html=`<div class="replay" style="margin-bottom:14px;flex-wrap:wrap;align-items:flex-start"><span class="pill solid">Provável</span><span style="font-size:13px;line-height:1.55">${baseTxt(0)}<br>${baseTxt(1)}<br><span style="color:var(--muted)">A oficial costuma sair de 20 a 40 minutos antes do jogo.</span></span></div>`
+    +(chg.length?`<div class="replay" style="margin-bottom:14px;background:var(--red-soft);border-color:transparent;align-items:flex-start"><span style="font-size:13px;line-height:1.55"><b>Mudanças por desfalque</b> (já aplicadas no campinho):<ul style="margin:4px 0 0;padding-left:18px">${chg.join('')}</ul></span></div>`:'')
+    +(dbt.length?`<div class="replay" style="margin-bottom:14px;align-items:flex-start"><span style="font-size:13px;line-height:1.55"><b>Dúvidas mantidas na escalação:</b> ${dbt.join('; ')}.</span></div>`:'')+html;
   }else if(pl.official)html=`<div class="replay" style="margin-bottom:14px"><span class="pill live" style="animation:none">Oficial</span><span style="font-size:13px">Escalações confirmadas pelos clubes.</span></div>`+html;
   const injCard=(t)=>{const L=byTeam(t.id);return `<div class="card"><div class="card-h"><h3>${rCrest(t)} Desfalques · ${esc(t.name)}</h3></div>${L.length?L.map(x=>`<div class="lp">${lpPh(x.player.id,x.player.photo,x.player.type==='Missing Fixture'?'✕':'?','',`background:${x.player.type==='Missing Fixture'?'var(--red)':'var(--yellow)'};color:${x.player.type==='Missing Fixture'?'#fff':'#111'}`)}<span class="nm">${esc(x.player.name)}<small>${esc(REASON_PT(x.player.reason))}</small></span><span class="ics">${esc(INJ_PT[x.player.type]||x.player.type)}</span></div>`).join(''):'<p style="color:var(--muted);margin:0;font-size:13px">Nenhum desfalque informado.</p>'}</div>`;};
   return html+`<div class="pre-2">${injCard(h)}${injCard(a)}</div>`;
