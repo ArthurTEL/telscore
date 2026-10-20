@@ -49,6 +49,22 @@ Antes de escrever qualquer texto, o site monta o contexto da partida e todas as 
 
 Esse contexto aparece nos posts do Estúdio, na Prévia (pré-jogo) e no card "Leitura TEL.SCORE", na aba Estatísticas da Central do jogo.
 
+## Posts das tabelas de classificação
+
+No Estúdio, a fonte "Tabelas" gera posts a partir da classificação de cada liga (também dá para abrir pelo botão "Gerar post da tabela", na página Ligas). Escolha a liga, o formato, a plataforma e o tom:
+
+- **Classificação:** a tabela inteira em slides, com escudos e as cores das zonas.
+- **Briga pelo título:** líder x vice, top 5, momento dos líderes e projeção no ritmo atual.
+- **Corrida pelas vagas:** a linha de corte de cada zona (Libertadores, Sul-Americana, Champions, acesso...).
+- **Luta contra o rebaixamento:** quem está no Z4, a distância para sair e quem está reagindo.
+- **Quem está embalado:** melhores e piores sequências nos últimos 5 jogos.
+- **Ataque e defesa**, **Em casa e fora** e **Projeção de pontos**.
+- **Resumo da rodada** e **Próxima rodada:** resultados e jogos com a posição de cada time, destacando o jogo da rodada.
+- **Raio-x do time na tabela:** escolha o time no campo "Foco".
+- **Enquete:** quem é campeão, quem escapa da queda.
+
+Cada post usa 2 consultas à API (classificação e jogos da temporada), guardadas por até 1 hora. O vídeo animado não está disponível para tabelas; as outras plataformas funcionam normalmente.
+
 ## Tabelas das ligas
 
 A classificação marca as zonas de cada liga com a descrição oficial que vem da API-Football: Libertadores, Pré-Libertadores, Sul-Americana, Champions, Europa League, Conference League, acesso, playoff e rebaixamento. A cor aparece na posição e na faixa à esquerda da linha, e a legenda embaixo mostra só as zonas daquela tabela. No celular a tabela fica resumida (posição, clube, jogos, saldo e pontos).
