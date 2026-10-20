@@ -61,8 +61,8 @@ A Central do jogo (aba Escalação provável) e o post "Escalação provável" d
 
 ## Visual dos posts
 
-- **Capa:** escudos e placar (ou horário), uma etiqueta com a fase e o formato (ex.: "Pré-jogo · Análise TEL.SCORE"), o título, um selo com o número principal e a lista "Neste post" com os temas dos próximos slides. Os dados detalhados ficam para os slides seguintes.
-- **Texto dos slides:** a frase principal vem em destaque, o complemento em tom mais leve e os números na cor da marca, com uma barra vermelha ligando o texto ao gráfico acima.
+- **Capa:** escudos com placar ou horário, título e o número principal em destaque (só aparece quando é um número de verdade).
+- **Slides:** cada slide tem um título curto, um visual (comparativo, barras, tabela, card do jogador) e uma legenda de no máximo duas frases curtas, com os números na cor da marca. Quando o visual já mostra o dado, a legenda não repete. O carrossel tem no máximo 5 slides de conteúdo; o texto completo continua na legenda do post.
 
 ## Posts das tabelas de classificação
 

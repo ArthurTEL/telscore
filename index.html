@@ -384,10 +384,9 @@ svg.chart text{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
 .slide .foot{font-family:var(--f-mono);font-size:9.5px;opacity:.6;margin-top:auto;display:flex;justify-content:space-between;gap:6px}
 .slide.cta{background:var(--p-home);color:#fff}
 .slide .rule{height:4px;width:42px;border-radius:9px;background:var(--p-home);margin:12px 0}
-.slide p.rt,.story p.rt{position:relative;padding-left:10px}
-.slide p.rt::before,.story p.rt::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:3px;border-radius:3px;background:var(--p-home)}
-.slide p.rt .ld,.story p.rt .ld{display:block;font-weight:700;line-height:1.3}
-.slide p.rt .rs,.story p.rt .rs{display:block;font-weight:500;opacity:.82;font-size:.93em;margin-top:4px}
+.slide p.rt,.story p.rt{font-weight:600;text-wrap:pretty}
+.slide p.rt.sm{font-size:12px;line-height:1.4;opacity:.92;margin-top:4px}
+.slide p.rt.big{font-size:16px;line-height:1.38;font-weight:700}
 .slide p .hl,.story p .hl{font-style:normal;color:var(--p-home);font-weight:800}
 .slide.cover .cvb{margin-top:auto;display:grid;gap:6px}
 .slide.cover h5{margin:0;font-size:15.5px}
@@ -1842,11 +1841,11 @@ function vizFor(c,text,fmtName,fmtId){
  const mm=t.match(/^(\d{1,3}(?:\+\d+)?)'/);if(mm){const p=PL[0];const side=/\bdo ([^:,.]+)/.exec(t);const s=side&&side[1]===A.name?'a':side&&side[1]===H.name?'h':null;return {kick:/Gol/i.test(t)?'Gol':/Expuls|vermelho/i.test(t)?'Expulsão':/Amarelo|amarelo/.test(t)?'Cartão':'Lance',v:{k:'big',txt:mm[1]+"'",lab:'',e:p?vzPl(c,p):s?vzTeam(c,s):null},t:t.replace(/^\d{1,3}(?:\+\d+)?'\s*·?\s*/,'')};}
  // time citado com dois números: comparação
  const hi=t.indexOf(H.name),ai=t.indexOf(A.name);
- const nums=[...t.matchAll(/(-?\d+(?:,\d+)?)(%?)/g)].filter(m=>!/^\d{4}$/.test(m[1]));
+ const nums=[...t.matchAll(/(-?\d+(?:,\d+)?)(%?)/g)].filter(m=>!/^\d{4}$/.test(m[1])&&!/^['º°ª+]|^x\d/.test(t.slice(m.index+m[0].length))&&!/\d[x+]$/.test(t.slice(0,m.index)));
  if(hi>=0&&ai>=0&&nums.length>=2&&!PL.length){const a1=nums.find(n=>n.index>hi),a2=nums.find(n=>n.index>ai);if(a1&&a2&&a1!==a2){const n=s=>parseFloat(s.replace(',','.'));return R(kick||'Comparativo',cmpV('',n(a1[1]),n(a2[1]),v=>(String(v).replace('.',','))+(a1[2]||'')));}}
  // um número em destaque
  const sc=t.match(/\b(\d+x\d+)\b/);
- if(nums.length||sc){let txt,lab='';if(sc){txt=sc[1].replace('x',' × ');lab='placar';}else{const score=m=>(m[2]?3:0)+(+m[1].replace(',','.')!==0?2:0);const m=nums.slice().sort((p,q)=>score(q)-score(p)||p.index-q.index)[0];txt=m[1]+(m[2]||'');const after=t.slice(m.index+m[0].length).match(/^\s*([^\d.,;:()]{2,40})/);lab=after?after[1].trim().split(/\s+/).slice(0,4).join(' '):'';}
+ if(nums.length||sc){let txt,lab='';if(sc){txt=sc[1].replace('x',' × ');lab='placar';}else{const score=m=>(m[2]?3:0)+(+m[1].replace(',','.')!==0?2:0);const m=nums.slice().sort((p,q)=>score(q)-score(p)||p.index-q.index)[0];txt=m[1]+(m[2]||'');const after=t.slice(m.index+m[0].length).match(/^\s*([^\d.,;:()]{2,40})/);lab=after?after[1].trim().split(/\s+/).slice(0,4).join(' ').replace(/\s+(e|de|da|do|com|x|em|no|na|a|o)$/i,'').replace(/[,;]$/,''):'';}
   const e=PL[0]?vzPl(c,PL[0]):fP?vzPl(c,fP):hi>=0&&ai<0?vzTeam(c,'h'):ai>=0&&hi<0?vzTeam(c,'a'):null;return {kick:kick||fmtName||'Em números',v:{k:'big',txt,lab,e},t:body.replace(/\s+/g,' ')};}
  // sem números: frase de destaque
  const es=[];if(hi>=0)es.push(vzTeam(c,'h'));if(ai>=0)es.push(vzTeam(c,'a'));if(PL[0])es.unshift(vzPl(c,PL[0]));else if(fP)es.unshift(vzPl(c,fP));
@@ -1862,9 +1861,13 @@ function vizItems(c,blocks,fmtName,max,fmtId,bviz){
 /* texto dos slides: frase principal em destaque, complemento mais leve e números na cor da marca */
 function splitLead(t){t=String(t||'').replace(/\s+/g,' ').trim();const m=t.match(/^(.{12,125}?[.!?])\s+(\S.*)$/);if(m)return [m[1],m[2]];return t.length<=125?[t,'']:['',t];}
 const hlNums=s=>esc(s).replace(/(^|[\s(~+−-])(\d+(?:[.,]\d+)?(?:%|º|ª)?)(?=[\s.,;:)!?]|$)/g,'$1<em class="hl">$2</em>');
-const richHTML=t=>{const [a,b]=splitLead(t);return `${a?`<b class="ld">${hlNums(a)}</b>`:''}${a&&b?' ':''}${b?`<span class="rs">${hlNums(b)}</span>`:''}`;};
+const richHTML=t=>hlNums(t);
+// texto curto: a 1ª frase (ou as 2 primeiras, até ~170 caracteres), sem cortar no meio da ideia
+const sentN=(t,n,mx)=>{mx=mx||170;t=String(t||'').replace(/\s+/g,' ').trim();const S=t.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g)||[t];let out='';for(const x of S.slice(0,n)){const y=x.trim();if(out&&out.length+y.length>mx)break;out=(out?out+' ':'')+y;}if(out.length>150&&n===1){const k=out.lastIndexOf(',',130);if(k>50)out=out.slice(0,k)+'.';}return out;};
+const isDataLine=t=>/^[^:]{2,40}:\s/.test(String(t||''))&&/\d/.test(t)&&!/[.!?]\s+\S/.test(String(t).trim());
+function captionOf(x){const body=String(x.t||'').trim();let c=body;if(x.v&&isDataLine(x.src)&&String(x.src).includes(body.slice(0,24)))c='';return c?sentN(c,2,125):'';}
 const rtP=(t,cls,extra)=>{t=sing1(String(t||''));return `<p class="rt${cls?' '+cls:''}" data-t="${esc(t)}">${richHTML(t)}${extra||''}</p>`;};
-const vizBlockHTML=(x,story)=>`${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${x.v?`<div class="viz" data-viz="${esc(JSON.stringify(x.v))}">${vizSVG(x.v)}</div>`:''}${rtP(x.t,x.v?'sm':'',x.note?`<span class="note">${esc(x.note)}</span>`:'')}`;
+const vizBlockHTML=(x,story)=>{const cap=captionOf(x);return `${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${x.v?`<div class="viz" data-viz="${esc(JSON.stringify(x.v))}">${vizSVG(x.v)}</div>`:''}${cap?rtP(cap,x.v?'sm':''):''}`;};
 
 /* ---- escudos e fotos nos posts ---- */
 const prox=u=>!u?'':/^https:\/\/media\.api-sports\.io\//.test(u)?'/api/logo?u='+encodeURIComponent(u):/^data:image\//.test(u)?u:'';
@@ -1882,13 +1885,9 @@ function compose(c,f,tone,plat,r){
  const dt=c.m.off===0?'hoje':shortDate(c.m.date);const liveNote=c.live?` (parcial, ${c.minute})`:'';
  let html='',text='';
  if(plat==='ig'){
-  const its=vizItems(c,blocks,f.name,7,f.id,bviz);const sl=its.map(x=>x.src+(x.note?' '+x.note:''));const N=its.length+2;
-  const ph=featPhoto(c,f),cvi=coverImage(c),aseed=f.id+(c.id||c.score);
-  const phase=c.tab?'Tabela':c.pre?'Pré-jogo':c.live?`Ao vivo · ${c.minute}`:'Pós-jogo';
-  const st0=String(out.stat[0]||''),badge=/\d/.test(st0)&&st0.length<=12;
-  const nx=[...new Set(its.map(x=>x.kick).filter(Boolean).map(k=>k.replace(/\s*\(.*\)$/,'')))].slice(0,3);
-  html=`<div class="slides"><div class="slide cover">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}<div class="sn"><span>${esc(c.lg.short)} · ${dt}</span><span>1/${N}</span></div>${mxHTML(c)}<div class="cvb"><span class="ckick">${esc(phase)} · ${esc(f.name)}</span><h5>${esc(out.head)}</h5>${badge||ph?`<div class="cbadge">${badge?`<b class="num">${esc(st0)}</b><span>${esc(out.stat[1])}${esc(liveNote)}</span>`:''}${ph?`<img class="pp" src="${esc(ph)}" alt="" crossorigin="anonymous">`:''}</div>`:''}</div>${nx.length>=2?`<div class="cnext"><small>Neste post</small><div>${nx.map(k=>`<i>${esc(k)}</i>`).join('')}</div></div>`:''}<div class="foot"><span>@tel.score</span><span>arraste →</span></div></div>
-   ${its.map((x,i)=>`<div class="slide${x.v?' vz':''}">${artDiv(x.v&&/^(tbl|games)$/.test(x.v.k)?'lights':artKindFor(aseed,i),false)}<div class="sn"><span>${esc(f.name)}</span><span>${i+2}/${N}</span></div>${x.v?vizBlockHTML(x):`${mediaFor(c,x.src)}${rtP(x.src)}`}<div class="foot"><span>@tel.score</span><span>${esc(c.score)}</span></div></div>`).join('')}
+  const its=vizItems(c,blocks,f.name,5,f.id,bviz);const sl=its.map(x=>x.src+(x.note?' '+x.note:''));const N=its.length+2;
+  const ph=featPhoto(c,f),cvi=coverImage(c),aseed=f.id+(c.id||c.score);const st0=String(out.stat[0]||''),showSt=/\d/.test(st0)&&st0.length<=14;html=`<div class="slides"><div class="slide cover">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}<div class="sn"><span>${esc(c.lg.short)} · ${dt}</span><span>1/${N}</span></div>${mxHTML(c)}<h5>${esc(out.head)}</h5><div class="bsrow"><div style="min-width:0">${showSt?`<div class="bs num">${esc(st0)}</div>`:''}<div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div>${ph?`<img class="pp" src="${esc(ph)}" alt="" crossorigin="anonymous">`:''}</div><div class="rule"></div><div class="foot"><span>@tel.score</span><span>arraste →</span></div></div>
+   ${its.map((x,i)=>`<div class="slide${x.v?' vz':''}">${artDiv(x.v&&/^(tbl|games)$/.test(x.v.k)?'lights':artKindFor(aseed,i),false)}<div class="sn"><span>${esc(f.name)}</span><span>${i+2}/${N}</span></div>${x.v?vizBlockHTML(x):`${mediaFor(c,x.src)}${rtP(sentN(x.src,2),'big')}`}<div class="foot"><span>@tel.score</span><span>${esc(c.score)}</span></div></div>`).join('')}
    <div class="slide cta">${artDiv('ball',true)}<div class="sn"><span>TEL.SCORE</span><span>${N}/${N}</span></div>${mxHTML(c)}<h5>${tone.emoji?'Curtiu? Salva e manda pro grupo':'Salve para consultar depois'}</h5><p style="margin:0 0 auto;font-size:13.5px">${esc(close)}</p><div class="foot"><span>@tel.score</span><span>placar · análise</span></div></div></div>`;
   const cap=[open,out.head+em(),blocks[0],tone.emoji?'Arraste para ver tudo ➡️':'Arraste para ver a análise completa.',close,'',tags].filter((x,i)=>x||i===5).join('\n');
   html+=`<div class="caption"><div class="who">${AV}tel.score</div>${esc(cap)}</div>`;
@@ -1896,7 +1895,7 @@ function compose(c,f,tone,plat,r){
  } else if(plat==='story'){
   const poll=out.poll||[pick(r,['Concorda com a análise?','Você viu esse jogo?','Esse número te surpreendeu?']),['Sim','Não']];
   const sits=vizItems(c,blocks,f.name,6,f.id,bviz);const fr=[{h:out.head,s:out.stat},{p:sits[0]?sits[0].src:blocks[0],it:sits[0]},{p:blocks[Math.min(2,blocks.length-1)],poll},{h:tone.emoji?'Análise completa no feed 👆':'Análise completa no feed'}];
-  const cvi=coverImage(c),aseed=f.id+(c.id||c.score);html=`<div class="stories">${fr.map((x,i)=>`<div class="story">${i===0?artDiv('lights',false,true)+coverBgDiv(cvi):artDiv(i===fr.length-1?'ball':artKindFor(aseed,i,true),false,true)}<div class="bars">${fr.map((_,j)=>`<i class="${j<=i?'on':''}"></i>`).join('')}</div><div style="display:flex;align-items:center;gap:6px;font-size:11px">${AV.replace('class="avatar"','class="avatar" style="width:22px;height:22px"')}tel.score</div>${i===0?mxHTML(c):''}${x.h?`<h5>${esc(x.h)}</h5>`:''}${x.s?`<div class="bs num">${esc(x.s[0])}</div><div style="font-family:var(--f-mono);font-size:10px;opacity:.75">${esc(x.s[1])}</div>`:''}${i===0&&featPhoto(c,f)?`<img class="pp" src="${esc(featPhoto(c,f))}" alt="" crossorigin="anonymous">`:''}${x.it&&x.it.v?vizBlockHTML(x.it,true):x.p?`${mediaFor(c,x.p)}${rtP(x.p)}`:''}${x.poll?`<div class="sticker"><b>${esc(x.poll[0])}</b>${x.poll[1].slice(0,4).map(o=>`<span>${esc(o)}</span>`).join('')}</div>`:''}</div>`).join('')}</div>`;
+  const cvi=coverImage(c),aseed=f.id+(c.id||c.score);html=`<div class="stories">${fr.map((x,i)=>`<div class="story">${i===0?artDiv('lights',false,true)+coverBgDiv(cvi):artDiv(i===fr.length-1?'ball':artKindFor(aseed,i,true),false,true)}<div class="bars">${fr.map((_,j)=>`<i class="${j<=i?'on':''}"></i>`).join('')}</div><div style="display:flex;align-items:center;gap:6px;font-size:11px">${AV.replace('class="avatar"','class="avatar" style="width:22px;height:22px"')}tel.score</div>${i===0?mxHTML(c):''}${x.h?`<h5>${esc(x.h)}</h5>`:''}${x.s?`<div class="bs num">${esc(x.s[0])}</div><div style="font-family:var(--f-mono);font-size:10px;opacity:.75">${esc(x.s[1])}</div>`:''}${i===0&&featPhoto(c,f)?`<img class="pp" src="${esc(featPhoto(c,f))}" alt="" crossorigin="anonymous">`:''}${x.it&&x.it.v?vizBlockHTML(x.it,true):x.p?`${mediaFor(c,x.p)}${rtP(sentN(x.p,2),'big')}`:''}${x.poll?`<div class="sticker"><b>${esc(x.poll[0])}</b>${x.poll[1].slice(0,4).map(o=>`<span>${esc(o)}</span>`).join('')}</div>`:''}</div>`).join('')}</div>`;
   text=fr.map((x,i)=>`STORY ${i+1}: ${x.h||''}${x.s?' | '+x.s[0]+' ('+x.s[1]+')':''}${x.p?x.p:''}${x.poll?`\n  [Enquete] ${x.poll[0]} → ${x.poll[1].join(' / ')}`:''}`).join('\n');
  } else if(plat==='x'){
   const tw=[[open,out.head+(tone.emoji?' 🧵':''),`${out.stat[0]}: ${out.stat[1]}${liveNote}`].filter(Boolean).join('\n\n'),...blocks.map(b=>b+em()),[close,tags].filter(Boolean).join('\n\n')];
@@ -2679,15 +2678,15 @@ const RFORMATS=[
  if(H.passes!=null)b.push({t:`Passes: ${H.passes} x ${A.passes}${H.acc!=null?`, com ${Math.round(H.acc)}% x ${Math.round(A.acc)}% de acerto`:''}.`});
  if(c.goals.length)b.push({t:`Gols: ${c.goals.slice().sort((x,y)=>x.m-y.m).map(g=>goalTxt(g)).join('; ')}.`});
  if(c.star)b.push({t:`Melhor em campo: ${c.star.name} (${c.star.tn}), nota ${f1(c.star.rating)}.`,why:RWHY.rating});
- b.push({t:c.verdict});if(c.expect&&!c.lead)b.push({t:c.expect});
+ b.push({t:c.verdict,viz:{kick:c.live?'Até aqui':'Veredito',v:verdictViz(c),t:c.verdict}});if(c.expect&&!c.lead)b.push({t:c.expect});
  if(c.lead){const lt=c.lead+(c.expect?' '+c.expect:c.stakes?' '+c.stakes:'');b.unshift({t:lt,viz:{kick:'Contexto',v:ctxViz(c),t:lt}});}
  return {head:pick(r,c.live?[`${c.score}: o jogo em números até aqui`,`Os números de ${c.score} até agora`]:[`${c.score}: o jogo em números`,`Os números por trás de ${c.score}`,`${c.score} explicado em dados`]),stat:c.has.xg?[`${f2(H.xg)} × ${f2(A.xg)}`,'xG do jogo']:c.has.shots?[`${H.shots} × ${A.shots}`,'finalizações']:[`${H.goals}–${A.goals}`,'placar final'],blocks:b};}},
 {id:'placar-mentiu',cat:'Pós-jogo',name:'O placar mentiu?',desc:'Placar contra xG',visual:'Mapa de finalizações com círculos por xG',need:c=>c.has.xg,run(c,r){const H=c.H,A=c.A;const gd=H.goals-A.goals,xd=H.xg-A.xg;const P=c.cx.perf;const lie=(c.res!=='d'&&P.side&&P.side!==c.res&&P.lvl!=='eq')||(c.res==='d'&&P.lvl==='claro')||Math.abs(gd-xd)>2;
- const conv=s=>s.shots?Math.round(s.goals/s.shots*100):0;const b=[{t:`Placar: ${c.score}. xG: ${f2(H.xg)} x ${f2(A.xg)}.`,why:RWHY.xg}];
+ const conv=s=>s.shots?Math.round(s.goals/s.shots*100):0;const b=[{t:`Placar: ${c.score}. xG: ${f2(H.xg)} x ${f2(A.xg)}.`,why:RWHY.xg,viz:{kick:'Placar e xG',v:verdictViz(c),t:`Placar de ${H.goals} x ${A.goals} com xG de ${f2(H.xg)} x ${f2(A.xg)}. ${lie?'O xG conta outra história.':'O xG confirma o placar.'}`}}];
  if(c.has.shots)b.push({t:`Aproveitamento: ${H.name} transformou ${conv(H)}% das finalizações em gol; ${A.name}, ${conv(A)}%.`});
  if(c.miss)b.push({t:`A maior chance perdida: ${c.miss.player} (${sName(c,c.miss.side)}), aos ${c.miss.label}, de ${c.miss.dist} m. Chance de ${Math.round(c.miss.xg*100)}% que terminou ${c.miss.out==='para fora'?'para fora':c.miss.out==='defendido'?'no goleiro':c.miss.out==='na trave'?'na trave':'bloqueada'}.`});
  if(H.big!=null)b.push({t:`Grandes chances (xG acima de 0,30): ${H.big} x ${A.big}.`});
- b.push({t:`Veredito: ${c.verdict}`});if(c.expect)b.push({t:c.expect});
+ b.push({t:`Veredito: ${c.verdict}`,viz:{kick:'Veredito',v:{k:'big',txt:lie?'NÃO':'SIM',lab:lie?'o placar não reflete o jogo':'o placar reflete o jogo',e:c.cx.perf.side?vzTeam(c,c.cx.perf.side):null},t:c.verdict}});{const ev=expectViz(c);if(c.expect)b.push(ev?{t:c.expect,viz:{kick:'Antes do jogo',v:ev,t:c.expect}}:{t:c.expect});}
  return {head:c.live?(lie?pick(r,['O placar está mentindo?','O xG discorda do placar até aqui']):pick(r,['O placar está justo até aqui?','Placar e xG concordam até agora'])):lie?pick(r,['O placar mentiu?','Placar e jogo contaram histórias diferentes','O xG discorda do placar']):pick(r,['O placar foi justo?','Placar e xG concordam','Desta vez o placar disse a verdade']),stat:[`${H.goals}–${A.goals}`,`xG ${f2(H.xg)} – ${f2(A.xg)}`],blocks:b};}},
 {id:'momento-chave',cat:'Pós-jogo',name:'O lance que decidiu',desc:'O gol decisivo em detalhe',visual:'Replay do lance com seta no mapa',need:c=>!!c.key,run(c,r){const k=c.key;const sc={h:0,a:0};c.goals.slice().sort((x,y)=>x.m-y.m).some(g=>{sc[g.side]++;return g===k;});
  const b=[{t:`${k.label}: ${k.type==='gol contra'?'gol contra a favor do '+sName(c,k.side):`${k.player} marca para o ${sName(c,k.side)}`}${k.type==='pênalti'?', de pênalti':''}${k.body?`, de ${k.body}`:''}${k.dist?`, a ${k.dist} metros do gol`:''}.`}];
@@ -2720,13 +2719,15 @@ const RFORMATS=[
  if(c.H.fouls!=null&&!c.live){const tf=c.H.fouls+c.A.fouls;b.push({t:tf>30?`Jogo truncado: ${tf} faltas, o apito apareceu bastante.`:tf<20?`Só ${tf} faltas: arbitragem que deixou o jogo correr.`:`${tf} faltas: número dentro do padrão de um jogo comum.`});}
  if(c.cx.manUp)b.push({t:`A expulsão mudou o jogo: o ${sName(c,c.cx.manUp.dn)} ${c.live?'joga':'jogou'} com um a menos desde os ${c.cx.manUp.label}.`});
  return {head:pick(r,[`Quem apitou ${c.score}?`,`A arbitragem de ${R.name} em números`,`${R.name}: rigoroso ou permissivo?`]),stat:[`${yc+rc}`,'cartões no jogo'],blocks:b};}},
-{id:'destaque',cat:'Jogador',name:'Craque do jogo',desc:'Perfil completo do destaque',visual:'Foto do jogador com 3 números grandes',need:c=>c.has.players,run(c,r){const p=c.P;const b=[{t:`${pl(p.goals,'gol(s)')} e ${pl(p.assists,'assistência(s)')} em ${p.mins} minutos como ${p.posName}.`}];
- if(p.xg!=null)b.push({t:`xG ${f2(p.xg)} + xA ${f2(p.xa)}: participou de ${f2(p.xg+p.xa)} em chances esperadas.`,why:RWHY.xa});
- b.push({t:`${p.passes} passes${p.acc!=null?` com ${Math.round(p.acc)}% de acerto`:''}${p.prog!=null?` e ${p.prog} passes progressivos`:''}.`,why:p.prog!=null?RWHY.prog:null});
- b.push({t:`${p.key} passes-chave, ${p.shots} finalizações e ${p.drib} dribles certos.`});
- b.push({t:`Sem a bola: ${p.tkl} desarmes, ${p.intc} interceptações${p.duels?` e ${p.duelsW} de ${p.duels} duelos vencidos`:''}${p.press!=null?`, ${p.press} pressões`:''}.`});
+{id:'destaque',cat:'Jogador',name:'Craque do jogo',desc:'Perfil completo do destaque',visual:'Foto do jogador com 3 números grandes',need:c=>c.has.players,run(c,r){const p=c.P;const b=[];
  const mine=p.side,won=c.res===mine,lost=c.res!=='d'&&!won,isStar=c.star&&c.star.id===p.id;
- b.push({t:won?(c.live?`Atuação que está pesando a favor do ${p.tn}, que vence por enquanto.`:`Atuação que pesou na vitória do ${p.tn}.`):lost?(c.live?`Destaque mesmo com o ${p.tn} atrás no placar.`:`Destaque mesmo na derrota do ${p.tn}.`):(c.live?`Destaque de um jogo empatado até aqui.`:`Destaque de um jogo que terminou empatado.`)});
+ const ctxT=won?(c.live?`Peça importante no ${p.tn}, que vence por enquanto.`:`Peça importante na vitória do ${p.tn}.`):lost?(c.live?`Destaque mesmo com o ${p.tn} atrás no placar.`:`Destaque mesmo na derrota do ${p.tn}.`):(c.live?'Destaque de um jogo empatado até aqui.':'Destaque de um jogo que terminou empatado.');
+ b.push({t:`${p.name}: nota ${f1(p.rating)} em ${p.mins} minutos como ${p.posName}. ${ctxT}`,viz:{kick:isStar?'Melhor em campo':'Destaque',v:vzPlayerCard(c,p),t:ctxT}});
+ const pv=pctVals(c,p).sort((x,y)=>y.v-x.v).slice(0,3);
+ b.push({t:`Pontos fortes: ${pv.map(x=>`${x.k.toLowerCase()} (percentil ${x.v}, ${x.raw})`).join('; ')}.`,why:RWHY.pct,viz:{kick:'Pontos fortes',v:{k:'bars3',max:100,rows:pv.map(x=>({lab:x.k,v:x.v,txt:'p'+x.v,sym:x.k[0]}))},t:`Melhor fundamento: ${pv[0].k.toLowerCase()}, acima de ${pv[0].v}% dos jogadores de linha da partida.`}});
+ const att=p.goals||p.assists||p.key>=2||p.shots>=2;
+ if(att)b.push({t:`Ataque: ${pl(p.goals,'gol(s)')}, ${pl(p.assists,'assistência(s)')}, ${p.key} passes-chave e ${p.shots} finalizações.`,viz:{kick:'No ataque',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:`${p.goals}G ${p.assists}A`,l:'gols e assist.'},{v:p.key||0,l:'passes-chave'},{v:p.shots||0,l:'finalizações'}]},t:p.xg!=null?`xG ${f2(p.xg)} + xA ${f2(p.xa)} em chances criadas e finalizadas.`:`${p.passes} passes${p.acc!=null?` com ${Math.round(p.acc)}% de acerto`:''}.`}});
+ b.push({t:`Sem a bola: ${p.tkl} desarmes, ${p.intc} interceptações${p.duels?` e ${p.duelsW} de ${p.duels} duelos vencidos`:''}.`,viz:{kick:'Sem a bola',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:p.tkl||0,l:'desarmes'},{v:p.intc||0,l:'interceptações'},{v:p.duels?`${p.duelsW}/${p.duels}`:(p.def||0),l:p.duels?'duelos':'ações def.'}]},t:p.duels?`Venceu ${Math.round(p.duelsW/p.duels*100)}% dos duelos que disputou.`:`${p.def} ações defensivas no jogo.`}});
  return {head:pick(r,[`${p.name}: a atuação em números`,...(isStar?[`Por que ${p.name} foi o melhor em campo`]:[`O jogo de ${p.name} em detalhe`]),...(won&&p.rating>=7.5?[`${p.name} carregou o ${p.tn}`]:[])]),stat:[f1(p.rating),'nota TEL.SCORE'],blocks:b};}},
 {id:'heroi-oculto',cat:'Jogador',name:'Herói invisível',desc:'Quem brilhou sem aparecer',visual:'Mapa de ações defensivas',need:c=>c.has.players&&!!c.hero,run(c,r){const p=c.hero;const b=[{t:`${p.name} (${p.tn}), ${p.posName}, não apareceu nos lances de gol. Os dados mostram outra coisa.`},{t:`${p.tkl} desarmes e ${p.intc} interceptações${p.rec!=null?`, além de ${p.rec} bolas recuperadas`:''}.`}];
  if(p.duels)b.push({t:`Venceu ${p.duelsW} de ${p.duels} duelos.`});if(p.press!=null)b.push({t:`Pressionou o adversário ${p.press} vezes.`});
@@ -2802,7 +2803,7 @@ const RFORMATS=[
  if(c.has.poss&&c.T.poss>58&&c.T.goals<=c.O.goals)takes.push(`A posse do ${c.T.name} foi só decorativa.`);
  if(c.hero)takes.push(`${c.hero.name} foi mais importante que qualquer atacante neste jogo.`);
  if(!takes.length)takes.push(`${c.T.name} jogou o suficiente para vencer.`);
- const tk=pick(r,takes);const b=[{t:`Opinião: ${tk}`}];
+ const tk=pick(r,takes);const b=[];
  if(c.has.xg)b.push({t:`Os dados: xG ${f2(c.H.xg)} x ${f2(c.A.xg)}.`});else if(c.has.shots)b.push({t:`Os dados: finalizações ${c.H.shots} x ${c.A.shots}, no alvo ${c.H.sot} x ${c.A.sot}.`});
  if(c.star)b.push({t:`${c.star.name}: nota ${f1(c.star.rating)}, ${pl(c.star.goals+c.star.assists,'participação(ões)')} em gol, ${c.star.key} passes-chave.`});
  b.push({t:'Pode discordar, mas traga números.'});
@@ -3413,6 +3414,11 @@ function cxExpect(c){
  return F.v>=60?V(`Zebra: o ${dog} venceu um ${fav} que tinha ${F.v}% de chance de vitória ${src}.`,`Zebra em andamento: o ${dog} vence um ${fav} que tinha ${F.v}% de chance de vitória ${src}.`):V(`Resultado contra a expectativa: o ${fav} era o favorito (${F.v}% ${src}) e perdeu.`,`Contra a expectativa: o ${fav} era o favorito (${F.v}% ${src}) e está perdendo.`);
 }
 const COMP_PT=n=>String(n).replace(/^FIFA World Cup$/,'Copa do Mundo').replace(/^UEFA Euro$/,'Eurocopa').replace(/^Copa America$/,'Copa América').replace(/^FIFA Women's World Cup$/,'Copa do Mundo Feminina').replace(/^UEFA Women's Euro$/,'Eurocopa Feminina').replace(/^Women's World Cup$/,'Copa do Mundo Feminina');
+// visual do veredito (quem criou mais) e da expectativa (probabilidades antes do jogo)
+function verdictViz(c){const H=c.H,A=c.A;if(c.has.xg)return {k:'cmp',h:{...vzTeam(c,'h'),v:H.xg,txt:f2(H.xg),lab:'xG '+H.name},a:{...vzTeam(c,'a'),v:A.xg,txt:f2(A.xg),lab:'xG '+A.name},sub:`placar: ${H.goals} x ${A.goals}${c.live?` (${c.minute})`:''}`};
+ if(c.has.shots)return {k:'cmp',h:{...vzTeam(c,'h'),v:H.shots,txt:String(H.shots),lab:'finalizações'},a:{...vzTeam(c,'a'),v:A.shots,txt:String(A.shots),lab:'finalizações'},sub:`no alvo: ${H.sot} x ${A.sot} · placar ${H.goals} x ${A.goals}`};
+ return ctxViz(c);}
+function expectViz(c){const F=c.cx&&c.cx.fav;if(!F||!F.p)return null;return {k:'bars3',max:100,rows:[{e:vzTeam(c,'h'),lab:c.H.name,v:F.p.h,txt:F.p.h+'%'},{lab:'Empate',v:F.p.d,txt:F.p.d+'%',sym:'='},{e:vzTeam(c,'a'),lab:c.A.name,v:F.p.a,txt:F.p.a+'%'}]};}
 // visual do contexto: as duas linhas da tabela (quando é jogo de liga) ou os dois escudos
 function ctxViz(c){const T=c.cx&&c.cx.tbl;if(T&&T.h&&T.a&&T.h.rank&&T.a.rank){const row=(s,t)=>({pos:t.rank,e:vzTeam(c,s),name:sName(c,s),vals:t.pts!=null?[t.pts]:[`${t.rank}º`],zc:t.zone?t.zone.c:null,hl:false});const rs=[row('h',T.h),row('a',T.a)].sort((x,y)=>x.pos-y.pos);return {k:'tbl',cols:[T.h.pts!=null?'PTS':'POS'],rows:rs,legend:[T.h.zone,T.a.zone].filter(Boolean).filter((z,i,a)=>a.findIndex(y=>y.k===z.k)===i).map(z=>({c:z.c,l:z.l}))};}
  const D=c.cx&&c.cx.dom;return {k:'cmp',nobar:true,h:{...vzTeam(c,'h'),v:0,txt:'',lab:D&&D.h?`${c.H.name} · ${D.h.name}`:c.H.name},a:{...vzTeam(c,'a'),v:0,txt:'',lab:D&&D.a?`${c.A.name} · ${D.a.name}`:c.A.name},sub:null};}
@@ -3630,8 +3636,9 @@ async function cvFonts(){try{await Promise.all(['900 80px Orbitron','800 80px Or
 function wrapLines(ctx,text,maxW){const words=String(text||'').split(/\s+/).filter(Boolean);const lines=[];let line='';for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;}if(line)lines.push(line);return lines;}
 function fitText(ctx,text,font,size,minSize,maxW,maxLines,weight){let s=size;for(;s>=minSize;s-=4){ctx.font=`${weight} ${s}px ${font}`;const L=wrapLines(ctx,text,maxW);if(L.length<=maxLines)return {s,L};}ctx.font=`${weight} ${minSize}px ${font}`;return {s:minSize,L:wrapLines(ctx,text,maxW)};}
 // texto rico no PNG: frase principal em negrito, complemento mais leve, números em vermelho e barra lateral da marca
-function richTokens(t){const [a,b]=splitLead(t);const tk=[];const push=(x,ld)=>String(x||'').split(/\s+/).filter(Boolean).forEach(w=>{const m=w.match(/^(\(?)([~+−-]?\d+(?:[.,]\d+)?(?:%|º|ª)?)(.*)$/);tk.push({w,ld,pre:m?m[1]:'',num:m?m[2]:'',rest:m?m[3]:''});});push(a,true);if(a&&b)tk.push({br:true});push(b,false);return tk;}
+function richTokens(t){const a=String(t||''),b='';const tk=[];const push=(x,ld)=>String(x||'').split(/\s+/).filter(Boolean).forEach(w=>{const m=w.match(/^(\(?)([~+−-]?\d+(?:[.,]\d+)?(?:%|º|ª)?)(.*)$/);tk.push({w,ld,pre:m?m[1]:'',num:m?m[2]:'',rest:m?m[3]:''});});push(a,true);if(a&&b)tk.push({br:true});push(b,false);return tk;}
 function richLayout(ctx,tk,size,maxW){const lines=[[]];let w=0;const sp=size*.3;tk.forEach(t=>{if(t.br){if(lines[lines.length-1].length){lines.push([]);lines[lines.length-1].gap=true;}w=0;return;}ctx.font=`${t.ld?700:500} ${size}px ${CV.body}`;const tw=ctx.measureText(t.w).width;if(w&&w+sp+tw>maxW){const g=false;lines.push([]);lines[lines.length-1].gap=g;w=0;}const x=w?w+sp:0;lines[lines.length-1].push({...t,x});w=x+tw;});return lines.filter(l=>l.length);}
+
 function fitRich(ctx,t,maxW,maxS,minS,maxL){const tk=richTokens(t);let s=maxS,L=richLayout(ctx,tk,s,maxW);while(L.length>maxL&&s>minS){s-=2;L=richLayout(ctx,tk,s,maxW);}if(L.length>maxL)L=L.slice(0,maxL);return {s,L,lh:s*1.34,h:L.length*s*1.34+L.filter(l=>l.gap).length*s*.35};}
 function drawRich(ctx,R,x,y,bar){ctx.save();ctx.textAlign='left';const y0=y;R.L.forEach(l=>{if(l.gap)y+=R.s*.35;l.forEach(t=>{const wt=t.ld?700:500;ctx.font=`${wt} ${R.s}px ${CV.body}`;ctx.globalAlpha=t.ld?1:.84;const by=y+R.s*.92;
   if(t.num){let px=x+t.x;if(t.pre){ctx.fillStyle='#fff';ctx.fillText(t.pre,px,by);px+=ctx.measureText(t.pre).width;}ctx.font=`800 ${R.s}px ${CV.body}`;ctx.fillStyle=CV.red;ctx.globalAlpha=1;ctx.fillText(t.num,px,by);const nw=ctx.measureText(t.num).width+(px-x-t.x);ctx.font=`${wt} ${R.s}px ${CV.body}`;ctx.fillStyle='#fff';ctx.globalAlpha=t.ld?1:.84;if(t.rest)ctx.fillText(t.rest,x+t.x+nw,by);}
@@ -3686,14 +3693,14 @@ async function drawVizBody(ctx,el,W,P,top,bottom,story){
  const kick=el.querySelector('.kick'),pEl=el.querySelector('p');const note=pEl&&pEl.querySelector('.note');
  const main=pEl?(pEl.dataset.t||[...pEl.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('')).trim():'';
  const maxW=W-2*P,vh=vizHeight(v,maxW);
- const T=main?fitRich(ctx,main,maxW-34,story?58:50,story?38:34,story?6:5):{s:0,L:[],h:0};
+ const T=main?fitRich(ctx,main,maxW,story?54:46,story?38:34,story?4:3):{s:0,L:[],h:0};
  const ns=story?36:32;ctx.font=`400 ${ns}px ${CV.mono}`;const NL=note?wrapLines(ctx,note.textContent,maxW).slice(0,story?4:3):[];
  const kh=kick?72:0,ph=T.h,nh=NL.length?NL.length*(ns*1.35)+20:0,gap=T.L.length?54:0;
  const avail=bottom-top;const k=Math.min(1,Math.max(.55,(avail-kh-gap-ph-nh)/vh));const total=kh+vh*k+gap+ph+nh;
  let y=top+Math.max(0,(avail-total)/2);
  if(kick){ctx.save();ctx.fillStyle=CV.red;ctx.font=`700 ${story?40:36}px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(kick.textContent.toUpperCase(),P,y+38);ctx.restore();y+=kh;}
  ctx.save();ctx.translate(P+(maxW-maxW*k)/2,y);ctx.scale(k,k);await vizDraw(ctx,v,0,0,maxW);ctx.restore();y+=vh*k+gap;
- if(T.L.length)y=drawRich(ctx,T,P+34,y,true);
+ if(T.L.length)y=drawRich(ctx,T,P,y,false);
  ctx.save();ctx.fillStyle='#fff';ctx.textAlign='left';
  if(NL.length){y+=20;ctx.globalAlpha=.7;ctx.font=`400 ${ns}px ${CV.mono}`;NL.forEach(l=>{ctx.fillText(l,P,y+ns);y+=ns*1.35;});}
  ctx.restore();
@@ -3749,9 +3756,9 @@ async function drawSlide(el){
  }else if(el.querySelector('.viz')){
   await drawVizBody(ctx,el,W,P,P+80,H-P-60,false);
  }else if(p){
-  const hasM=!!el.querySelector('.smed');const T=fitRich(ctx,p.dataset.t||p.textContent,maxW-34,66,40,hasM?10:12);const mh=hasM?150:0;const block=T.h+mh;let top=(H-block)/2;
+  const hasM=!!el.querySelector('.smed');const T=fitRich(ctx,p.dataset.t||p.textContent,maxW,70,46,hasM?7:8);const mh=hasM?150:0;const block=T.h+mh;let top=(H-block)/2;
   if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}
-  drawRich(ctx,T,P+34,top,true);
+  drawRich(ctx,T,P,top,false);
  }
  return cv;
 }
@@ -3773,8 +3780,8 @@ async function drawStory(el,idx,total){
   if(S){y+=40-lh+S.s*.85;ctx.fillStyle=CV.red;ctx.font=`900 ${S.s}px ${CV.display}`;ctx.fillText(S.L[0],P,y);}
   if(lab){y+=80;ctx.fillStyle='rgba(255,255,255,.8)';ctx.font=`400 52px ${CV.mono}`;ctx.fillText(lab,P,y);}
   if(hasPh)drawPhoto(ctx,ppEl,P+170,y+80+170,170);}
- if(p){const hasM=!!el.querySelector('.smed');const T=fitRich(ctx,p.dataset.t||p.textContent,maxW-34,76,46,hasM?10:12);const stH=st?260+st.querySelectorAll('span').length*120:0;const mh=hasM?170:0;
-  const block=T.h+(stH?60+stH:0)+mh;let top=(H-block)/2;if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}y=drawRich(ctx,T,P+34,top,true);
+ if(p){const hasM=!!el.querySelector('.smed');const T=fitRich(ctx,p.dataset.t||p.textContent,maxW,80,50,hasM?8:9);const stH=st?260+st.querySelectorAll('span').length*120:0;const mh=hasM?170:0;
+  const block=T.h+(stH?60+stH:0)+mh;let top=(H-block)/2;if(hasM){drawMedia(ctx,el,P,top,maxW);top+=mh;}y=drawRich(ctx,T,P,top,false);
   if(st){y+=30;const opts=[...st.querySelectorAll('span')].map(x=>x.textContent);const q=st.querySelector('b')?st.querySelector('b').textContent:'';
    const Q=fitText(ctx,q,CV.body,52,36,maxW-100,3,700);const qlh=Q.s*1.25;const bh=60+Q.L.length*qlh+30+opts.length*120;
    ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect?ctx.roundRect(P,y,maxW,bh,48):ctx.rect(P,y,maxW,bh);ctx.fill();
