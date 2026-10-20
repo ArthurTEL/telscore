@@ -59,6 +59,11 @@ Enquanto a escalação oficial não sai, o site monta a provável assim:
 
 A Central do jogo (aba Escalação provável) e o post "Escalação provável" do Estúdio mostram a base usada, as trocas feitas e as dúvidas.
 
+## Visual dos posts
+
+- **Capa:** escudos e placar (ou horário), uma etiqueta com a fase e o formato (ex.: "Pré-jogo · Análise TEL.SCORE"), o título, um selo com o número principal e a lista "Neste post" com os temas dos próximos slides. Os dados detalhados ficam para os slides seguintes.
+- **Texto dos slides:** a frase principal vem em destaque, o complemento em tom mais leve e os números na cor da marca, com uma barra vermelha ligando o texto ao gráfico acima.
+
 ## Posts das tabelas de classificação
 
 No Estúdio, a fonte "Tabelas" gera posts a partir da classificação de cada liga (também dá para abrir pelo botão "Gerar post da tabela", na página Ligas). Escolha a liga, o formato, a plataforma e o tom:
