@@ -59,6 +59,10 @@ Enquanto a escalação oficial não sai, o site monta a provável assim:
 
 A Central do jogo (aba Escalação provável) e o post "Escalação provável" do Estúdio mostram a base usada, as trocas feitas e as dúvidas.
 
+## Relatório de scout
+
+O formato "Relatório de scout" mostra, em slides visuais: a ficha do jogador (foto, nota, minutos, função e clube), os 3 pontos fortes em barras de percentil, os 2 pontos de atenção, o volume de jogo (passes, passes-chave, ações defensivas e duelos) e a recomendação com a nota. Na comparação de força do elenco entre ligas diferentes, o post diz qual liga é mais forte pelo nível estimado e por quantos pontos.
+
 ## Vídeo animado
 
 No Estúdio, a plataforma "Vídeo animado" gera um vídeo vertical (1080×1920) para Reels, TikTok e Stories. As cenas de análise não usam texto corrido: cada uma tem uma etiqueta com o tema, o visual do post (comparativo, barras, card do jogador, probabilidades, sequência V/E/D) e no máximo 3 fichas curtas que entram uma por vez, com os números em vermelho. O texto completo fica na legenda do vídeo.
