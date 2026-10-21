@@ -145,6 +145,8 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
    - `SUPABASE_URL` = endereço do projeto no Supabase (`https://xxxx.supabase.co`).
    - `SUPABASE_SECRET_KEY` = chave secreta do Supabase (`sb_secret_...`, em Settings → API Keys). Fica só no servidor.
    - `CRON_SECRET` = uma senha longa inventada por você. A Vercel manda essa senha quando roda a conferência agendada.
+   - `POSTS_SENHA` = a senha que você digita no Estúdio para ligar os posts na nuvem (use uma senha longa, só sua).
+   - Opcional: `COLETA_MAX` (padrão `15`) = máximo de requisições da API por coleta; `COLETA_RESERVA` (padrão `35`) = requisições do dia que ficam guardadas para o site.
 2. Faça um novo deploy (**Deployments → ⋯ → Redeploy**). Variáveis novas só valem depois de um deploy.
 
 ## Placar de acertos (banco de dados)
@@ -156,6 +158,25 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
 - Contam: resultado do jogo, mais ou menos de 2,5 gols (quando a análise aponta tendência: 58% ou mais, ou 42% ou menos), os dois marcam (55% ou mais, ou 40% ou menos) e placar exato.
 - Página **Placar de acertos** (`/#acertos`): percentual geral, últimos 7 dias, sequência, faixas de confiança (previsto contra real), por liga e últimos jogos. Resumo no card lateral da página de Partidas.
 - Segurança: a tabela tem RLS ligado e sem regras, então ninguém acessa de fora. Só a função do site, com a chave secreta guardada na Vercel.
+
+## Banco de jogos (partes 2 e 3)
+
+- Tabela `jogos` no Supabase, criada com `supabase/02_jogos_arbitros_posts.sql`. Guarda todo jogo encerrado das ligas acompanhadas com placar, xG (oficial ou estimado pelos chutes), finalizações, posse, escanteios, faltas, cartões, pênaltis, VAR e árbitro.
+- A coleta (`api/banco.js?acao=coletar`) roda sozinha 3 vezes por dia (01h15, 10h15 e 16h15 de Brasília): primeiro os jogos de ontem e de hoje, depois completa a temporada atual de cada liga e, por fim, a temporada anterior. Busca 20 jogos por requisição, usa no máximo 15 requisições por vez e nunca deixa o dia com menos de 35 requisições para o site.
+- Jogo que acabou de terminar e ainda não tem estatísticas na API é buscado de novo na coleta seguinte.
+- O que o site ganha:
+  - **Tabela das ligas:** colunas xG e xGC (por jogo) e ±xPts (pontos reais menos os pontos que o xG daria), gráfico "Pontos − xPts" e novas leituras ("soma mais do que joga"). No celular aparece só o ±xPts.
+  - **Análise TEL.SCORE:** usa o xG da temporada inteira junto com o dos últimos 5 jogos, e mostra os dois lado a lado.
+  - **Temporada (Central do jogo):** card "xG na temporada", com casa e fora e xPts.
+  - **Arbitragem:** perfil do árbitro em todas as competições guardadas: amarelos, vermelhos, faltas e pênaltis por jogo, e resultados.
+  - **Confronto direto:** médias de xG, finalizações, posse, escanteios e cartões nos confrontos guardados.
+- Progresso da coleta: abra `https://www.telscore.com.br/api/banco?acao=resumo` (jogos guardados por liga).
+
+## Posts na nuvem (parte 4)
+
+- Tabela `posts` no Supabase. No Estúdio, em **Meus posts salvos**, clique em **Ligar a nuvem** e digite a senha `POSTS_SENHA`.
+- Com a nuvem ligada, todo post salvo vai para o banco e aparece no celular e no computador. Excluir em um aparelho exclui em todos. Sem internet, o post fica no aparelho e sobe na próxima vez.
+- A senha fica guardada só no navegador onde você entrou. **Sair** desliga a nuvem naquele aparelho sem apagar nada.
 
 ## Consumo de requisições
 

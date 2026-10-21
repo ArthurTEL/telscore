@@ -1,6 +1,13 @@
 {
+  "functions": {
+    "api/banco.js": { "maxDuration": 60 },
+    "api/acertos.js": { "maxDuration": 30 }
+  },
   "crons": [
     { "path": "/api/acertos?acao=conferir&turno=noite", "schedule": "30 3 * * *" },
-    { "path": "/api/acertos?acao=conferir&turno=manha", "schedule": "0 11 * * *" }
+    { "path": "/api/acertos?acao=conferir&turno=manha", "schedule": "0 11 * * *" },
+    { "path": "/api/banco?acao=coletar&turno=madrugada", "schedule": "15 4 * * *" },
+    { "path": "/api/banco?acao=coletar&turno=manha", "schedule": "15 13 * * *" },
+    { "path": "/api/banco?acao=coletar&turno=tarde", "schedule": "15 19 * * *" }
   ]
 }
