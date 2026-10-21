@@ -131,7 +131,12 @@ O site é pensado primeiro para o celular (é por onde chega quem vem do Instagr
 - Escalações: o campinho aparece primeiro, depois as listas.
 - Tabelas largas (jogadores, análise tática) rolam para o lado com a coluna do jogador fixa.
 - No Estúdio, ao escolher um formato a tela desce até a prévia do post.
-- Textos de apresentação das páginas ficam em no máximo duas linhas.
+- **Modo compacto (telas até 720 px), no estilo dos apps de placar:**
+  - Na página de Partidas a lista de jogos vem primeiro; o jogo em destaque, o Radar do dia e o placar de acertos vão para baixo.
+  - Linhas de jogo baixas, com escudos pequenos e sem estádio e árbitro (eles aparecem na central).
+  - Títulos menores, sem o texto de apresentação, e blocos com menos espaço em volta.
+  - Abas da Central do jogo e da página do time ficam fixas no topo ao rolar.
+  - Placar, lance a lance, análise, tabelas, elenco e placar de acertos com fontes e espaçamentos reduzidos.
 
 ## Tema dia e noite
 
