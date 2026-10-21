@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/acertos?acao=conferir&turno=noite", "schedule": "30 3 * * *" },
+    { "path": "/api/acertos?acao=conferir&turno=manha", "schedule": "0 11 * * *" }
+  ]
+}

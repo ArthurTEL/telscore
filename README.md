@@ -142,7 +142,20 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
 1. Em **Settings → Environment Variables** do projeto, crie:
    - `API_FOOTBALL_KEY` = sua chave (painel da API-Football → My Access).
    - Opcional: `CACHE_LIVE_SECONDS` = de quantos em quantos segundos o placar ao vivo é buscado de novo. Padrão: `120`. Com o plano pago, pode baixar para `30`.
+   - `SUPABASE_URL` = endereço do projeto no Supabase (`https://xxxx.supabase.co`).
+   - `SUPABASE_SECRET_KEY` = chave secreta do Supabase (`sb_secret_...`, em Settings → API Keys). Fica só no servidor.
+   - `CRON_SECRET` = uma senha longa inventada por você. A Vercel manda essa senha quando roda a conferência agendada.
 2. Faça um novo deploy (**Deployments → ⋯ → Redeploy**). Variáveis novas só valem depois de um deploy.
+
+## Placar de acertos (banco de dados)
+
+- Banco no **Supabase** (Postgres). A tabela é criada com `supabase/01_placar_de_acertos.sql` (SQL Editor → Run).
+- Quando a análise TEL.SCORE de um jogo que ainda não começou é calculada no site (prévia na Central do jogo ou Estúdio), ela é registrada em `api/acertos.js`. Só a primeira análise de cada jogo vale e nada é trocado depois.
+- A conferência roda sozinha duas vezes por dia (cron da Vercel em `vercel.json`, 00h30 e 08h de Brasília): busca o resultado dos jogos encerrados na API-Football, em lotes de 20 jogos por requisição.
+- Vale o placar dos 90 minutos. Jogo adiado, cancelado ou com análise registrada depois do início é anulado e não conta.
+- Contam: resultado do jogo, mais ou menos de 2,5 gols (quando a análise aponta tendência: 58% ou mais, ou 42% ou menos), os dois marcam (55% ou mais, ou 40% ou menos) e placar exato.
+- Página **Placar de acertos** (`/#acertos`): percentual geral, últimos 7 dias, sequência, faixas de confiança (previsto contra real), por liga e últimos jogos. Resumo no card lateral da página de Partidas.
+- Segurança: a tabela tem RLS ligado e sem regras, então ninguém acessa de fora. Só a função do site, com a chave secreta guardada na Vercel.
 
 ## Consumo de requisições
 
