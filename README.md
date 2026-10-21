@@ -172,6 +172,15 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
   - **Confronto direto:** médias de xG, finalizações, posse, escanteios e cartões nos confrontos guardados.
 - Progresso da coleta: abra `https://www.telscore.com.br/api/banco?acao=resumo` (jogos guardados por liga).
 
+## Página do time
+
+- Toque no nome ou no escudo de um time na **tabela das ligas** (e das copas), no **topo da central do jogo** ou no título das **escalações**. Endereço próprio: `/#time-127` (o número é o id do time na API-Football), dá para compartilhar.
+- **Resumo:** cabeçalho com estádio, fundação, posição e forma; próximo jogo com contagem regressiva e atalho para a prévia; Leitura TEL.SCORE (forma, gols, casa e fora, xG da temporada, situação na tabela e placar de acertos do time); trecho da tabela; desempenho pelo xG; desfalques do próximo jogo; últimos 5 jogos.
+- **Elenco:** elenco inteiro por posição, com idade, número, jogos, minutos, gols, assistências, cartões e nota; destaques (artilheiro, garçom, melhor nota, mais minutos) e quem está fora do próximo jogo.
+- **Jogos:** últimos 10 e próximos 5 (toque abre a central), com o xG de cada jogo guardado e gráfico "xG jogo a jogo".
+- **Números:** campanha, casa x fora (com xG), gols por faixa de minutos, sequências e recordes, formações, pênaltis, cartões e médias por jogo da base TEL.SCORE.
+- Cada aba busca só o que precisa, com cache longo (dados do clube: 7 dias; elenco: 24 h; números do elenco: 12 h; estatísticas da temporada: 6 h), para poupar a cota da API.
+
 ## Posts na nuvem (parte 4)
 
 - Tabela `posts` no Supabase. No Estúdio, em **Meus posts salvos**, clique em **Ligar a nuvem** e digite a senha `POSTS_SENHA`.
