@@ -1925,11 +1925,14 @@ const rtP=(t,cls,extra)=>{t=sing1(String(t||''));return `<p class="rt${cls?' '+c
 // texto organizado: cada informação numa linha, com etiqueta quando o texto já traz uma ("Posse: ...", "Ataque: ...")
 const cap1=x=>x?x.charAt(0).toUpperCase()+x.slice(1):x;
 function factsOf(t,max){t=sing1(String(t||'')).replace(/\s+/g,' ').trim();if(!t)return [];
- let parts=t.split(/(?<=[a-zà-ú0-9)%º][.!?])\s+(?=[A-ZÀ-Ú0-9"“])|;\s+|\s+·\s+/).map(x=>x.trim().replace(/[.;]+$/,'')).filter(Boolean);
+ let parts=t.split(/(?<=(?:[a-zà-ú]{2}|\d[.,]?\d+|[)%º'])[.!?])\s+(?=[A-ZÀ-Ú0-9"“])|;\s+|\s+·\s+/).map(x=>x.trim().replace(/[.;]+$/,'')).filter(Boolean);
  const rows=[];parts.forEach(p=>{const m=p.match(/^([^:]{2,26}):\s+(.+)$/);if(m&&!/\d{2}/.test(m[1])&&m[1].split(' ').length<=4)rows.push({l:m[1],v:cap1(m[2])});else rows.push({l:'',v:cap1(p)});});
  return rows.slice(0,max||3);}
 const factsHTML=(rows,big)=>rows.length?`<ul class="facts${big?' big':''}" data-f="${esc(JSON.stringify(rows))}">${rows.map(r=>`<li class="${r.l?'lb':'bl'}">${r.l?`<small>${esc(r.l)}</small>`:''}<span>${hlNums(r.v)}</span></li>`).join('')}</ul>`:'';
-function factsFor(x){const body=String(x.t||'').trim();let t=body;if(x.v&&isDataLine(x.src)&&String(x.src).includes(body.slice(0,24)))t='';if(!x.v&&!t)t=x.src||'';return factsOf(t,x.v?3:4);}
+function factsFor(x){const body=String(x.t||'').trim();let t=body;if(x.v&&isDataLine(x.src)&&String(x.src).includes(body.slice(0,24)))t='';if(!x.v&&!t)t=x.src||'';
+ let F=factsOf(t,6).filter(r=>!/^[\d.,%º°'x× -]{1,8}$/.test(r.v));
+ if(x.v&&x.v.k==='player'&&x.v.name){const nm=x.v.name;F=F.filter(r=>!(r.v.includes(nm)&&r.v.replace(/\([^)]*\)/g,'').replace(nm,'').replace(/[\d.,·\s]/g,'').length<4));}
+ return F.slice(0,x.v?3:4);}
 const vizBlockHTML=(x,story)=>`${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${x.v?`<div class="viz" data-viz="${esc(JSON.stringify(x.v))}">${vizSVG(x.v)}</div>`:''}${factsHTML(factsFor(x),!x.v)}`;
 const SBRAND=(right)=>`<div class="sn sbrand"><span class="sbr">${AV}<b>TEL<em>.</em>SCORE</b></span><span>${right}</span></div>`;
 
@@ -1973,11 +1976,11 @@ function compose(c,f,tone,plat,r){
   html=`<div class="script"><div class="scene head">Duração estimada: ${t+4}s · Formato vertical 9:16 · Visual sugerido: ${esc(f.visual)}</div>${scenes.map(s=>`<div class="scene"><div class="tc">${s.tc}<small>${s.k}</small></div><div class="scr"><small>NA TELA</small>${esc(s.s)}</div><div class="vo"><small>NARRAÇÃO</small>${esc(s.v)}</div></div>`).join('')}</div>`;
   text=`ROTEIRO (${t+4}s · 9:16)\nVisual: ${f.visual}\n\n`+scenes.map(s=>`[${s.tc}] ${s.k.toUpperCase()}\nNa tela: ${s.s}\nNarração: ${s.v}`).join('\n\n');
  } else if(plat==='anim'){
-  const data=videoScenes(c,f,out,blocks,tone,close);const total=data.scenes.reduce((a,s)=>a+s.dur,0);
+  const data=videoScenes(c,f,out,blocks,tone,close,bviz);const total=data.scenes.reduce((a,s)=>a+s.dur,0);
   const cap=[open,out.head+em(),blocks[0],close,'',tags].filter((x,i)=>x||i===4).join('\n');
   const dur=s=>s.dur.toFixed(1).replace('.',',')+'s';
   html=`<div class="vplayer"><div class="vstage"><canvas width="540" height="960" aria-label="Prévia do vídeo animado"></canvas><button class="vbig" data-vact="play" aria-label="Reproduzir">${VI_PLAY}</button></div><div class="vside"><div class="vctrl"><button class="btn sm" data-vact="play" aria-label="Reproduzir">${VI_PLAY}</button><input type="range" class="vseek" min="0" max="1000" value="0" aria-label="Posição do vídeo"><span class="vtime num">0:00 / ${vClock(total)}</span></div><div class="vsc-h">Cenas<small>Desmarque para tirar a cena do vídeo. Toque no nome para ir até ela.</small></div><div class="vsc">${data.scenes.map((s,i)=>`<div class="vsc-row" data-i="${i}"><input type="checkbox" checked data-vtog="${i}" aria-label="Incluir ${esc(s.name)}"><button data-vjump="${i}">${esc(s.name)}</button><span>${dur(s)}</span></div>`).join('')}</div><p class="vnote">Vídeo vertical 1080×1920 para Reels, TikTok e Stories. Sai sem som: escolha a música pelo próprio app na hora de postar.</p></div><script type="application/json" class="vdata">${JSON.stringify(data).replace(/</g,'\\u003c')}<\/script></div><div class="caption"><div class="who">${AV}tel.score</div>${esc(cap)}</div>`;
-  let t0=0;text=`[VÍDEO ANIMADO · 1080×1920 · ${Math.round(total)}s]\n\n`+data.scenes.map(s=>{const a=t0;t0+=s.dur;return `${a.toFixed(1).replace('.',',')}–${t0.toFixed(1).replace('.',',')}s · ${s.name}${s.head?': '+s.head:s.stat?': '+s.stat+' ('+s.lab+')':s.t?': '+s.t:s.k==='cta'?': '+s.h:''}`;}).join('\n')+`\n\nLEGENDA:\n${cap}`;
+  let t0=0;text=`[VÍDEO ANIMADO · 1080×1920 · ${Math.round(total)}s]\n\n`+data.scenes.map(s=>{const a=t0;t0+=s.dur;return `${a.toFixed(1).replace('.',',')}–${t0.toFixed(1).replace('.',',')}s · ${s.name}${s.head?': '+s.head:s.stat?': '+s.stat+' ('+s.lab+')':s.facts?': '+(s.facts.length?s.facts.map(x=>(x.l?x.l+': ':'')+x.v).join(' · '):s.kick):s.t?': '+s.t:s.k==='cta'?': '+s.h:''}`;}).join('\n')+`\n\nLEGENDA:\n${cap}`;
  } else if(plat==='li'){
   const lesson=pick(r,['Na engenharia de produção separamos indicador de processo e de resultado. No futebol, o xG é o processo e o placar é o resultado.','Decisão boa com resultado ruim continua sendo decisão boa. Os dados ajudam a separar uma coisa da outra.','Medir o que acontece antes do resultado é o que permite melhorar de forma consistente, no campo e na empresa.']);
   const body=[out.head,'',open,...blocks.map(b=>'→ '+b),'','O que isso ensina sobre análise de dados:',lesson,'',pick(r,['Como você usa dados para avaliar desempenho na sua área?','Você confia mais no placar ou no processo?']),'',tags].filter((x,i,a)=>x!==''||a[i-1]!=='').join('\n');
@@ -3935,7 +3938,7 @@ function vMedia(c,text){
  return ts.length?{k:'t',teams:ts}:null;
 }
 // Monta as cenas do vídeo a partir do mesmo conteúdo do post
-function videoScenes(c,f,out,blocks,tone,close){
+function videoScenes(c,f,out,blocks,tone,close,bviz){
  const H=c.H,A=c.A;const tm=T=>({name:T.name,code:tCode(T),logo:prox(T.logo)||'',g:T.goals!=null?T.goals:0});
  const dt=c.dateLabel||(c.m&&c.m.off===0?'hoje':(c.m&&c.m.date?shortDate(c.m.date):''));
  const meta={lg:(c.lg&&(c.lg.short||c.lg.name))||'',dt,h:tm(H),a:tm(A),bg:coverImage(c)||'',fmt:f.name,live:c.live?String(c.minute||'ao vivo'):'',sb:c.src==='sb',pre:!!c.pre,kick:c.kick||''};
@@ -3955,14 +3958,18 @@ function videoScenes(c,f,out,blocks,tone,close){
  const pf=['destaque','raio-x','scout','heroi-oculto','devendo','duelo','notas','heatmap'].includes(f.id),tf=['momento-chave','linha-do-tempo'].includes(f.id);
  (c.pre?[probs,bars]:pf?[pl,bars,tl]:tf?[tl,bars,pl]:[bars,tl,pl]).filter(Boolean).slice(0,2).forEach(x=>S.push(x));
  const aseed=f.id+(c.id||c.score);
- blocks.slice(0,3).forEach((b,i)=>{const w=String(b).split(/\s+/).length;S.push({k:'text',name:i?`Análise ${i+1}`:'Análise',dur:+vcl(1.8+w/3.2,3.6,7.5).toFixed(1),t:String(b),art:(hash(String(aseed))+i)%2?'ball':'pitch',media:vMedia(c,b)});});
+ // análise: cada bloco vira um visual (gráfico, card, tabela) com no máximo 3 fichas curtas, em vez de texto corrido
+ let its=[];try{its=vizItems(c,blocks,f.name,4,f.id,bviz);}catch(e){its=[];}
+ its.forEach((x,i)=>{const kick=String(x.kick||(i?`Análise ${i+1}`:'Análise'));
+  if(x.v){const F=factsFor(x).slice(0,3);S.push({k:'viz',name:kick,dur:+vcl(3.4+F.length*.8,3.8,6.4).toFixed(1),kick,v:x.v,facts:F,art:(hash(String(aseed))+i)%2?'ball':'pitch'});}
+  else{const F=factsOf(x.src+(x.note?' '+x.note:''),4);S.push({k:'facts',name:kick,dur:+vcl(2.6+F.length*1,3.6,7).toFixed(1),kick,facts:F,art:(hash(String(aseed))+i)%2?'ball':'pitch',media:vMedia(c,x.src)});}});
  S.push({k:'cta',name:'Encerramento',dur:3.6,h:tone.emoji?'Segue o TEL.SCORE':'Siga o TEL.SCORE',p:close||''});
  return {meta,scenes:S};
 }
 function vTimeline(data,on){let t=0;const list=[];data.scenes.forEach((s,i)=>{if(on&&!on[i])return;list.push(Object.assign({},s,{i,t0:t}));t+=s.dur;});return {meta:data.meta,list,total:Math.max(t,.1)};}
 
 /* ---- desenho das cenas (coordenadas 1080×1920) ---- */
-const VART={intro:'pitch',hero:'lights',bars:null,timeline:null,player:null,cta:'ball-cta'};
+const VART={intro:'pitch',hero:'lights',bars:null,timeline:null,player:null,cta:'ball-cta',viz:null};
 function vBg(ctx,t,s,lt,en,ex,I){
  ctx.globalAlpha=1;ctx.fillStyle=CV.dark;ctx.fillRect(0,0,VW,VH);
  const gx=VW*(.5+.45*Math.sin(t*.35)),gy=VH*(.18+.1*Math.cos(t*.27));const g=ctx.createRadialGradient(gx,gy,0,gx,gy,VH*.7);g.addColorStop(0,'rgba(255,37,51,.36)');g.addColorStop(1,'rgba(255,37,51,0)');ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
@@ -3970,8 +3977,8 @@ function vBg(ctx,t,s,lt,en,ex,I){
   ctx.globalAlpha=ex;try{ctx.drawImage(im,(VW-w)/2,(VH-h)/2,w,h);}catch(e){}
   const o=ctx.createLinearGradient(0,0,0,VH);o.addColorStop(0,'rgba(12,12,15,.35)');o.addColorStop(.38,'rgba(12,12,15,.62)');o.addColorStop(.7,'rgba(12,12,15,.88)');o.addColorStop(1,'rgba(12,12,15,.97)');ctx.fillStyle=o;ctx.fillRect(0,0,VW,VH);}
  if(s.k==='cta'){ctx.globalAlpha=en;ctx.fillStyle=CV.red;ctx.fillRect(0,0,VW,VH);}
- const key=s.k==='text'?s.art:(s.k==='intro'&&I.bg?'lights':VART[s.k]);const art=key&&I.art[key];
- if(art){ctx.save();ctx.globalAlpha=Math.min(en,ex)*(s.k==='text'?.6:1);ctx.drawImage(art,0,Math.sin(t*.6)*14,VW,VH);ctx.restore();}
+ const key=s.k==='text'||s.k==='facts'?s.art:(s.k==='intro'&&I.bg?'lights':VART[s.k]);const art=key&&I.art[key];
+ if(art){ctx.save();ctx.globalAlpha=Math.min(en,ex)*(s.k==='text'||s.k==='facts'?.45:1);ctx.drawImage(art,0,Math.sin(t*.6)*14,VW,VH);ctx.restore();}
  ctx.globalAlpha=1;
 }
 function vChrome(ctx,V,i,lt){
@@ -3982,7 +3989,35 @@ function vChrome(ctx,V,i,lt){
  ctx.globalAlpha=.65;ctx.fillStyle='#fff';ctx.font=`400 32px ${CV.mono}`;ctx.textAlign='left';ctx.fillText('@tel.score',VPD,VH-70);ctx.textAlign='right';
  ctx.fillText(M.sb?'Dados: StatsBomb':M.pre?`${M.h.code} × ${M.a.code} · ${M.kick}`:`${M.h.code} ${M.h.g}–${M.a.g} ${M.a.code}`,VW-VPD,VH-70);ctx.globalAlpha=1;ctx.textAlign='left';
 }
+// fichas do vídeo: cards com etiqueta vermelha e valor com números em destaque
+function vFactsLayout(ctx,rows,W2,s){const pad=Math.round(s*.5),lab=Math.round(s*.46);let h=0;const out=rows.map(r=>{const tk=richTokens(r.v).map(t=>({...t,ld:true}));const L=richLayout(ctx,tk,s,W2-2*pad-14);const rh=2*pad+(r.l?lab*1.5:0)+L.length*s*1.24;h+=rh;return {r,L,rh};});return {rows:out,h:h+(rows.length-1)*Math.round(s*.36),s,pad,lab,gap:Math.round(s*.36)};}
+function vFitFacts(ctx,rows,W2,maxS,minS,maxH){let s=maxS,F=vFactsLayout(ctx,rows,W2,s);while(F.h>maxH&&s>minS){s-=2;F=vFactsLayout(ctx,rows,W2,s);}return F;}
+function vDrawFacts(ctx,F,x,y,W2,lt,t0,A){F.rows.forEach((o,i)=>{const q=vEo(vseg(lt,t0+i*.32,t0+.45+i*.32));if(q<=0){y+=o.rh+F.gap;return;}
+  ctx.save();ctx.globalAlpha=A*q;const dx=(1-q)*60;
+  ctx.fillStyle='rgba(255,255,255,.08)';vRR(ctx,x+dx,y,W2,o.rh,28);ctx.fill();ctx.fillStyle=CV.red;vRR(ctx,x+dx,y,12,o.rh,6);ctx.fill();
+  let yy=y+F.pad;const tx=x+dx+F.pad+14;
+  if(o.r.l){ctx.fillStyle=CV.red;ctx.font=`700 ${F.lab}px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(String(o.r.l).toUpperCase(),tx,yy+F.lab);yy+=F.lab*1.5;}
+  o.L.forEach(l=>{l.forEach(t=>{const by=yy+F.s*.92,bx=tx+t.x;ctx.font=`700 ${F.s}px ${CV.body}`;
+    if(t.num){let px=bx;if(t.pre){ctx.fillStyle='#fff';ctx.fillText(t.pre,px,by);px+=ctx.measureText(t.pre).width;}ctx.font=`900 ${F.s}px ${CV.body}`;ctx.fillStyle=CV.red;ctx.fillText(t.num,px,by);px+=ctx.measureText(t.num).width;ctx.font=`700 ${F.s}px ${CV.body}`;ctx.fillStyle='#fff';if(t.rest)ctx.fillText(t.rest,px,by);}
+    else{ctx.fillStyle='#fff';ctx.fillText(t.w,bx,by);}});yy+=F.s*1.24;});
+  ctx.restore();y+=o.rh+F.gap;});return y;}
+function vKick(ctx,txt,lt,A){const W2=VW-2*VPD;vAl(ctx,A,vseg(lt,.05,.4));ctx.font=`700 36px ${CV.mono}`;const t=vEll(ctx,String(txt||'').toUpperCase(),W2-60);const w=ctx.measureText(t).width+56;ctx.fillStyle=CV.red;vRR(ctx,VPD,262,w,64,32);ctx.fill();ctx.fillStyle='#fff';ctx.textAlign='left';ctx.fillText(t,VPD+28,306);}
 const VDRAW={
+ viz(ctx,s,lt,d,I,M,A){
+  const W2=VW-2*VPD;vKick(ctx,s.kick,lt,A);
+  const top=370,bottom=VH-150;const F=s.facts.length?vFitFacts(ctx,s.facts,W2,58,40,560):null;const fh=F?F.h+60:0;
+  const vh=vizHeight(s.v,W2);const k=Math.min(1,Math.max(.5,(bottom-top-fh)/vh));const total=vh*k+fh;let y=top+Math.max(0,(bottom-top-total)/2);
+  const q=vEo(vseg(lt,.15,.75));ctx.save();ctx.globalAlpha=A*q;const sc=k*(.94+.06*q);ctx.translate(VPD+(W2-W2*sc)/2,y+(1-q)*50);ctx.scale(sc,sc);vzPaint(cvPainter(ctx,0,0,I.vz||{}),s.v,W2);ctx.restore();
+  y+=vh*k+60;if(F)vDrawFacts(ctx,F,VPD,y,W2,lt,.75,A);
+ },
+ facts(ctx,s,lt,d,I,M,A){
+  const W2=VW-2*VPD;vKick(ctx,s.kick,lt,A);const md=s.media,mh=md?200:0;
+  const F=vFitFacts(ctx,s.facts,W2,70,44,VH-560-mh);const top=Math.max(380,(VH-(mh+F.h))/2);
+  if(md){const q=vEb(vseg(lt,.15,.6));vAl(ctx,A,vcl(q));
+   if(md.k==='p'){vPop(ctx,VPD+70,top+70,q,()=>vFace(ctx,md.photo&&I.ph[md.photo],md.name,VPD+70,top+70,66));ctx.fillStyle='#fff';ctx.textAlign='left';ctx.font=`700 46px ${CV.body}`;ctx.fillText(vEll(ctx,md.name,W2-190),VPD+170,top+62);ctx.globalAlpha=A*vcl(q)*.7;ctx.font=`400 34px ${CV.mono}`;ctx.fillText(vEll(ctx,md.tn,W2-190),VPD+170,top+110);}
+   else md.teams.forEach((sd,i)=>{const cx=VPD+64+i*150;vPop(ctx,cx,top+66,q,()=>vCrest(ctx,sd==='h'?I.h:I.a,sd==='h'?M.h.code:M.a.code,cx,top+66,62));});}
+  vDrawFacts(ctx,F,VPD,top+mh,W2,lt,.35,A);
+ },
  intro(ctx,s,lt,d,I,M,A){
   const W2=VW-2*VPD,cy=560,r=118;
   vAl(ctx,A,vseg(lt,.1,.6));ctx.fillStyle='#fff';ctx.font=`500 38px ${CV.mono}`;ctx.textAlign='center';ctx.fillText(vEll(ctx,`${M.lg}${M.dt?' · '+M.dt:''}`.toUpperCase(),W2),VW/2,340);
@@ -4095,6 +4130,7 @@ async function vPreload(data){
  const jobs=[loadImg(M.h.logo).then(x=>I.h=ok(x)),loadImg(M.a.logo).then(x=>I.a=ok(x)),loadImg(M.bg).then(x=>I.bg=ok(x))];
  const ph=new Set();data.scenes.forEach(s=>{if(s.photo)ph.add(s.photo);if(s.p&&s.p.photo)ph.add(s.p.photo);if(s.media&&s.media.photo)ph.add(s.media.photo);});
  ph.forEach(u=>jobs.push(loadImg(u).then(x=>{if(ok(x))I.ph[u]=x;})));
+ I.vz={};const vu=new Set();data.scenes.forEach(s=>{if(s.v)vizImgs(s.v).forEach(u=>vu.add(u));});vu.forEach(u=>jobs.push(loadImg(u).then(x=>{if(ok(x))I.vz[u]=x;})));
  ART_KINDS.forEach(k=>jobs.push(loadImg(artSVG(k,VW,VH,false)).then(x=>I.art[k]=ok(x))));
  jobs.push(loadImg(artSVG('ball',VW,VH,true)).then(x=>I.art['ball-cta']=ok(x)));
  await Promise.all(jobs);await cvFonts();return I;
@@ -4117,7 +4153,7 @@ function vMount(){
  if(!el||VID.p)return;
  let data;try{data=JSON.parse(el.querySelector('.vdata').textContent);}catch(e){return;}
  const cv=el.querySelector('canvas');cv.width=540;cv.height=960;const ctx=cv.getContext('2d');
- const P={el,data,on:data.scenes.map(()=>true),t:2.6,fresh:true,playing:false,I:{h:null,a:null,bg:null,ph:{},art:{}},ready:false,raf:0,last:0};
+ const P={el,data,on:data.scenes.map(()=>true),t:2.6,fresh:true,playing:false,I:{h:null,a:null,bg:null,ph:{},art:{},vz:{}},ready:false,raf:0,last:0};
  P.V=()=>vTimeline(P.data,P.on);
  P.draw=()=>{const V=P.V();if(P.t>V.total)P.t=V.total;ctx.setTransform(.5,0,0,.5,0,0);vFrame(ctx,V,Math.min(P.t,V.total-.001),P.I);vUI(P,V);};
  P.loop=now=>{if(!P.playing)return;P.t+=Math.min((now-P.last)/1000,.1);P.last=now;const V=P.V();if(P.t>=V.total){P.t=V.total;P.playing=false;}P.draw();if(P.playing)P.raf=requestAnimationFrame(P.loop);};
