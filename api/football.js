@@ -12,7 +12,11 @@ const ALLOWED = {
   injuries: ['fixture', 'team', 'season', 'date'],
   standings: ['league', 'season'],
   'fixtures/headtohead': ['h2h', 'last', 'timezone'],
-  odds: ['fixture', 'bookmaker', 'bet']
+  odds: ['fixture', 'bookmaker', 'bet'],
+  teams: ['id'],
+  'players/squads': ['team'],
+  'teams/statistics': ['league', 'season', 'team'],
+  players: ['team', 'season', 'page']
 };
 
 const LIVE = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE', 'INT', 'SUSP']);
@@ -75,6 +79,10 @@ module.exports = async (req, res) => {
     else if (endpoint === 'odds') ttl = 3600;
     else if (endpoint === 'injuries') ttl = 1800;
     else if (endpoint === 'fixtures/headtohead') ttl = 21600;
+    else if (endpoint === 'teams') ttl = 604800;
+    else if (endpoint === 'players/squads') ttl = 86400;
+    else if (endpoint === 'teams/statistics') ttl = 21600;
+    else if (endpoint === 'players') ttl = 43200;
     else if (endpoint === 'fixtures') {
       const list = Array.isArray(response) ? response : [];
       const anyLive = list.some(f => f.fixture && f.fixture.status && LIVE.has(f.fixture.status.short));
@@ -82,6 +90,7 @@ module.exports = async (req, res) => {
       else if (q.ids) {
         ttl = list.length && list.every(f => f.fixture && FINISHED.has(f.fixture.status.short)) ? 86400 : 600;
       } else if (q.team && q.last) ttl = 1800;
+      else if (q.team && q.next) ttl = 3600;
       else if (q.id) {
         const s = list[0] && list[0].fixture && list[0].fixture.status.short;
         ttl = FINISHED.has(s) ? 86400 : 600;

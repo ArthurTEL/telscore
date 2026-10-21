@@ -7,6 +7,7 @@
 //   GET /api/banco?acao=liga&id=71       → xG, xG sofrido e pontos esperados (xPts) de cada time na temporada
 //   GET /api/banco?acao=arbitro&nome=X   → perfil do árbitro: cartões, faltas, pênaltis e resultados
 //   GET /api/banco?acao=h2h&a=1&b=2      → confrontos guardados entre dois times, com estatísticas
+//   GET /api/banco?acao=time&id=127      → números do time na base (xG, médias, casa e fora, acertos)
 //   GET /api/banco?acao=resumo           → quantos jogos já estão guardados por liga
 //
 // A coleta respeita a cota da API-Football: usa no máximo COLETA_MAX requisições por vez (padrão 15)
@@ -320,6 +321,39 @@ async function h2h(c, q, res) {
   }, 'public, s-maxage=21600, stale-while-revalidate=43200');
 }
 
+async function time(c, q, res) {
+  const id = int(q.id, 0);
+  if (!id) return send(res, 400, { ok: false, error: 'Time inválido.' });
+  const { data } = await sb(c, `jogos?or=(mandante_id.eq.${id},visitante_id.eq.${id})&select=fixture_id,data,liga_id,liga_nome,temporada,mandante_id,mandante,visitante_id,visitante,gols_casa,gols_fora,xg_casa,xg_fora,xg_fonte,chutes_casa,chutes_fora,chutes_gol_casa,chutes_gol_fora,posse_casa,posse_fora,escanteios_casa,escanteios_fora,faltas_casa,faltas_fora,amarelos_casa,amarelos_fora,vermelhos_casa,vermelhos_fora&order=data.desc&limit=60`);
+  const rows = data || [];
+  const jogos = rows.map(r => {
+    const casa = r.mandante_id === id, m = casa ? 'casa' : 'fora', o = casa ? 'fora' : 'casa';
+    const v = k => (r[k + '_' + m] == null ? null : Number(r[k + '_' + m])), w = k => (r[k + '_' + o] == null ? null : Number(r[k + '_' + o]));
+    return { id: r.fixture_id, data: r.data, liga: r.liga_id, liga_nome: r.liga_nome, temporada: r.temporada, casa, adversario: casa ? r.visitante : r.mandante, adversario_id: casa ? r.visitante_id : r.mandante_id,
+      gp: v('gols'), gc: w('gols'), xg: v('xg'), xgc: w('xg'), xg_fonte: r.xg_fonte, chutes: v('chutes'), chutes_c: w('chutes'), no_gol: v('chutes_gol'), posse: v('posse'), escanteios: v('escanteios'), faltas: v('faltas'), amarelos: v('amarelos'), vermelhos: v('vermelhos') };
+  });
+  const media = (list, k) => { const l = list.filter(j => j[k] != null); return l.length ? r2(l.reduce((s, j) => s + j[k], 0) / l.length) : null; };
+  const temporadaAtual = jogos.length ? jogos[0].temporada : null;
+  const T = jogos.filter(j => j.temporada === temporadaAtual);
+  let xpts = 0, ptsx = 0, nx = 0;
+  T.forEach(j => { if (j.xg != null && j.xgc != null && j.gp != null) { const [e] = xPts(j.xg, j.xgc); xpts += e; ptsx += j.gp > j.gc ? 3 : j.gp === j.gc ? 1 : 0; nx++; } });
+  const lado = casa => { const l = T.filter(j => j.casa === casa); return { n: l.length, xg: media(l, 'xg'), xgc: media(l, 'xgc'), gp: media(l, 'gp'), gc: media(l, 'gc') }; };
+  // placar de acertos em jogos deste time
+  let acertos = null;
+  try {
+    const { data: pv } = await sb(c, `previsoes?or=(mandante_id.eq.${id},visitante_id.eq.${id})&status=eq.conferido&select=acertou_resultado`);
+    if (pv && pv.length) acertos = { n: pv.length, acertos: pv.filter(x => x.acertou_resultado).length };
+  } catch (e) { acertos = null; }
+  return send(res, 200, {
+    ok: true, id, n: jogos.length, temporada: temporadaAtual,
+    medias: { n: T.length, xg: media(T, 'xg'), xgc: media(T, 'xgc'), chutes: media(T, 'chutes'), chutes_c: media(T, 'chutes_c'), no_gol: media(T, 'no_gol'), posse: media(T, 'posse'), escanteios: media(T, 'escanteios'), faltas: media(T, 'faltas'), amarelos: media(T, 'amarelos'), vermelhos: media(T, 'vermelhos') },
+    xpts: nx ? { n: nx, xpts: r1(xpts), pts: ptsx, dif: r1(ptsx - xpts) } : null,
+    casa: lado(true), fora: lado(false),
+    acertos,
+    jogos: jogos.slice(0, 15)
+  }, 'public, s-maxage=1800, stale-while-revalidate=3600');
+}
+
 async function resumo(c, q, res) {
   const out = [];
   for (const l of LIGAS) {
@@ -343,6 +377,7 @@ module.exports = async (req, res) => {
     if (acao === 'liga') return await liga(c, q, res);
     if (acao === 'arbitro') return await arbitro(c, q, res);
     if (acao === 'h2h') return await h2h(c, q, res);
+    if (acao === 'time') return await time(c, q, res);
     if (acao === 'resumo') return await resumo(c, q, res);
     return send(res, 400, { ok: false, error: 'Ação desconhecida.' });
   } catch (e) {
