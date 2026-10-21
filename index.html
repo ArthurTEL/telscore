@@ -690,6 +690,45 @@ p .note{display:block;margin-top:6px;font-family:var(--f-mono);font-size:8.5px;l
   .lab-head .fm{font-size:10px}
   .stage{padding:18px 16px}
 }
+
+/* ===== celular: ajustes finos ===== */
+@media (max-width:720px){
+  .demo-note{display:none!important}
+  .sec-head p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:none}
+  h2.sec{font-size:22px;line-height:1.1}
+  .hfade{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+  .hfade.hfl{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+  .hfade.hfl.hfe{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px);mask-image:linear-gradient(to right,transparent,#000 28px)}
+  .hfade.hfe:not(.hfl){-webkit-mask-image:none;mask-image:none}
+  /* placar da central */
+  .cm-row{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;margin:18px 0 10px}
+  .cm-team{gap:7px}
+  .cm-team .nm{font-size:13.5px;letter-spacing:.01em;overflow-wrap:anywhere;hyphens:auto}
+  .cm-team .co{font-size:10.5px;line-height:1.35;overflow-wrap:anywhere}
+  .cm-stage-top{font-size:10px;gap:6px}
+  .cm-meta .pill{font-size:11.5px;max-width:100%;white-space:normal;text-align:left}
+  /* barra de ações (ao vivo, replay, pré-jogo) */
+  .replay{border-radius:18px;padding:10px 12px;gap:8px}
+  .replay>span:not(.pill):not(.rm):not(.dot){flex:1 1 calc(100% - 24px);font-size:12.5px!important;line-height:1.45}
+  .replay .btn{flex:1 1 auto;justify-content:center}
+  /* escalações: campinho primeiro */
+  .lu-pitch{order:-1}
+  .lp .nm{white-space:normal;overflow:visible;line-height:1.3}
+  .lp .nm small{margin-left:5px}
+  /* tabelas largas: primeira coluna fixa ao rolar */
+  .tbl-wrap{-webkit-overflow-scrolling:touch}
+  .tbl-wrap table:not(.st-tbl) th:first-child,.tbl-wrap table:not(.st-tbl) td:first-child{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:6px 0 8px -8px rgba(0,0,0,.35)}
+  .cm-pick .eyebrow{flex-basis:100%;margin-top:4px}
+  #st-title{scroll-margin-top:16px}
+  .lab-head .fm{font-size:10.5px;line-height:1.35;overflow-wrap:anywhere}
+  .card{padding:16px}
+}
+@media (max-width:380px){
+  .cm-team .nm{font-size:12.5px}
+  .crest.xl{width:50px;height:50px}
+  .day{width:58px;height:70px}
+  .bn{font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -2027,7 +2066,9 @@ const REAL={on:false,cache:{},day:0,st:'all',lg:'all',key:null,tab:'lance',goals
 const TEAM_FIX={'Sao Paulo':'São Paulo','Gremio':'Grêmio','Vitoria':'Vitória','Atletico-MG':'Atlético-MG','Atletico Mineiro':'Atlético-MG','Atletico Paranaense':'Athletico-PR','Athletico Paranaense':'Athletico-PR','Atletico-PR':'Athletico-PR','Vasco DA Gama':'Vasco da Gama','Chapecoense-sc':'Chapecoense','Cuiaba':'Cuiabá','Goias':'Goiás','Criciuma':'Criciúma','Avai':'Avaí','Ceara':'Ceará','America Mineiro':'América-MG','Atletico Goianiense':'Atlético-GO','Sport Recife':'Sport','Operario-PR':'Operário-PR','Ferroviaria':'Ferroviária','Botafogo SP':'Botafogo-SP','Gremio Novorizontino':'Novorizontino','Athletic Club':'Athletic Bilbao','Atletico Madrid':'Atlético de Madrid','Bayern Munich':'Bayern de Munique','Bayern München':'Bayern de Munique','Inter':'Inter de Milão','Internazionale':'Inter de Milão','AC Milan':'Milan','Paris Saint Germain':'PSG','Sporting CP':'Sporting','Penarol':'Peñarol','Colo Colo':'Colo-Colo','Velez Sarsfield':'Vélez Sarsfield','Lanus':'Lanús','Bolivar':'Bolívar','Cerro Porteno':'Cerro Porteño','Universidad Catolica':'Universidad Católica','Union Espanola':'Unión Española','Barcelona SC':'Barcelona de Guayaquil','Estudiantes L.P.':'Estudiantes','Talleres Cordoba':'Talleres','Argentinos JRS':'Argentinos Juniors','Newells Old Boys':"Newell's Old Boys",'Atletico Nacional':'Atlético Nacional','Deportivo Tachira':'Deportivo Táchira','Independiente Medellin':'Independiente Medellín','Leon':'León'};
 function fixNames(o,d){if(!o||typeof o!=='object'||(d|0)>8)return o;if(Array.isArray(o)){o.forEach(x=>fixNames(x,(d|0)+1));return o;}
  if(typeof o.name==='string'&&('logo' in o)&&!('photo' in o)&&!('country' in o)){const n=TEAM_FIX[o.name];if(n)o.name=n;else if(typeof CT_PT!=='undefined'&&CT_PT[o.name])o.name=CT_PT[o.name];else if(/ (DA|DE|DO) /.test(o.name))o.name=o.name.replace(/ (DA|DE|DO) /g,m=>m.toLowerCase());}
+ if(typeof o.name==='string'&&o.name.indexOf('&')>=0)o.name=deEnt(o.name);
  for(const k in o){const v=o[k];if(v&&typeof v==='object')fixNames(v,(d|0)+1);}return o;}
+function deEnt(x){return String(x).replace(/&apos;|&#0*39;|&#x27;/gi,"'").replace(/&quot;|&#0*34;/gi,'"').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&amp;/gi,'&');}
 /* ---- artigos: "a Juventus", "da Argentina" ---- */
 const FEM=new Set(['Juventus','Roma','Lazio','Fiorentina','Atalanta','Inter de Milão','Sampdoria','Udinese','Salernitana','Cremonese','Real Sociedad','Chapecoense','Ponte Preta','Portuguesa','Ferroviária','Argentina','Colombia','Colômbia','Croatia','Croácia','Italy','Itália','Spain','Espanha','France','França','Germany','Alemanha','England','Inglaterra','Netherlands','Holanda','Belgium','Bélgica','Bolivia','Bolívia','Venezuela','Ukraine','Ucrânia','Austria','Áustria','Russia','Rússia','Hungary','Hungria','Sweden','Suécia','Norway','Noruega','Scotland','Escócia','Ireland','Irlanda','Romania','Romênia','Serbia','Sérvia','Slovakia','Slovenia','Albania','Georgia','Turkey','Turquia','Poland','Polônia','Denmark','Dinamarca','Greece','Grécia','Switzerland','Suíça','Saudi Arabia','Arábia Saudita','Australia','Austrália','South Korea','Coreia do Sul','Nigeria','Nigéria','Tunisia','Algeria','Costa Rica','Jamaica','New Zealand','Iceland','Finland','Czech Republic','Bulgaria']);
 const ART={o:'a',O:'A',do:'da',Do:'Da',no:'na',No:'Na',ao:'à',Ao:'À',pelo:'pela',Pelo:'Pela'};
@@ -2554,7 +2595,7 @@ function lvPlayers(f){
 }
 function timelineSVG(f){
  const ev=f.events||[];const maxM=Math.max(90,...ev.map(e=>e.time.elapsed+(e.time.extra||0)));const M=maxM>95?120:95;
- const w=640,h=150,ml=70,mr=14,X=v=>ml+(Math.min(v,M)/M)*(w-ml-mr),yH=48,yA=108;
+ const nar=window.innerWidth<=720;const w=nar?380:640,h=150,ml=nar?44:70,mr=nar?10:14,X=v=>ml+(Math.min(v,M)/M)*(w-ml-mr),yH=48,yA=108;
  let g=`<line x1="${ml}" x2="${w-mr}" y1="${yH}" y2="${yH}" stroke="var(--line2)" stroke-width="2" stroke-linecap="round"/><line x1="${ml}" x2="${w-mr}" y1="${yA}" y2="${yA}" stroke="var(--line2)" stroke-width="2" stroke-linecap="round"/>`;
  g+=`<line x1="${X(45)}" x2="${X(45)}" y1="22" y2="${h-18}" stroke="var(--line2)" stroke-dasharray="3 4"/>`;
  (M>95?[0,15,30,45,60,75,90,105,120]:[0,15,30,45,60,75,90]).forEach(t=>g+=`<text x="${X(t)}" y="${h-4}" text-anchor="middle">${t}'</text>`);
@@ -4172,7 +4213,7 @@ document.addEventListener('click',e=>{
  if(t.dataset.post&&SB.on&&labSrc()==='hist'){const k=t.dataset.post;return goStudioReal('sb',SB.match,k,['heatmap','raio-x'].includes(k)&&SB.player?'p:'+SB.player:k==='rede-passes'?SB.net:'auto',SB.comp);}
  if(t.dataset.rpost){const [src,id,fm,fo]=t.dataset.rpost.split('|');return goStudioReal(src,id,fm,fo||'auto');}
  if(t.dataset.stsrc){RS.src=t.dataset.stsrc;RS.key=null;RS.data=null;return renderStudioReal();}
- if(t.dataset.rfmt){RS.fmt=t.dataset.rfmt;RS.ver=1;renderFormatsReal();return generateReal();}
+ if(t.dataset.rfmt){RS.fmt=t.dataset.rfmt;RS.ver=1;renderFormatsReal();generateReal();if(window.innerWidth<=720){const h=$('#st-title');if(h)setTimeout(()=>h.scrollIntoView({behavior:'smooth',block:'start'}),60);}return;}
  if(t.dataset.post){ST.focus=['heatmap','raio-x'].includes(t.dataset.post)&&labPlayer?'p:'+labPlayer:(t.dataset.post==='rede-passes'?labNet:'auto');return goStudio(labKey,t.dataset.post);}
  if(t.dataset.day!=null&&t.classList.contains('day')){PD.day=+t.dataset.day;PD.st='all';return renderPartidas();}
  if(t.dataset.pst){PD.st=t.dataset.pst;return renderPartidas();}
@@ -4227,6 +4268,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-theme-set]
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themeGet()==='auto')themeApply('auto');});}catch(e){}
 themeApply(themeGet());
 try{new MutationObserver(()=>{syncDl();vMount();}).observe($('#st-preview'),{childList:true});}catch(e){}
+/* celular: listas que rolam para o lado (dias, abas, filtros) mostram o item ativo e um degradê indicando que há mais */
+const HS=new WeakMap();
+function hsTune(){if(window.innerWidth>720)return;document.querySelectorAll('[aria-pressed="true"],[aria-current="page"]').forEach(el=>{const c=el.parentElement;if(!c||c.classList.contains('bnav'))return;const cs=getComputedStyle(c);if(!/(auto|scroll)/.test(cs.overflowX)||c.scrollWidth<=c.clientWidth+2)return;
+  if(HS.get(c)!==el){HS.set(c,el);const r=el.getBoundingClientRect(),cr=c.getBoundingClientRect();if(r.left<cr.left+8||r.right>cr.right-8)c.scrollLeft+=r.left-cr.left-(cr.width-r.width)/2;}
+  if(!c.dataset.hs){c.dataset.hs='1';c.addEventListener('scroll',()=>hsFade(c),{passive:true});}hsFade(c);});}
+function hsFade(c){const over=c.scrollWidth>c.clientWidth+2;c.classList.toggle('hfade',over);c.classList.toggle('hfl',over&&c.scrollLeft>4);c.classList.toggle('hfe',over&&c.scrollLeft+c.clientWidth>=c.scrollWidth-4);}
+let hsT=0;try{new MutationObserver(()=>{clearTimeout(hsT);hsT=setTimeout(hsTune,80);}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['aria-pressed']});}catch(e){}
+window.addEventListener('resize',()=>{clearTimeout(hsT);hsT=setTimeout(hsTune,120);});setTimeout(hsTune,300);
 /* revisor de texto: corrige "1 dribles", "gol(s)" etc. em qualquer texto que aparecer na tela */
 const txFix=root=>{try{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:t=>{const p=t.parentNode;return p&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}});let n;while((n=w.nextNode())){const v=n.nodeValue;if(v&&(v.indexOf('1 ')>=0||v.indexOf('(')>=0)){const f=sing1(v);if(f!==v)n.nodeValue=f;}}}catch(e){}};
 try{new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData'){const v=m.target.nodeValue,f=sing1(v);if(f!==v)m.target.nodeValue=f;}else m.addedNodes.forEach(x=>{if(x.nodeType===3){const f=sing1(x.nodeValue);if(f!==x.nodeValue)x.nodeValue=f;}else if(x.nodeType===1&&x.tagName!=='SCRIPT'&&x.tagName!=='STYLE')txFix(x);});}}).observe(document.body,{childList:true,subtree:true,characterData:true});txFix(document.body);}catch(e){}

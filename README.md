@@ -95,7 +95,15 @@ Todo texto do site passa por um revisor automático: plural certo ("1 gol", "3 g
 
 ## Celular
 
-No celular, as seções ficam numa barra fixa embaixo (Jogos, Central, Ligas, Análise, Estúdio), como num app. O cabeçalho fica compacto, os filtros deslizam para o lado e os jogos aparecem com um time por linha.
+O site é pensado primeiro para o celular (é por onde chega quem vem do Instagram e do TikTok):
+
+- Barra fixa embaixo (Jogos, Central, Ligas, Análise, Estúdio) e cabeçalho compacto.
+- Listas que rolam para o lado (dias, abas, filtros) já abrem mostrando o item ativo, com um degradê na borda indicando que há mais opções.
+- Placar da Central ajustado para nomes longos e telas pequenas (até 360 px).
+- Escalações: o campinho aparece primeiro, depois as listas.
+- Tabelas largas (jogadores, análise tática) rolam para o lado com a coluna do jogador fixa.
+- No Estúdio, ao escolher um formato a tela desce até a prévia do post.
+- Textos de apresentação das páginas ficam em no máximo duas linhas.
 
 ## Tema dia e noite
 
