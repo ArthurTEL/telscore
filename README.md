@@ -2,6 +2,16 @@
 
 Placar ao vivo, central do jogo e análise de desempenho no futebol, com gerador de posts para criadores de conteúdo.
 
+**Site:** [www.telscore.com.br](https://www.telscore.com.br)
+
+## Endereço
+
+- Domínio próprio `telscore.com.br`, registrado no Registro.br e apontado para a Vercel.
+- `www.telscore.com.br` é o endereço principal; `telscore.com.br` redireciona para ele.
+- `telscore.vercel.app` continua funcionando como endereço reserva.
+- DNS no Registro.br (modo avançado): registro A `@` → `216.198.79.1` e CNAME `www` → endereço `vercel-dns` indicado pela Vercel.
+- Para instalar como app: abra o endereço no celular e use "Adicionar à tela de início".
+
 ## Como funciona
 
 ```
@@ -58,6 +68,16 @@ Enquanto a escalação oficial não sai, o site monta a provável assim:
 3. **Dúvidas:** jogadores com status de dúvida continuam na escalação, mas aparecem destacados.
 
 A Central do jogo (aba Escalação provável) e o post "Escalação provável" do Estúdio mostram a base usada, as trocas feitas e as dúvidas.
+
+## Tabela ao vivo
+
+Na página Ligas, quando há jogos da liga em andamento, a classificação aplica os placares ao vivo: soma pontos e gols, reordena a tabela, mostra o placar e o minuto ao lado de cada time e setas (▲/▼) para quem sobe ou desce. As cores das zonas acompanham a posição. A tabela se atualiza sozinha junto com os jogos (vale também para a fase de liga da Champions e os grupos da Libertadores e Sul-Americana).
+
+## Modelo de gols (pré-jogo)
+
+A tendência de gols não é mais fixa. O site cruza o ataque de cada time com a defesa do adversário (xG recente, gols da temporada e gols dos últimos jogos), ajusta pelo mando e pelo nível das ligas e calcula: gols esperados no jogo, chance de mais de 1,5 e de mais de 2,5 gols e chance de os dois marcarem. A tendência só diz "mais" ou "menos de 2,5" quando a chance passa de 58% ou fica abaixo de 42%; no meio disso, aparece "jogo no limite dos 2,5 gols".
+
+Quando um time não tem xG oficial nos últimos jogos, o site estima pelos chutes; sem estatísticas, estima pelos gols, e avisa embaixo do card qual estimativa usou (antes aparecia 0,00).
 
 ## Relatório de scout
 
