@@ -59,6 +59,10 @@ Enquanto a escalação oficial não sai, o site monta a provável assim:
 
 A Central do jogo (aba Escalação provável) e o post "Escalação provável" do Estúdio mostram a base usada, as trocas feitas e as dúvidas.
 
+## Vídeo animado
+
+No Estúdio, a plataforma "Vídeo animado" gera um vídeo vertical (1080×1920) para Reels, TikTok e Stories. As cenas de análise não usam texto corrido: cada uma tem uma etiqueta com o tema, o visual do post (comparativo, barras, card do jogador, probabilidades, sequência V/E/D) e no máximo 3 fichas curtas que entram uma por vez, com os números em vermelho. O texto completo fica na legenda do vídeo.
+
 ## Linguagem dos posts
 
 Nos posts não aparecem as palavras "mercado", "aposta" ou "casas de apostas". As probabilidades aparecem sempre como **análise TEL.SCORE** (que, por dentro, considera mercado, xG, forma, desfalques e força do elenco). No site, fora dos posts, o card da Análise TEL.SCORE pode citar a "análise de mercado" como um dos fatores. As capas mostram só o confronto (ex.: "Real Madrid x Barcelona"), sem o nome do formato.
