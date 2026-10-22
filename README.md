@@ -178,7 +178,8 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
   - **Temporada (Central do jogo):** card "xG na temporada", com casa e fora e xPts.
   - **Arbitragem:** perfil do árbitro em todas as competições guardadas: amarelos, vermelhos, faltas e pênaltis por jogo, e resultados.
   - **Confronto direto:** médias de xG, finalizações, posse, escanteios e cartões nos confrontos guardados.
-- Progresso da coleta: abra `https://www.telscore.com.br/api/banco?acao=resumo` (jogos guardados por liga).
+- Progresso da coleta: abra `https://www.telscore.com.br/api/banco?acao=resumo` (jogos guardados por liga e, em `ultima_coleta`, o resultado da última coleta: quando rodou, quantas requisições usou, quantos jogos salvou e, se deu errado, o erro).
+- A coleta trabalha no máximo uns 40 segundos por vez e continua de onde parou na próxima.
 
 ## Página da liga
 
