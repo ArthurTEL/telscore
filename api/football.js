@@ -16,7 +16,10 @@ const ALLOWED = {
   teams: ['id'],
   'players/squads': ['team'],
   'teams/statistics': ['league', 'season', 'team'],
-  players: ['team', 'season', 'page']
+  players: ['team', 'season', 'page'],
+  'players/topscorers': ['league', 'season'],
+  'players/topassists': ['league', 'season'],
+  'players/topyellowcards': ['league', 'season']
 };
 
 const LIVE = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE', 'INT', 'SUSP']);
@@ -85,6 +88,7 @@ module.exports = async (req, res) => {
     else if (endpoint === 'players/squads') ttl = 86400;
     else if (endpoint === 'teams/statistics') ttl = 21600;
     else if (endpoint === 'players') ttl = 43200;
+    else if (/^players\/top/.test(endpoint)) ttl = 21600;
     else if (endpoint === 'fixtures') {
       const list = Array.isArray(response) ? response : [];
       const anyLive = list.some(f => f.fixture && f.fixture.status && LIVE.has(f.fixture.status.short));
@@ -99,7 +103,12 @@ module.exports = async (req, res) => {
         const kick = list[0] && list[0].fixture && Date.parse(list[0].fixture.date);
         // jogo prestes a começar: confere de minuto em minuto para pegar o apito inicial
         ttl = FINISHED.has(s) ? 86400 : Number.isFinite(kick) && kick - Date.now() < 2 * 3600 * 1000 ? 60 : 600;
-      } else if (q.league && q.season) ttl = 43200;
+      } else if (q.league && q.season) {
+        // temporada inteira: com jogo começando ou recém-terminado, renova em 2 min; senão de hora em hora
+        const now = Date.now();
+        const soon = list.some(f => f.fixture && f.fixture.status && !FINISHED.has(f.fixture.status.short) && Math.abs(Date.parse(f.fixture.date) - now) < 3 * 3600 * 1000);
+        ttl = soon ? 120 : 3600;
+      }
       else if (q.date) {
         // "hoje" no fuso pedido pelo site (Brasília), não em UTC: depois das 21h o dia UTC já virou
         let today;
