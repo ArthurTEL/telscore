@@ -140,6 +140,9 @@ O site é pensado primeiro para o celular (é por onde chega quem vem do Instagr
   - Títulos menores, sem o texto de apresentação, e blocos com menos espaço em volta.
   - Abas da Central do jogo e da página do time ficam fixas no topo ao rolar.
   - Placar, lance a lance, análise, tabelas, elenco e placar de acertos com fontes e espaçamentos reduzidos.
+- **Dias da página Jogos:** a fileira mostra duas semanas para trás e duas para a frente, com o nome do mês na virada. O botão **Data** (calendário) abre qualquer dia, passado ou futuro (por exemplo, 10 de julho). Em datas distantes aparece o botão **Voltar · hoje**. "Hoje", "Ontem" e "Amanhã" cabem na bolinha mesmo em telas pequenas.
+- **Classificação no celular:** a tabela mostra todas as colunas do computador (J, V, E, D, GP, GC, SG, Pts, xG, xGC, ±xPts e últimos 5) e é só **arrastar para o lado**. A posição e o clube ficam fixos. Um aviso "Arraste a tabela para o lado" aparece até a primeira vez que a pessoa arrastar.
+- **Jogadores na Central:** o nome tem espaço próprio e nunca passa por cima da posição; nomes compridos terminam em "…", e quem entrou durante o jogo aparece com "entrou no jogo" embaixo do nome. A coluna do jogador fica fixa ao arrastar a tabela.
 
 ## Tema dia e noite
 
