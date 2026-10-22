@@ -138,14 +138,16 @@ async function idsGuardados(c, ids) {
 
 async function coletar(c, req, res) {
   if (!cronOk(req)) return send(res, 401, { ok: false, error: 'Não autorizado.' });
-  const maxCalls = Math.max(1, int(process.env.COLETA_MAX, 15));
-  const reserva = Math.max(0, int(process.env.COLETA_RESERVA, 35));
-  let restante = null;
+  let restante = null, limite = null;
   try {
     const s = await apiFootball('status'); // não conta na cota
     const rq = s && s.requests;
-    if (rq && rq.limit_day) restante = rq.limit_day - rq.current;
+    if (rq && rq.limit_day) { restante = rq.limit_day - rq.current; limite = rq.limit_day; }
   } catch (e) { /* segue com o limite padrão */ }
+  // plano Pro (milhares de requisições por dia): coleta mais por vez; plano grátis: devagar
+  const grande = limite != null && limite >= 1000;
+  const maxCalls = Math.max(1, int(process.env.COLETA_MAX, grande ? 40 : 15));
+  const reserva = Math.max(0, int(process.env.COLETA_RESERVA, grande ? 1500 : 35));
   const budget = restante == null ? maxCalls : Math.min(maxCalls, restante - reserva);
   if (budget <= 0) return send(res, 200, { ok: true, pulado: 'cota do dia baixa', restante });
 
@@ -191,10 +193,8 @@ async function coletar(c, req, res) {
   }
 
   // 3) detalhes (estatísticas e eventos), 20 jogos por requisição
-  while (fila.length && calls < budget) {
-    const chunk = fila.splice(0, 20);
+  const lote = async chunk => {
     const list = await apiFootball(`fixtures?ids=${chunk.join('-')}&timezone=${encodeURIComponent(TZ)}`);
-    calls++;
     const rows = [];
     list.forEach(f => {
       if (!FINISHED.has(f.fixture.status.short)) return;
@@ -207,6 +207,12 @@ async function coletar(c, req, res) {
       await sb(c, 'jogos', { method: 'POST', body: rows, prefer: 'resolution=merge-duplicates,return=minimal' });
       salvos += rows.length;
     }
+  };
+  // 4 lotes ao mesmo tempo, para caber no tempo da função
+  while (fila.length && calls < budget) {
+    const grupo = [];
+    while (grupo.length < 4 && fila.length && calls < budget) { grupo.push(fila.splice(0, 20)); calls++; }
+    await Promise.all(grupo.map(lote));
   }
   return send(res, 200, { ok: true, chamadas: calls, salvos, aguardando_estatisticas: semEstat, faltam: fila.length, restante: restante == null ? null : restante - calls });
 }

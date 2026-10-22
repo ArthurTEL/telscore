@@ -70,7 +70,9 @@ module.exports = async (req, res) => {
 
     // Cache na rede da Vercel: todos os visitantes compartilham a mesma resposta,
     // então a API só é chamada de novo quando o tempo abaixo expira.
-    const liveTTL = toInt(process.env.CACHE_LIVE_SECONDS, 120);
+    // ao vivo: a API-Football atualiza os jogos a cada ~15 s; com o plano Pro dá para acompanhar nesse ritmo
+    const liveTTL = toInt(process.env.CACHE_LIVE_SECONDS, 15);
+    let anyLiveResp = false;
     let ttl = 600;
     if (errors) ttl = 30;
     else if (endpoint === 'status') ttl = 60;
@@ -86,6 +88,7 @@ module.exports = async (req, res) => {
     else if (endpoint === 'fixtures') {
       const list = Array.isArray(response) ? response : [];
       const anyLive = list.some(f => f.fixture && f.fixture.status && LIVE.has(f.fixture.status.short));
+      anyLiveResp = anyLive;
       if (anyLive) ttl = liveTTL;
       else if (q.ids) {
         ttl = list.length && list.every(f => f.fixture && FINISHED.has(f.fixture.status.short)) ? 86400 : 600;
@@ -93,15 +96,25 @@ module.exports = async (req, res) => {
       else if (q.team && q.next) ttl = 3600;
       else if (q.id) {
         const s = list[0] && list[0].fixture && list[0].fixture.status.short;
-        ttl = FINISHED.has(s) ? 86400 : 600;
+        const kick = list[0] && list[0].fixture && Date.parse(list[0].fixture.date);
+        // jogo prestes a começar: confere de minuto em minuto para pegar o apito inicial
+        ttl = FINISHED.has(s) ? 86400 : Number.isFinite(kick) && kick - Date.now() < 2 * 3600 * 1000 ? 60 : 600;
       } else if (q.league && q.season) ttl = 43200;
       else if (q.date) {
-        const today = new Date().toISOString().slice(0, 10);
-        ttl = q.date < today ? 21600 : q.date === today ? 300 : 1800;
+        // "hoje" no fuso pedido pelo site (Brasília), não em UTC: depois das 21h o dia UTC já virou
+        let today;
+        try { today = new Intl.DateTimeFormat('en-CA', { timeZone: String(q.timezone || 'America/Sao_Paulo'), year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+        catch (e) { today = new Date().toISOString().slice(0, 10); }
+        // algum jogo começando ou recém-terminado na lista: confere de minuto em minuto
+        const now = Date.now();
+        const soon = list.some(f => f.fixture && f.fixture.status && !FINISHED.has(f.fixture.status.short) && !['PST', 'CANC', 'ABD', 'AWD', 'WO'].includes(f.fixture.status.short) && Math.abs(Date.parse(f.fixture.date) - now) < 3 * 3600 * 1000);
+        ttl = soon ? 60 : q.date < today ? 21600 : q.date === today ? 60 : 1800;
       }
     }
 
-    res.setHeader('Cache-Control', `public, s-maxage=${ttl}, stale-while-revalidate=${Math.min(ttl * 2, 600)}`);
+    // ao vivo, a cópia velha só pode ser servida por poucos segundos enquanto a nova chega
+    const swr = anyLiveResp ? 5 : Math.min(ttl * 2, 600);
+    res.setHeader('Cache-Control', `public, s-maxage=${ttl}, stale-while-revalidate=${swr}`);
     res.status(200).json({
       ok: !errors,
       errors,

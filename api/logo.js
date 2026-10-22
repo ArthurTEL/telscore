@@ -3,7 +3,7 @@
 // pelo mesmo endereço do site. Assim as imagens aparecem nos posts e entram nos PNGs baixados.
 
 const HOST = 'media.api-sports.io';
-const MAX = 2 * 1024 * 1024;
+const MAX = 4 * 1024 * 1024; // fotos de estádio podem ser grandes; a Vercel aceita respostas de até 4,5 MB
 
 module.exports = async (req, res) => {
   const raw = String((req.query || {}).u || '');
@@ -14,11 +14,14 @@ module.exports = async (req, res) => {
     return;
   }
   try {
-    const r = await fetch(url.toString());
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 9000);
+    const r = await fetch(url.toString(), { signal: ctrl.signal });
+    clearTimeout(timer);
     const type = r.headers.get('content-type') || '';
     if (!r.ok || !/^image\//.test(type)) { res.setHeader('Cache-Control', 'public, s-maxage=600'); res.status(404).json({ ok: false, error: 'Imagem não encontrada.' }); return; }
     const buf = Buffer.from(await r.arrayBuffer());
-    if (buf.length > MAX) { res.status(413).json({ ok: false, error: 'Imagem grande demais.' }); return; }
+    if (buf.length > MAX) { res.setHeader('Cache-Control', 'public, s-maxage=86400'); res.status(413).json({ ok: false, error: 'Imagem grande demais.' }); return; }
     res.setHeader('Content-Type', type);
     res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400');
     res.status(200).send(buf);
