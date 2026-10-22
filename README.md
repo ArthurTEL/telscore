@@ -177,6 +177,15 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
   - **Confronto direto:** médias de xG, finalizações, posse, escanteios e cartões nos confrontos guardados.
 - Progresso da coleta: abra `https://www.telscore.com.br/api/banco?acao=resumo` (jogos guardados por liga).
 
+## Página da liga
+
+- Toque no nome ou no escudo de uma liga na lista de **Partidas**, no botão **"Jogos, rodadas e artilheiros"** da página Ligas, no nome da liga no topo da **Central do jogo** ou da **página do time**. Endereço próprio: `/#liga-71`.
+- **Resumo:** progresso da temporada, jogos da rodada atual, números da temporada (gols por jogo, vitórias do mandante, empates, jogos com 3+ gols, os dois marcam, maior goleada), os primeiros da tabela e os 5 artilheiros.
+- **Jogos:** todas as rodadas numeradas, com setas e a lista de rodadas para pular direto; os jogos vêm agrupados por dia e abrem a central. Nas copas, as fases aparecem pelo nome (Grupos, Oitavas, Quartas…).
+- **Classificação:** tabela com zonas e últimos 5 (grupos nas copas), com atalho para a tabela completa com xG.
+- **Artilheiros:** artilharia, garçons e cartões amarelos (top 20), com pênaltis, minutos por gol e nota; tocar no time abre a página dele.
+- A lista de jogos da temporada é renovada a cada 2 minutos quando há jogo começando ou acabando, e de hora em hora no resto do tempo; artilharia a cada 6 horas.
+
 ## Página do time
 
 - Toque no nome ou no escudo de um time na **tabela das ligas** (e das copas), no **topo da central do jogo** ou no título das **escalações**. Endereço próprio: `/#time-127` (o número é o id do time na API-Football), dá para compartilhar.

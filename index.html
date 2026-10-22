@@ -763,6 +763,35 @@ p .note{display:block;margin-top:6px;font-family:var(--f-mono);font-size:8.5px;l
 .wa-tm{position:absolute;right:10px;bottom:5px;font-size:10.5px;color:#5c7b5f}
 :root[data-theme="dark"] .wa-chat{background-color:#0B141A}:root[data-theme="dark"] .wa-bub{background:#005C4B;color:#E9EDEF}:root[data-theme="dark"] .wa-bub i{color:#cfd8dc}:root[data-theme="dark"] .wa-tm{color:#a6c7bd}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .wa-chat{background-color:#0B141A}:root:not([data-theme="light"]) .wa-bub{background:#005C4B;color:#E9EDEF}:root:not([data-theme="light"]) .wa-bub i{color:#cfd8dc}:root:not([data-theme="light"]) .wa-tm{color:#a6c7bd}}
+/* ---------- página da liga ---------- */
+.lg-open{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;display:flex;align-items:center;gap:10px;padding:0;cursor:pointer;min-width:0}
+.lg-open .lg-ot{display:grid;min-width:0}.lg-open:hover h3{text-decoration:underline;text-underline-offset:3px}
+.lg-arrow{margin-left:6px;color:var(--red);font-weight:800}
+.lgp-link{appearance:none;border:0;background:none;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:0;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:3px}
+.lgp-link:hover{color:#fff;text-decoration-color:var(--red)}
+.lg-pagebtn{order:2}
+.lgp-logo{width:78px;height:78px;border-radius:22px;background:#fff;display:grid;place-items:center;padding:10px;flex:none}.lgp-logo img{width:100%;height:100%;object-fit:contain}
+.lgp-prog{position:relative;height:6px;border-radius:99px;background:rgba(255,255,255,.14);margin-top:16px;overflow:hidden}.lgp-prog i{position:absolute;left:0;top:0;bottom:0;background:var(--red);border-radius:99px}
+.lgp-nav{display:flex;align-items:center;gap:10px}.lgp-nav .btn{font-size:16px;font-weight:800;padding:5px 14px}.lgp-nav .btn:disabled{opacity:.35;cursor:default}
+.lgp-rt{flex:1;display:grid;text-align:center}.lgp-rt b{font-family:var(--f-brand);font-weight:800;font-size:17px;letter-spacing:.03em;text-transform:uppercase}.lgp-rt small{font-size:11.5px;color:var(--muted)}
+.lgp-rd{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 2px 10px;margin:0 -2px}.lgp-rd::-webkit-scrollbar{display:none}
+.lgp-rc{flex:none;appearance:none;min-width:38px;height:34px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);color:var(--muted);font-family:var(--f-mono);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.lgp-rc.done{color:var(--ink)}.lgp-rc.cur{border-color:var(--red);color:var(--red-ink)}.lgp-rc.live{border-color:var(--red);color:var(--red-ink);background:var(--red-soft)}
+.lgp-rc[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff}
+.lgp-list .mrow{padding-inline:4px}
+.lgp-day{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 4px 6px;border-bottom:1px solid var(--line)}
+.lgp-games .lgp-list{margin-top:2px}
+.lgp-grp{margin-bottom:12px}
+.lgp-art{display:grid}
+.lgp-ar{display:grid;grid-template-columns:22px 32px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.lgp-ar:first-child{border-top:0}
+.lgp-ar .pav{width:32px;height:32px}
+.lgp-rk{font-family:var(--f-brand);font-weight:800;color:var(--muted);text-align:center}
+.lgp-pn{display:grid;min-width:0}.lgp-pn b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lgp-pn small,.lgp-top small.tmc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.lgp-pn small .crest,.lgp-top small .crest{width:16px;height:16px;font-size:5px}
+.lgp-gv{font-family:var(--f-brand);font-weight:900;font-size:22px;color:var(--red-ink)}
+.lgp-top .tm-pl>span{display:grid}
+.lgp-seg{margin-top:2px}
+@media (max-width:720px){.lgp-top .opt{display:none}.lgp-top th,.lgp-top td{padding-left:4px;padding-right:4px}.lgp-logo{width:52px;height:52px;border-radius:14px;padding:6px}.lgp-rt b{font-size:14px}.lgp-rc{height:30px;min-width:34px;font-size:11px}.lgp-f{display:none}.lg-pagebtn{order:0}.lgp-gv{font-size:18px}}
 /* ---------- página do time ---------- */
 .tlink{cursor:pointer}
 .tmc.tlink:hover,.cm-team.tlink:hover .nm,h4.tlink:hover{text-decoration:underline;text-underline-offset:3px}
@@ -1120,6 +1149,14 @@ p .note{display:block;margin-top:6px;font-family:var(--f-mono);font-size:8.5px;l
     <div id="cm-body"></div>
   </section>
 
+  <!-- PÁGINA DA LIGA -->
+  <section class="view" id="v-liga" aria-label="Página da liga" hidden>
+    <div class="tm-top"><button class="btn sm" id="lgp-back">← Voltar</button></div>
+    <div id="lgp-head"></div>
+    <div class="cm-tabs"><div class="seg" id="lgp-tabs"></div></div>
+    <div id="lgp-body"></div>
+  </section>
+
   <!-- PÁGINA DO TIME -->
   <section class="view" id="v-time" aria-label="Página do time" hidden>
     <div class="tm-top"><button class="btn sm" id="tm-back">← Voltar</button></div>
@@ -1136,7 +1173,7 @@ p .note{display:block;margin-top:6px;font-family:var(--f-mono);font-size:8.5px;l
 
   <!-- LIGAS -->
   <section class="view" id="v-ligas" role="tabpanel" aria-labelledby="tab-ligas" hidden>
-    <div class="sec-head"><div><h2 class="sec" id="lg-title">Ligas</h2><p id="lg-desc">Tabela com pontos esperados (xPts). A diferença entre pontos reais e esperados mostra quem está acima ou abaixo do próprio desempenho.</p></div></div>
+    <div class="sec-head"><button class="btn sm lg-pagebtn" id="lg-page">Jogos, rodadas e artilheiros →</button><div><h2 class="sec" id="lg-title">Ligas</h2><p id="lg-desc">Tabela com pontos esperados (xPts). A diferença entre pontos reais e esperados mostra quem está acima ou abaixo do próprio desempenho.</p></div></div>
     <div class="pd-bar"><div class="chips" id="lg-filter"></div></div>
     <div class="lg-layout">
       <div class="card"><div class="tbl-wrap" id="lg-table"></div><div class="legend zleg" id="lg-zones"></div><div class="legend"><span><i style="background:var(--good)"></i>Vitória</span><span><i style="background:var(--low)"></i>Empate</span><span><i style="background:var(--red)"></i>Derrota</span><span id="lg-leg-note">Top 10 da competição</span></div></div>
@@ -2574,12 +2611,13 @@ async function renderPartidasReal(){
  const by={};shown.forEach(f=>(by[f.league.id]=by[f.league.id]||[]).push(f));
  const order=Object.keys(by).map(Number).sort((a,b)=>{const la=by[a].some(f=>rStatus(f).k==='live'),lb=by[b].some(f=>rStatus(f).k==='live');return (lb-la)||(lgRank(a)-lgRank(b));});
  box.innerHTML=!list.length?'<div class="empty">Nenhum jogo das ligas acompanhadas neste dia.</div>':!order.length?'<div class="empty">Nenhum jogo com esses filtros. Tente "Todos".</div>':order.map(id=>{const g=by[id],f0=g[0];
-  return `<div class="lg-group"><div class="lg-gh"><span class="lg-badge img"><img src="${esc(imgUrl(f0.league.logo))}" alt="" loading="lazy" onerror="this.remove()"></span><div><h3>${esc(lgName(f0))}</h3><small>${esc(roundTxt(f0.league.round))} · ${g.length} jogo${g.length>1?'s':''}</small></div>${TABLE_LG.includes(id)?`<button class="btn sm" data-rlgo="${id}">Tabela</button>`:''}</div>${g.map(rowReal).join('')}</div>`;}).join('');
+  return `<div class="lg-group"><div class="lg-gh"><button class="lg-open" data-lgp="${id}" data-lgs="${f0.league.season}" title="Abrir a página da liga"><span class="lg-badge img"><img src="${esc(imgUrl(f0.league.logo))}" alt="" loading="lazy" onerror="this.remove()"></span><span class="lg-ot"><h3>${esc(lgName(f0))}<span class="lg-arrow" aria-hidden="true">›</span></h3><small>${esc(roundTxt(f0.league.round))} · ${g.length} jogo${g.length>1?'s':''}</small></span></button>${TABLE_LG.includes(id)?`<button class="btn sm" data-rlgo="${id}">Tabela</button>`:''}</div>${g.map(rowReal).join('')}</div>`;}).join('');
  renderFeatReal(list);renderInsReal(list);
 }
+const dayRel=d=>{const t=new Date(NOW());const k=x=>ymd(x);const tm=new Date(t);tm.setDate(tm.getDate()+1);const ye=new Date(t);ye.setDate(ye.getDate()-1);return k(d)===k(t)?'Hoje':k(d)===k(tm)?'Amanhã':k(d)===k(ye)?'Ontem':shortDate(d);};
 function rowReal(f){
  const st=rStatus(f),h=f.teams.home,a=f.teams.away,g=f.goals,v=f.fixture.venue||{};let sc,stc,ex;
- if(st.k==='pre'||st.k==='off'){sc=`<span class="sc pre">${esc(st.label)}</span>`;stc=`<span class="st">${st.k==='off'?esc(st.label):'Hoje'}</span>`;ex=`<div class="mini-prob"><small><span>${esc(roundTxt(f.league.round))}</span></small><small><span>${esc(v.name||'')}</span></small></div>`;}
+ if(st.k==='pre'||st.k==='off'){sc=`<span class="sc pre">${esc(st.label)}</span>`;stc=`<span class="st">${st.k==='off'?esc(st.label):esc(dayRel(new Date(f.fixture.date)))}</span>`;ex=`<div class="mini-prob"><small><span>${esc(roundTxt(f.league.round))}</span></small><small><span>${esc(v.name||'')}</span></small></div>`;}
  else{const ht=f.score&&f.score.halftime;sc=`<span class="sc ${st.k==='live'?'live':''}">${g.home} – ${g.away}${ht&&ht.home!=null&&(st.k==='ft'||st.min>45)?`<span class="xg">1º T ${ht.home}–${ht.away}</span>`:''}</span>`;
   stc=st.k==='live'?ring(st,42):'<span class="st">FIM</span>';ex=`<div class="mini-prob"><small><span>${esc(v.name||'')}</span></small><small><span>${f.fixture.referee?'Árb. '+esc(refName(f.fixture.referee)):''}</span></small></div>`;}
  return `<button class="mrow" data-rcm="${f.fixture.id}" aria-label="${esc(h.name)} contra ${esc(a.name)}, ${esc(st.label)}"><span class="stc">${stc}</span><span class="tm h"><span>${esc(h.name)}</span>${rCrest(h)}</span>${sc}<span class="tm">${rCrest(a)}<span>${esc(a.name)}</span></span>${ex}<span class="chev">${IC.chev}</span></button>`;
@@ -2639,7 +2677,7 @@ async function renderCentroReal(){
  const sm=statMap(f);const poss=sm['Ball Possession'];const ph=poss?sv(poss.h):0,pa=poss?sv(poss.a):0;const ht=f.score&&f.score.halftime;
  const pill=st.k==='live'?`<span class="pill live">Ao vivo · ${esc(st.label)}</span>`:`<span class="pill">${esc(st.k==='pre'?'Pré-jogo':st.label)}</span>`;
  $('#cm-stage').innerHTML=`<div class="stage">${ARCS}${ARCS.replace('class="arcs"','class="arcs l"')}
- <div class="cm-stage-top"><span class="eyebrow">${esc(lgName(f))} · ${esc(roundTxt(f.league.round))} · ${dateTxt(new Date(f.fixture.date))} · ${hhmm(new Date(f.fixture.date))}</span>${pill}</div>
+ <div class="cm-stage-top"><span class="eyebrow"><button class="lgp-link" data-lgp="${f.league.id}" data-lgs="${f.league.season}" title="Abrir a página da liga">${esc(lgName(f))}</button> · ${esc(roundTxt(f.league.round))} · ${dateTxt(new Date(f.fixture.date))} · ${hhmm(new Date(f.fixture.date))}</span>${pill}</div>
  <div class="cm-row"><div class="cm-team tlink" data-team="${h.id}" data-tlg="${f.league.id}" role="link" tabindex="0" title="Ver página do ${esc(h.name)}">${rCrest(h,'xl')}<span class="nm">${esc(h.name)}</span><span class="co">${esc(co(h))}</span></div>
   <div class="cm-mid">${st.k==='pre'||st.k==='off'?`<div class="score"><span class="t">${esc(st.label)}</span></div>`:`<div class="score">${f.goals.home}<i>×</i>${f.goals.away}</div>${ring(st,58,true)}`}</div>
   <div class="cm-team tlink" data-team="${a.id}" data-tlg="${f.league.id}" role="link" tabindex="0" title="Ver página do ${esc(a.name)}">${rCrest(a,'xl')}<span class="nm">${esc(a.name)}</span><span class="co">${esc(co(a))}</span></div></div>
@@ -2852,6 +2890,7 @@ async function realTick(){
  if(view==='centro'&&REAL.cur&&rStatus(REAL.cur).k!=='ft'&&String(REAL.cur.fixture.id)===REAL.key)renderCentroReal();
  if(view==='lab'&&labSrc()==='live'&&LV.cur&&rStatus(LV.cur).k==='live')renderLabLive();
  if(view==='ligas'&&REAL.lgLive)renderLigasReal(true);
+ if(view==='liga'&&LGP.ctx&&LGP.ctx.live&&(LGP.tab==='jogos'||LGP.tab==='resumo')){LGP.ctx=null;renderLiga();}
 }
 
 /* ================= ANÁLISE TÁTICA COM DADOS REAIS (StatsBomb Open Data via /api/statsbomb) ================= */
@@ -5025,7 +5064,7 @@ function tmHead(C){
  const t=C.team,v=C.venue||{},I=C.info||{},r=C.row;
  const form=C.last.slice(0,5).map(f=>tmRes(f,t.id).r).filter(Boolean).reverse();
  const chips=[I.country?ctPt(I.country):'',I.founded?`Fundado em ${I.founded}`:'',v.name?`${v.name}${v.city?', '+v.city:''}`:'',v.capacity?`${Number(v.capacity).toLocaleString('pt-BR')} lugares`:''].filter(Boolean);
- $('#tm-head').innerHTML=`<div class="stage tm-stage">${ARCS}<div class="cm-stage-top"><span class="eyebrow">${C.L?`${esc(C.L.name)} · ${esc(String(C.L.season))}`:'Página do time'}</span>${C.live?`<span class="pill live">Jogando agora</span>`:''}</div>
+ $('#tm-head').innerHTML=`<div class="stage tm-stage">${ARCS}<div class="cm-stage-top">${C.L?`<button class="eyebrow lgp-link" data-lgp="${C.L.id}" data-lgs="${C.L.season}">${esc(C.L.name)} · ${esc(String(C.L.season))} ›</button>`:'<span class="eyebrow">Página do time</span>'}${C.live?`<span class="pill live">Jogando agora</span>`:''}</div>
  <div class="tm-hero">${rCrest(t,'xl')}<div class="tm-id"><h2>${esc(t.name)}</h2><div class="tm-chips">${chips.map(c=>`<span class="pill">${esc(c)}</span>`).join('')}</div></div>
  <div class="tm-kpis">${r?`<div><b class="num">${r.rank}º</b><span>na tabela</span></div><div><b class="num">${r.points}</b><span>pontos em ${r.all.played} jogos</span></div>`:''}${form.length?`<div><span class="form">${form.map(x=>`<i class="${x}">${x}</i>`).join('')}</span><span>últimos ${form.length} jogos</span></div>`:''}</div></div></div>`;
 }
@@ -5156,14 +5195,124 @@ async function tmNumeros(C){
  return `<div class="tm-grid tm-num">${parts.map(p=>`<div class="tm-col">${p}</div>`).join('')}</div>`;
 }
 
+/* ================= PÁGINA DA LIGA =================
+   Abre ao tocar no nome ou no escudo de uma liga (lista de jogos, página Ligas, central e página do time).
+   Abas: Resumo, Jogos (todas as rodadas, numeradas), Classificação e Artilheiros. */
+const LGP={id:null,season:null,tab:'resumo',round:null,prev:'partidas',ctx:null,top:{},topTab:'gols'};
+function openLeague(id,season){
+ if(!REAL.on||!id)return;id=+id;const s=season?+season:(RLmap[id]?seasonFor(id):null);
+ if(LGP.id!==id||LGP.season!==s){LGP.ctx=null;LGP.top={};LGP.round=null;}
+ LGP.id=id;LGP.season=s;LGP.tab='resumo';if(view!=='liga')LGP.prev=view;show('liga');
+}
+const rdNum=r=>{const m=String(r||'').match(/(\d+)\s*$/);return m?+m[1]:null;};
+function lgRoundLabel(r){const n=rdNum(r);return /regular season/i.test(r||'')&&n!=null?`Rodada ${n}`:roundTxt(r);}
+function lgRoundShort(r){const n=rdNum(r);if(/regular season/i.test(r||'')&&n!=null)return String(n);const t=roundTxt(r);return t.replace(/^Fase de grupos\s*[·-]?\s*/i,'Grupos ').replace(/Oitavas de final/i,'Oitavas').replace(/Quartas de final/i,'Quartas').replace(/Semifinal/i,'Semi');}
+async function lgLoad(){
+ const id=LGP.id;let season=LGP.season;
+ if(!season){try{const g=await apiGet('fixtures',{league:id,next:1,timezone:TZ},3600000);season=g&&g[0]&&g[0].league.season;}catch(e){}if(!season)season=new Date().getFullYear();LGP.season=season;}
+ const [fx,st]=await Promise.all([apiGet('fixtures',{league:id,season,timezone:TZ},60000).catch(()=>[]),apiGet('standings',{league:id,season},300000).catch(()=>null)]);
+ const list=(fx||[]).slice().sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date));
+ const L=(list[0]&&list[0].league)||(st&&st[0]&&st[0].league)||{id,name:(RLmap[id]||{}).name||'Liga'};
+ const by=new Map();list.forEach(f=>{const r=f.league.round||'';if(!by.has(r))by.set(r,[]);by.get(r).push(f);});
+ const rounds=[...by.entries()].map(([name,games])=>({name,games,t0:new Date(games[0].fixture.date).getTime()})).sort((a,b)=>a.t0-b.t0);
+ const now=Date.now();const live=list.find(f=>rStatus(f).k==='live');
+ const done=list.filter(f=>FT_S.includes(f.fixture.status.short));const up=list.find(f=>rStatus(f).k==='pre'&&new Date(f.fixture.date)>=now-3*3600000);
+ let cur=live?live.league.round:null;
+ if(!cur){const lastR=done.length?done[done.length-1].league.round:null,nextR=up?up.league.round:null;
+  const lastRound=rounds.find(r=>r.name===lastR),lastFinished=lastRound&&lastRound.games.every(g=>FT_S.includes(g.fixture.status.short)||OFF_S.includes(g.fixture.status.short));
+  cur=nextR&&(!lastR||lastR===nextR||!lastFinished||new Date(up.fixture.date)-now<4*86400000)?nextR:(lastR||nextR||(rounds[0]&&rounds[0].name));}
+ const groups=((st&&st[0]&&st[0].league&&st[0].league.standings)||[]).filter(g=>Array.isArray(g)&&g.length);
+ LGP.ctx={id,season,L,list,rounds,cur,groups,done,live,cup:CUPS.has(id)||groups.length>1,logo:L.logo||'',country:L.country||''};
+ if(LGP.round==null||!rounds.some(r=>r.name===LGP.round))LGP.round=cur;
+}
+async function renderLiga(){
+ const head=$('#lgp-head'),tabs=$('#lgp-tabs'),body=$('#lgp-body');if(!body)return;
+ if(!REAL.on||!LGP.id){head.innerHTML='';tabs.innerHTML='';body.innerHTML='<div class="empty">A página da liga usa os jogos reais da API-Football.</div>';return;}
+ const id=LGP.id;
+ if(!LGP.ctx||LGP.ctx.id!==id){head.innerHTML='<div class="empty">Carregando a liga…</div>';tabs.innerHTML='';body.innerHTML='';
+  try{await lgLoad();}catch(e){if(LGP.id===id)head.innerHTML=`<div class="empty">Não foi possível carregar a liga agora. ${esc(e.message||'')}</div>`;return;}
+  if(LGP.id!==id||view!=='liga')return;}
+ const C=LGP.ctx;lgpHead(C);
+ tabs.innerHTML=[['resumo','Resumo'],['jogos','Jogos'],['tabela','Classificação'],['artilheiros','Artilheiros']].map(([k,l])=>`<button aria-pressed="${LGP.tab===k}" data-lgpt="${k}">${l}</button>`).join('');
+ if(LGP.tab==='jogos'){body.innerHTML=lgpJogos(C);const a=body.querySelector('.lgp-rd [aria-pressed="true"]');if(a)try{a.scrollIntoView({block:'nearest',inline:'center'});}catch(e){}}
+ else if(LGP.tab==='tabela')body.innerHTML=lgpTabela(C,false);
+ else if(LGP.tab==='artilheiros'){body.innerHTML='<div class="empty">Carregando a artilharia…</div>';const h=await lgpArt(C);if(LGP.id===id&&LGP.tab==='artilheiros'&&view==='liga')body.innerHTML=h;}
+ else{body.innerHTML=lgpResumo(C,null);const tops=await lgpTop(C,'gols').catch(()=>null);if(LGP.id===id&&LGP.tab==='resumo'&&view==='liga'){const box=$('#lgp-art');if(box)box.outerHTML=lgpArtMini(tops);}}
+}
+function lgpHead(C){
+ const L=C.L,R=C.rounds,nr=Math.max(0,...R.filter(r=>/regular season/i.test(r.name)).map(r=>rdNum(r.name)||0));
+ const total=C.list.length,played=C.done.length;const pct=total?Math.round(played/total*100):0;
+ const chips=[C.country?ctPt(C.country):'',`Temporada ${seasonLabelAny(C.id,C.season)}`,C.cur?`${lgRoundLabel(C.cur)}${nr&&rdNum(C.cur)&&/regular season/i.test(C.cur)?` de ${nr}`:''}`:''].filter(Boolean);
+ $('#lgp-head').innerHTML=`<div class="stage tm-stage">${ARCS}<div class="cm-stage-top"><span class="eyebrow">Página da liga</span>${C.live?'<span class="pill live">Jogo ao vivo</span>':''}</div>
+ <div class="tm-hero"><span class="lgp-logo">${C.logo?`<img src="${esc(imgUrl(C.logo))}" alt="" onerror="this.remove()">`:''}</span><div class="tm-id"><h2>${esc((RLmap[C.id]||{}).name||L.name||'Liga')}</h2><div class="tm-chips">${chips.map(c=>`<span class="pill">${esc(c)}</span>`).join('')}</div></div>
+ <div class="tm-kpis"><div><b class="num">${played}</b><span>de ${total} jogos disputados</span></div><div><b class="num">${pct}%</b><span>da temporada</span></div></div></div>
+ ${total?`<div class="lgp-prog"><i style="width:${pct}%"></i></div>`:''}</div>`;
+}
+const seasonLabelAny=(id,s)=>RLmap[id]?seasonLabel(id):(String(s||''));
+function lgpRoundBlock(C,name,limit){
+ const r=C.rounds.find(x=>x.name===name);if(!r)return '<p class="acc-wait">Sem jogos nesta rodada.</p>';
+ const days=new Map();r.games.forEach(f=>{const d=new Date(f.fixture.date);const k=ymd(d);if(!days.has(k))days.set(k,{d,g:[]});days.get(k).g.push(f);});
+ let n=0;const parts=[];for(const {d,g} of days.values()){if(limit&&n>=limit)break;const gg=limit?g.slice(0,limit-n):g;n+=gg.length;parts.push(`<div class="lgp-day">${esc(dateTxt(d))}</div>${gg.map(rowReal).join('')}`);}
+ return parts.join('');
+}
+function lgpJogos(C){
+ const R=C.rounds;if(!R.length)return '<div class="empty">A API ainda não tem o calendário desta liga.</div>';
+ const i=Math.max(0,R.findIndex(r=>r.name===LGP.round));const r=R[i];
+ const fin=r.games.filter(g=>FT_S.includes(g.fixture.status.short)).length;
+ const goals=r.games.filter(g=>FT_S.includes(g.fixture.status.short)).reduce((s,g)=>s+(g.goals.home||0)+(g.goals.away||0),0);
+ const chips=R.map((x,k)=>{const st=x.games.every(g=>FT_S.includes(g.fixture.status.short)||OFF_S.includes(g.fixture.status.short))?'done':x.games.some(g=>rStatus(g).k==='live')?'live':x.name===C.cur?'cur':'';return `<button class="lgp-rc ${st}" aria-pressed="${k===i}" data-lgpr="${k}" title="${esc(lgRoundLabel(x.name))}">${esc(lgRoundShort(x.name))}</button>`;}).join('');
+ return `<div class="card lgp-games"><div class="lgp-nav"><button class="btn sm" data-lgpr="${i-1}" ${i<=0?'disabled':''} aria-label="Rodada anterior">‹</button><div class="lgp-rt"><b>${esc(lgRoundLabel(r.name))}</b><small>${r.games.length} jogos${fin?` · ${fin} encerrados · ${goals} gols`:''}${r.name===C.cur?' · rodada atual':''}</small></div><button class="btn sm" data-lgpr="${i+1}" ${i>=R.length-1?'disabled':''} aria-label="Próxima rodada">›</button></div>
+ <div class="lgp-rd hfade">${chips}</div><div class="lgp-list">${lgpRoundBlock(C,r.name)}</div></div>`;
+}
+function lgpTabela(C,mini){
+ const G=C.groups;if(!G.length)return mini?'':'<div class="empty">Classificação indisponível para esta competição.</div>';
+ const tbl=(g,cut)=>{const rows=cut?g.slice(0,cut):g;return `<div class="tbl-wrap"><table class="tbl tm-mini lgp-tbl"><thead><tr><th class="l">#</th><th class="l">Clube</th><th>J</th><th>SG</th><th>Pts</th>${mini?'':'<th class="l lgp-f">Últimos 5</th>'}</tr></thead><tbody>${rows.map(r=>{const z=CUPS.has(C.id)?cupZone(r.description):zoneInfo(r.description);return `<tr class="${z?'zr':''}"${z?` style="--zc:${z.c}"`:''}><td class="pos l"><span>${r.rank}</span></td><td class="l"><span class="tmc tlink" data-team="${r.team.id}" data-tlg="${C.id}" role="link" tabindex="0">${rCrest(r.team)}${esc(r.team.name)}</span></td><td>${r.all.played}</td><td>${r.goalsDiff>0?'+':''}${r.goalsDiff}</td><td class="pts">${r.points}</td>${mini?'':`<td class="l lgp-f"><span class="form">${String(r.form||'').split('').slice(-5).map(c=>({W:'V',D:'E',L:'D'}[c]||c)).map(x=>`<i class="${x}">${x}</i>`).join('')}</span></td>`}</tr>`;}).join('')}</tbody></table></div>`;};
+ const leg=[];const seen=new Set();G.flat().forEach(r=>{const z=CUPS.has(C.id)?cupZone(r.description):zoneInfo(r.description);if(z&&!seen.has(z.k)){seen.add(z.k);leg.push(z);}});
+ const full=TABLE_LG.includes(C.id)?`<button class="btn sm" data-lgptab="${C.id}">Tabela com xG e gráficos</button>`:'';
+ if(mini){const g=G[0];return `<div class="card"><div class="card-h"><div><h3>Classificação</h3><div class="sub">${G.length>1?esc(g[0].group||'Grupo 1'):'Os primeiros colocados'}</div></div><button class="btn sm" data-lgpt="tabela">Ver tudo</button></div>${tbl(g,6)}</div>`;}
+ return `${G.map(g=>`<div class="card lgp-grp"><div class="card-h"><div><h3>${esc(G.length>1?(g[0].group||'Grupo'):'Classificação')}</h3><div class="sub">${g.length} times</div></div>${G.length===1?full:''}</div>${tbl(g)}</div>`).join('')}${leg.length?`<div class="legend zleg">${leg.map(z=>`<span><i style="background:${z.c}"></i>${esc(z.l)}</span>`).join('')}</div>`:''}${G.length>1&&full?`<div style="margin-top:10px">${full}</div>`:''}`;
+}
+const TOPK={gols:['players/topscorers','Artilheiros'],assist:['players/topassists','Garçons'],cartoes:['players/topyellowcards','Cartões amarelos']};
+async function lgpTop(C,k){if(LGP.top[k])return LGP.top[k];const r=await apiGet(TOPK[k][0],{league:C.id,season:C.season},21600000);LGP.top[k]=(r||[]).map(p=>{const S=(p.statistics||[]).find(s=>s.league&&s.league.id===C.id)||(p.statistics||[])[0]||{};const G=S.games||{},Gl=S.goals||{},Pn=S.penalty||{},Cd=S.cards||{};
+ return {id:p.player.id,name:p.player.name,photo:p.player.photo,age:p.player.age,nat:p.player.nationality,team:S.team||{},j:G.appearences||0,min:G.minutes||0,rt:parseFloat(G.rating)||null,g:Gl.total||0,a:Gl.assists||0,pen:Pn.scored||0,y:Cd.yellow||0,r:(Cd.red||0)+(Cd.yellowred||0)};});return LGP.top[k];}
+function lgpArtMini(L){
+ if(!L||!L.length)return '<div class="card"><div class="card-h"><h3>Artilharia</h3></div><p class="acc-wait">A artilharia aparece quando a liga tiver gols registrados.</p></div>';
+ return `<div class="card"><div class="card-h"><div><h3>Artilharia</h3><div class="sub">Os 5 primeiros</div></div><button class="btn sm" data-lgpt="artilheiros">Ver todos</button></div><div class="lgp-art">${L.slice(0,5).map((p,i)=>`<div class="lgp-ar"><span class="lgp-rk">${i+1}</span>${pAv(p.id,p.photo)}<span class="lgp-pn"><b>${esc(p.name)}</b><small class="tmc tlink" data-team="${p.team.id||''}" role="link" tabindex="0">${rCrest(p.team)}${esc(p.team.name||'')}</small></span><span class="lgp-gv num">${p.g}</span></div>`).join('')}</div></div>`;
+}
+async function lgpArt(C){
+ const k=LGP.topTab;let L=null;try{L=await lgpTop(C,k);}catch(e){L=null;}
+ const seg=`<div class="seg lgp-seg">${Object.entries(TOPK).map(([kk,v])=>`<button aria-pressed="${kk===k}" data-lgpk="${kk}">${v[1]}</button>`).join('')}</div>`;
+ if(!L||!L.length)return `${seg}<div class="empty" style="margin-top:12px">Ainda não há dados de ${TOPK[k][1].toLowerCase()} desta liga na API.</div>`;
+ const col=k==='gols'?['Gols','g']:k==='assist'?['Assist.','a']:['Amarelos','y'];
+ const rows=L.slice(0,20).map((p,i)=>{const mpg=k==='gols'&&p.g?Math.round(p.min/p.g):null;return `<tr><td class="pos l"><span>${i+1}</span></td><td class="l"><span class="tm-pl">${pAv(p.id,p.photo)}<span>${esc(p.name)}<small class="tmc tlink" data-team="${p.team.id||''}" role="link" tabindex="0">${rCrest(p.team)}${esc(p.team.name||'')}</small></span></span></td><td class="pts">${p[col[1]]}</td>${k==='gols'?`<td class="opt">${p.pen||0}</td><td>${p.a}</td><td class="opt">${mpg?mpg+"'":'–'}</td>`:k==='assist'?`<td>${p.g}</td>`:`<td>${p.r}</td>`}<td>${p.j}</td><td>${p.rt?`<span class="rt" style="background:${rcol(p.rt)}">${f1(p.rt)}</span>`:'–'}</td></tr>`;}).join('');
+ const th=k==='gols'?'<th>Gols</th><th class="opt" title="Gols de pênalti">Pên.</th><th title="Assistências">A</th><th class="opt" title="Minutos por gol">Min/gol</th>':k==='assist'?'<th>Assist.</th><th>Gols</th>':'<th>Amarelos</th><th>Verm.</th>';
+ const top=L[0];const lead=k==='gols'?`${top.name} lidera com ${pl(top.g,'gol(s)')}${top.pen?`, ${top.pen} de pênalti`:''}.`:k==='assist'?`${top.name} lidera com ${pl(top.a,'assistência(s)')}.`:`${top.name} lidera com ${pl(top.y,'amarelo(s)')}.`;
+ return `${seg}<div class="card" style="margin-top:12px"><div class="card-h"><div><h3>${TOPK[k][1]}</h3><div class="sub">${esc(lead)}</div></div></div><div class="tbl-wrap"><table class="tbl lgp-top"><thead><tr><th class="l">#</th><th class="l">Jogador</th>${th}<th title="Jogos">J</th><th>Nota</th></tr></thead><tbody>${rows}</tbody></table></div><p class="chart-note">Dados da API-Football, atualizados a cada 6 horas. Toque no time para abrir a página dele.</p></div>`;
+}
+function lgpNums(C){
+ const F=C.done;if(F.length<5)return '';const n=F.length;const G=F.map(f=>({h:f.goals.home||0,a:f.goals.away||0,f}));
+ const goals=G.reduce((s,x)=>s+x.h+x.a,0),hw=G.filter(x=>x.h>x.a).length,dr=G.filter(x=>x.h===x.a).length,aw=n-hw-dr;
+ const o25=G.filter(x=>x.h+x.a>=3).length,btts=G.filter(x=>x.h>0&&x.a>0).length,z0=G.filter(x=>x.h+x.a===0).length;
+ const big=G.slice().sort((x,y)=>Math.abs(y.h-y.a)-Math.abs(x.h-x.a)||(y.h+y.a)-(x.h+x.a))[0],most=G.slice().sort((x,y)=>(y.h+y.a)-(x.h+x.a))[0];
+ const t=(v,l)=>`<div class="tile"><b class="num">${v}</b><span>${l}</span></div>`;
+ const gm=x=>`${esc(x.f.teams.home.name)} ${x.h}–${x.a} ${esc(x.f.teams.away.name)}`;
+ return `<div class="card"><div class="card-h"><div><h3>Números da temporada</h3><div class="sub">${pl(n,'jogo(s)')} encerrado(s)</div></div></div><div class="ref-tiles" style="margin-top:0">${t(f1(goals/n,2),'gols por jogo')}${t(Math.round(hw/n*100)+'%','vitórias do mandante')}${t(Math.round(dr/n*100)+'%','empates')}${t(Math.round(aw/n*100)+'%','vitórias do visitante')}${t(Math.round(o25/n*100)+'%','jogos com 3+ gols')}${t(Math.round(btts/n*100)+'%','os dois marcam')}</div>
+ <div class="crew" style="margin-top:12px"><div><span>Maior goleada</span><b>${gm(big)}</b></div><div><span>Jogo com mais gols</span><b>${gm(most)}</b></div><div><span>Jogos 0 a 0</span><b class="num">${z0}</b></div><div><span>Total de gols</span><b class="num">${goals}</b></div></div></div>`;
+}
+function lgpResumo(C){
+ const r=C.rounds.find(x=>x.name===C.cur);
+ return `<div class="tm-grid"><div class="tm-col"><div class="card lgp-games"><div class="card-h"><div><h3>${C.cur?esc(lgRoundLabel(C.cur)):'Jogos'}</h3><div class="sub">${r?`${r.games.length} jogos · rodada atual`:''}</div></div><button class="btn sm" data-lgpt="jogos">Todas as rodadas</button></div><div class="lgp-list">${r?lgpRoundBlock(C,r.name,10):'<p class="acc-wait">Sem jogos marcados.</p>'}</div></div>${lgpNums(C)}</div>
+ <div class="tm-col">${lgpTabela(C,true)}<div id="lgp-art"><div class="card"><div class="card-h"><h3>Artilharia</h3></div><p class="acc-wait">Carregando…</p></div></div></div></div>`;
+}
+
 /* ================= navegação ================= */
-let view='partidas';const VIEWS=['partidas','centro','ligas','lab','estudio','acertos','time'];
+let view='partidas';const VIEWS=['partidas','centro','ligas','lab','estudio','acertos','time','liga'];
 function show(v,push=true){
  view=v;$$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));$$('.bn').forEach(b=>{if(b.dataset.go===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});$$('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
  if(v!=='centro')stopReplay();
- if(v==='partidas')(REAL.on?renderPartidasReal:renderPartidas)();if(v==='centro')(REAL.on?renderCentroReal:renderCentro)();if(v==='ligas')(REAL.on?renderLigasReal:renderLeagues)();if(v==='lab')renderLabAny();if(v==='acertos')renderAcertos();if(v==='time')renderTime();if(v==='estudio'){nvBar();nvLoad();if(rsOn()){const n=$('#v-estudio .real-note');if(n)n.hidden=true;renderStudioReal();}else{renderStudioControls();generate();}}
- if(v!=='time'){try{localStorage.setItem('telscore:view',v);}catch(e){}}
- if(push){try{history.replaceState(null,'','#'+(v==='time'?'time-'+TM.id:v));}catch(e){}}
+ if(v==='partidas')(REAL.on?renderPartidasReal:renderPartidas)();if(v==='centro')(REAL.on?renderCentroReal:renderCentro)();if(v==='ligas')(REAL.on?renderLigasReal:renderLeagues)();if(v==='lab')renderLabAny();if(v==='acertos')renderAcertos();if(v==='time')renderTime();if(v==='liga')renderLiga();if(v==='estudio'){nvBar();nvLoad();if(rsOn()){const n=$('#v-estudio .real-note');if(n)n.hidden=true;renderStudioReal();}else{renderStudioControls();generate();}}
+ if(v!=='time'&&v!=='liga'){try{localStorage.setItem('telscore:view',v);}catch(e){}}
+ if(push){try{history.replaceState(null,'','#'+(v==='time'?'time-'+TM.id:v==='liga'?'liga-'+LGP.id:v));}catch(e){}}
  window.scrollTo(0,0);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.dataset&&e.target.dataset.team){e.preventDefault();openTeam(+e.target.dataset.team,e.target.dataset.tlg?+e.target.dataset.tlg:null);}});
@@ -5173,6 +5322,13 @@ document.addEventListener('click',e=>{
  if(t.classList.contains('tab'))return show(t.dataset.v);
  if(t.dataset.team){e.preventDefault();return openTeam(+t.dataset.team,t.dataset.tlg?+t.dataset.tlg:null);}
  if(t.dataset.tmt){TM.tab=t.dataset.tmt;return renderTime();}
+ if(t.dataset.lgp){e.preventDefault();return openLeague(+t.dataset.lgp,t.dataset.lgs?+t.dataset.lgs:null);}
+ if(t.dataset.lgpt){LGP.tab=t.dataset.lgpt;window.scrollTo(0,Math.min(window.scrollY,$('#lgp-tabs').getBoundingClientRect().top+window.scrollY-10));return renderLiga();}
+ if(t.dataset.lgpr!=null&&LGP.ctx){const k=+t.dataset.lgpr;const r=LGP.ctx.rounds[k];if(r){LGP.round=r.name;return renderLiga();}return;}
+ if(t.dataset.lgpk){LGP.topTab=t.dataset.lgpk;return renderLiga();}
+ if(t.dataset.lgptab){REAL.lgTab=+t.dataset.lgptab;return show('ligas');}
+ if(t.id==='lgp-back')return show(LGP.prev&&LGP.prev!=='liga'?LGP.prev:'partidas');
+ if(t.id==='lg-page')return openLeague(REAL.lgTab);
  if(t.dataset.tmlg){REAL.lgTab=+t.dataset.tmlg;return show('ligas');}
  if(t.id==='tm-back')return show(TM.prev&&TM.prev!=='time'?TM.prev:'partidas');
  if(t.id==='acc-reload')return renderAcertos(true);
@@ -5269,7 +5425,7 @@ const txFix=root=>{try{const w=document.createTreeWalker(root,NodeFilter.SHOW_TE
 try{new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData'){const v=m.target.nodeValue,f=sing1(v);if(f!==v)m.target.nodeValue=f;}else m.addedNodes.forEach(x=>{if(x.nodeType===3){const f=sing1(x.nodeValue);if(f!==x.nodeValue)x.nodeValue=f;}else if(x.nodeType===1&&x.tagName!=='SCRIPT'&&x.tagName!=='STYLE')txFix(x);});}}).observe(document.body,{childList:true,subtree:true,characterData:true});txFix(document.body);}catch(e){}
 syncDl();vMount();renderSaved();
 let start='partidas';const hsh=(location.hash||'').slice(1);
-if(VIEWS.includes(hsh))start=hsh;else if(/^time-\d+$/.test(hsh)){TM.id=+hsh.slice(5);start='time';}else{try{const s=localStorage.getItem('telscore:view');if(s&&VIEWS.includes(s))start=s;}catch(e){}}
+if(VIEWS.includes(hsh))start=hsh;else if(/^time-\d+$/.test(hsh)){TM.id=+hsh.slice(5);start='time';}else if(/^liga-\d+$/.test(hsh)){LGP.id=+hsh.slice(5);LGP.season=RLmap[LGP.id]?null:null;start='liga';}else{try{const s=localStorage.getItem('telscore:view');if(s&&VIEWS.includes(s))start=s;}catch(e){}}
 (async()=>{
  renderClock();await Promise.all([bootReal(),bootSB()]);applyMode();applySB();
  if(REAL.on)renderTickerReal();else renderTicker();
