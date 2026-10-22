@@ -192,9 +192,31 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
 - Com a nuvem ligada, todo post salvo vai para o banco e aparece no celular e no computador. Excluir em um aparelho exclui em todos. Sem internet, o post fica no aparelho e sobe na próxima vez.
 - A senha fica guardada só no navegador onde você entrou. **Sair** desliga a nuvem naquele aparelho sem apagar nada.
 
+## Ao vivo mais rápido
+
+- A API-Football atualiza os jogos a cada ~15 segundos. Com o plano Pro, o servidor guarda a resposta ao vivo por **15 s** (antes 2 min) e o site confere a cada 15 s; ao voltar para o app, atualiza na hora.
+- Corrigido: depois das 21h (Brasília) a lista de jogos do dia era tratada como "dia passado" (o dia em UTC já tinha virado) e ficava guardada por horas, atrasando o início dos jogos da noite. Agora "hoje" é calculado no fuso do site, e listas com jogo começando ou acabando de terminar são conferidas a cada minuto.
+- Jogo que começa em até 2 horas é conferido de minuto em minuto, para pegar o apito inicial.
+- `CACHE_LIVE_SECONDS` continua valendo para ajustar (padrão `15`).
+- Gasto estimado em dia cheio de jogos (8 horas com bola rolando e várias centrais abertas): até uns 4.000 requisições, dentro das 7.500 do Pro. Para economizar, use `CACHE_LIVE_SECONDS` = `30`.
+
+## Estúdio: pré-jogo completo
+
+- Ao abrir um jogo que ainda não começou, o Estúdio busca também a tabela, as tendências dos últimos 10 jogos de cada time, os destaques do elenco (artilheiro, garçom, melhor nota), o perfil do árbitro e os confrontos com estatísticas.
+- Formatos novos de pré-jogo: **Guia completo do jogo** (até 9 slides), **Raio-x dos gols**, **Tendências dos times**, **xG da temporada**, **Mandante x visitante**, **O que está em jogo** (tabela e para onde cada um vai com a vitória), **Jogadores para ficar de olho** e **Quem apita o jogo**. Cada um só aparece quando há dados para ele.
+- Formatos antigos melhorados: Retrospecto (lista visual e xG dos confrontos), Ficha do jogo (árbitro, tabela e favorito) e Momento dos times (últimos 10 jogos).
+- Plataformas novas: **Post único** (uma imagem 1080×1350 com capa e os 3 pontos principais) e **WhatsApp e Telegram** (mensagem com *negrito* e _itálico_ pronta para grupos e canais).
+- **Vídeo animado das tabelas:** agora funciona nos posts de tabela, com abertura em pódio (1º, 2º e 3º), a classificação animada e as leituras.
+
+## Foto do estádio na capa
+
+- A capa confere se a foto do estádio realmente abre. Se a API não tiver foto (ou o jogo vier sem estádio cadastrado), tenta a foto do estádio do clube mandante, quando é o mesmo estádio.
+- Se não houver foto, a capa usa o fundo da TEL.SCORE e o Estúdio avisa embaixo de "Foto de capa", sugerindo escolher uma foto.
+- O servidor de imagens aceita fotos de até 4 MB (antes 2 MB) e as imagens têm até 15 s para carregar antes de gerar os PNGs.
+
 ## Consumo de requisições
 
-O plano grátis da API-Football permite 100 requisições por dia. Graças ao cache, cada tela é buscada no máximo uma vez por período, não importa quantas pessoas estejam no site:
+O plano grátis da API-Football permite 100 requisições por dia; o Pro, 7.500 (o site está no Pro). Graças ao cache, cada tela é buscada no máximo uma vez por período, não importa quantas pessoas estejam no site:
 
 | Pedido | Renovado a cada |
 |---|---|
