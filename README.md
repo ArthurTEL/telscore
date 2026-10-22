@@ -131,6 +131,9 @@ O site é pensado primeiro para o celular (é por onde chega quem vem do Instagr
 - Escalações: o campinho aparece primeiro, depois as listas.
 - Tabelas largas (jogadores, análise tática) rolam para o lado com a coluna do jogador fixa.
 - No Estúdio, ao escolher um formato a tela desce até a prévia do post.
+- **Atualizar:** botão ⟳ no canto de cima (no celular e no computador) e **puxar para baixo** no topo de qualquer tela. Atualiza jogos, placares, tabelas e páginas sem recarregar o site. Se houver versão nova da TEL.SCORE publicada, o botão recarrega o site sozinho, e ao voltar para o app aparece o aviso "Nova versão disponível" (não precisa mais de Ctrl+F5).
+- **Barra de baixo:** Jogos, Ligas, Central, Estúdio e **Mais**. O "Mais" abre um painel com Análise tática, Placar de acertos, Tabelas, Estúdio, atalhos para a página de cada liga (com escudo), o tema dia/noite e o botão de atualizar.
+- **Topo fixo e limpo no celular:** logo e botão de atualizar sempre à vista; o tema foi para o "Mais" e a faixa de placares do topo some no celular (os jogos já estão na página Jogos). As abas da Central, do time e da liga ficam fixas logo abaixo do topo.
 - **Modo compacto (telas até 720 px), no estilo dos apps de placar:**
   - Na página de Partidas a lista de jogos vem primeiro; o jogo em destaque, o Radar do dia e o placar de acertos vão para baixo.
   - Linhas de jogo baixas, com escudos pequenos e sem estádio e árbitro (eles aparecem na central).
