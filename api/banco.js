@@ -138,83 +138,90 @@ async function idsGuardados(c, ids) {
 
 async function coletar(c, req, res) {
   if (!cronOk(req)) return send(res, 401, { ok: false, error: 'Não autorizado.' });
-  let restante = null, limite = null;
-  try {
-    const s = await apiFootball('status'); // não conta na cota
-    const rq = s && s.requests;
-    if (rq && rq.limit_day) { restante = rq.limit_day - rq.current; limite = rq.limit_day; }
-  } catch (e) { /* segue com o limite padrão */ }
-  // plano Pro (milhares de requisições por dia): coleta mais por vez; plano grátis: devagar
-  const grande = limite != null && limite >= 1000;
-  const maxCalls = Math.max(1, int(process.env.COLETA_MAX, grande ? 40 : 15));
-  const reserva = Math.max(0, int(process.env.COLETA_RESERVA, grande ? 1500 : 35));
-  const budget = restante == null ? maxCalls : Math.min(maxCalls, restante - reserva);
-  if (budget <= 0) return send(res, 200, { ok: true, pulado: 'cota do dia baixa', restante });
+  const t0 = Date.now();
+  // a função da Vercel tem tempo limitado: para de pegar trabalho novo perto dos 40 s e continua na próxima coleta
+  const temTempo = () => Date.now() - t0 < 40000;
+  const R = { quando: new Date().toISOString(), ok: false, etapa: 'cota', chamadas: 0, salvos: 0, aguardando_estatisticas: 0, faltam: 0, restante: null, erro: null };
+  const run = async () => {
+    let limite = null;
+    try {
+      const st = await apiFootball('status'); // não conta na cota
+      const rq = st && st.requests;
+      if (rq && rq.limit_day) { R.restante = rq.limit_day - rq.current; limite = rq.limit_day; }
+    } catch (e) { /* segue com o limite padrão */ }
+    // plano Pro (milhares de requisições por dia): coleta mais por vez; plano grátis: devagar
+    const grande = limite != null && limite >= 1000;
+    const maxCalls = Math.max(1, int(process.env.COLETA_MAX, grande ? 40 : 15));
+    const reserva = Math.max(0, int(process.env.COLETA_RESERVA, grande ? 1500 : 35));
+    const budget = R.restante == null ? maxCalls : Math.min(maxCalls, R.restante - reserva);
+    if (budget <= 0) { R.ok = true; R.pulado = 'cota do dia baixa'; return; }
 
-  let calls = 0, salvos = 0, semEstat = 0;
-  const fila = [];
-  const naFila = new Set();
-  const add = id => { if (!naFila.has(id)) { naFila.add(id); fila.push(id); } };
-  const now = new Date();
+    const fila = [];
+    const naFila = new Set();
+    const add = id => { if (!naFila.has(id)) { naFila.add(id); fila.push(id); } };
+    const now = new Date();
 
-  // 1) jogos de ontem e de hoje (pega o que terminou desde a última coleta)
-  const recentes = [];
-  for (const d of [ymd(new Date(now - DAY)), ymd(now)]) {
-    if (calls >= budget) break;
-    const list = await apiFootball(`fixtures?date=${d}&timezone=${encodeURIComponent(TZ)}`);
-    calls++;
-    list.forEach(f => { if (f.league && LIGA_IDS.has(f.league.id) && FINISHED.has(f.fixture.status.short)) recentes.push(f.fixture.id); });
-  }
-  if (recentes.length) {
-    const have = await idsGuardados(c, recentes);
-    recentes.filter(id => !have.has(id)).forEach(add);
-  }
-
-  // 2) completar a temporada atual de cada liga; depois, a temporada anterior
-  const plano = [...LIGAS.map(l => ({ id: l.id, s: seasonOf(l.id, now), atual: true })), ...LIGAS.map(l => ({ id: l.id, s: seasonOf(l.id, now) - 1, atual: false }))];
-  for (const p of plano) {
-    // só lista mais uma temporada se, depois dela, ainda sobrar requisição para os detalhes da fila
-    if (calls + Math.ceil(fila.length / 20) + 1 >= budget) break;
-    const chave = `lista:${p.id}:${p.s}`;
-    const { data: ctl } = await sb(c, `coleta?chave=eq.${encodeURIComponent(chave)}&select=valor,atualizado_em`);
-    const row = ctl && ctl[0];
-    const idade = row ? Date.now() - Date.parse(row.atualizado_em) : Infinity;
-    let ids;
-    if (row && idade < (p.atual ? 20 * HOUR : 30 * DAY)) ids = (row.valor && row.valor.ids) || [];
-    else {
-      const list = await apiFootball(`fixtures?league=${p.id}&season=${p.s}&status=FT-AET-PEN&timezone=${encodeURIComponent(TZ)}`);
-      calls++;
-      ids = list.map(f => f.fixture.id);
-      await sb(c, 'coleta', { method: 'POST', body: { chave, valor: { ids, n: ids.length }, atualizado_em: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' });
+    // 1) lista dos jogos encerrados de cada liga (temporada atual, renovada a cada 6 h; depois a anterior)
+    R.etapa = 'listas';
+    const plano = [...LIGAS.map(l => ({ id: l.id, s: seasonOf(l.id, now), atual: true })), ...LIGAS.map(l => ({ id: l.id, s: seasonOf(l.id, now) - 1, atual: false }))];
+    for (const p of plano) {
+      if (!temTempo()) break;
+      // só lista mais uma temporada se, depois dela, ainda sobrar requisição para os detalhes da fila
+      if (R.chamadas + Math.ceil(fila.length / 20) + 1 >= budget) break;
+      const chave = `lista:${p.id}:${p.s}`;
+      const { data: ctl } = await sb(c, `coleta?chave=eq.${encodeURIComponent(chave)}&select=valor,atualizado_em`);
+      const row = ctl && ctl[0];
+      const idade = row ? Date.now() - Date.parse(row.atualizado_em) : Infinity;
+      let ids;
+      if (row && idade < (p.atual ? 6 * HOUR : 30 * DAY)) ids = (row.valor && row.valor.ids) || [];
+      else {
+        const list = await apiFootball(`fixtures?league=${p.id}&season=${p.s}&status=FT-AET-PEN`);
+        R.chamadas++;
+        ids = list.map(f => f.fixture.id);
+        await sb(c, 'coleta', { method: 'POST', body: { chave, valor: { ids, n: ids.length }, atualizado_em: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' });
+      }
+      if (!ids.length) continue;
+      const have = new Set((await sbAll(c, `jogos?liga_id=eq.${p.id}&temporada=eq.${p.s}&select=fixture_id`)).map(r => Number(r.fixture_id)));
+      ids.filter(id => !have.has(id)).forEach(add);
     }
-    if (!ids.length) continue;
-    const have = new Set((await sbAll(c, `jogos?liga_id=eq.${p.id}&temporada=eq.${p.s}&select=fixture_id`)).map(r => Number(r.fixture_id)));
-    ids.filter(id => !have.has(id)).forEach(add);
-  }
 
-  // 3) detalhes (estatísticas e eventos), 20 jogos por requisição
-  const lote = async chunk => {
-    const list = await apiFootball(`fixtures?ids=${chunk.join('-')}&timezone=${encodeURIComponent(TZ)}`);
-    const rows = [];
-    list.forEach(f => {
-      if (!FINISHED.has(f.fixture.status.short)) return;
-      const r = rowOf(f);
-      // jogo recém-terminado ainda sem estatísticas: tenta de novo na próxima coleta
-      if (!r.estatisticas && Date.now() - Date.parse(r.data) < 2 * DAY) { semEstat++; return; }
-      rows.push(r);
-    });
-    if (rows.length) {
-      await sb(c, 'jogos', { method: 'POST', body: rows, prefer: 'resolution=merge-duplicates,return=minimal' });
-      salvos += rows.length;
+    // 2) detalhes (estatísticas e eventos), 20 jogos por requisição, 4 ao mesmo tempo
+    R.etapa = 'detalhes';
+    const lote = async chunk => {
+      const list = await apiFootball(`fixtures?ids=${chunk.join('-')}&timezone=${encodeURIComponent(TZ)}`);
+      const rows = [];
+      list.forEach(f => {
+        if (!FINISHED.has(f.fixture.status.short)) return;
+        const r = rowOf(f);
+        // jogo recém-terminado ainda sem estatísticas: tenta de novo na próxima coleta
+        if (!r.estatisticas && Date.now() - Date.parse(r.data) < 2 * DAY) { R.aguardando_estatisticas++; return; }
+        rows.push(r);
+      });
+      if (rows.length) {
+        await sb(c, 'jogos', { method: 'POST', body: rows, prefer: 'resolution=merge-duplicates,return=minimal' });
+        R.salvos += rows.length;
+      }
+    };
+    while (fila.length && R.chamadas < budget && temTempo()) {
+      const grupo = [];
+      while (grupo.length < 4 && fila.length && R.chamadas < budget) { grupo.push(fila.splice(0, 20)); R.chamadas++; }
+      await Promise.all(grupo.map(lote));
     }
+    R.faltam = fila.length;
+    R.etapa = 'fim';
+    R.ok = true;
   };
-  // 4 lotes ao mesmo tempo, para caber no tempo da função
-  while (fila.length && calls < budget) {
-    const grupo = [];
-    while (grupo.length < 4 && fila.length && calls < budget) { grupo.push(fila.splice(0, 20)); calls++; }
-    await Promise.all(grupo.map(lote));
+  try {
+    await run();
+  } catch (e) {
+    R.erro = String((e && e.message) || e).slice(0, 300);
+  } finally {
+    R.segundos = Math.round((Date.now() - t0) / 100) / 10;
+    if (R.restante != null) R.restante -= R.chamadas;
+    // guarda o resultado da última coleta para conferir em /api/banco?acao=resumo
+    try { await sb(c, 'coleta', { method: 'POST', body: { chave: 'ultima_coleta', valor: R, atualizado_em: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) { /* sem registro */ }
   }
-  return send(res, 200, { ok: true, chamadas: calls, salvos, aguardando_estatisticas: semEstat, faltam: fila.length, restante: restante == null ? null : restante - calls });
+  return send(res, R.ok ? 200 : 500, R);
 }
 
 /* ---------------- leituras públicas ---------------- */
@@ -370,7 +377,9 @@ async function resumo(c, q, res) {
     const encerrados = data && data[0] && data[0].valor ? data[0].valor.n : null;
     out.push({ liga: l.id, temporada: s, guardados, encerrados });
   }
-  return send(res, 200, { ok: true, ligas: out }, 'public, s-maxage=600');
+  let ultima = null;
+  try { const { data } = await sb(c, 'coleta?chave=eq.ultima_coleta&select=valor'); ultima = data && data[0] ? data[0].valor : null; } catch (e) { ultima = null; }
+  return send(res, 200, { ok: true, ultima_coleta: ultima, ligas: out }, 'public, s-maxage=120');
 }
 
 module.exports = async (req, res) => {
