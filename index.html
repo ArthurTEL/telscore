@@ -6128,8 +6128,8 @@ function gateRender(){
   <form class="gate-f" data-gform="email" novalidate><label class="gate-l" for="gate-email">Seu e-mail</label><input id="gate-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="voce@email.com" value="${esc(CONTA.email)}" required><button class="btn primary gate-go" type="submit"${CONTA.busy?' disabled':''}>${CONTA.busy?'Enviando…':'Receber código'}</button></form>${err}
   <p class="gate-fine">Usamos o seu e-mail só para o login e para guardar seus favoritos.</p>`;}
  else if(S==='codigo'){const left=Math.max(0,Math.ceil((CONTA.coolUntil-Date.now())/1000));
-  b.innerHTML=`<h2>Digite o código</h2><p class="gate-p">Enviamos um código para <b>${esc(CONTA.email)}</b>. Ele chega em alguns segundos; se não aparecer, olhe a caixa de spam ou promoções.</p>
-  <form class="gate-f" data-gform="codigo" novalidate><label class="gate-l" for="gate-cod">Código</label><input id="gate-cod" class="gate-cod" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="12" placeholder="000000" required><button class="btn primary gate-go" type="submit"${CONTA.busy?' disabled':''}>${CONTA.busy?'Conferindo…':'Entrar'}</button></form>${err}
+  b.innerHTML=`<h2>Digite o código</h2><p class="gate-p">Enviamos um código para <b>${esc(CONTA.email)}</b>. Digite todos os números e toque em Entrar. Se não aparecer, olhe a caixa de spam ou promoções. Use sempre o código do <b>último</b> e-mail.</p>
+  <form class="gate-f" data-gform="codigo" novalidate><label class="gate-l" for="gate-cod">Código</label><input id="gate-cod" class="gate-cod" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="10" placeholder="código" required><button class="btn primary gate-go" type="submit"${CONTA.busy?' disabled':''}>${CONTA.busy?'Conferindo…':'Entrar'}</button></form>${err}
   <div class="gate-links"><button type="button" data-gresend ${left?'disabled':''}>${left?`Reenviar código em ${left}s`:'Reenviar código'}</button><button type="button" data-gstep="email">Trocar e-mail</button></div>`;}
  else if(S==='ligas'){const D=CONTA.draft;
   b.innerHTML=`<h2>Quais ligas você acompanha?</h2><p class="gate-p">Os jogos delas aparecem primeiro. O resto fica guardado no botão "Ver todos os jogos".</p>
@@ -6167,7 +6167,7 @@ async function gateSubmit(kind){
   if(r.j.ok){CONTA.coolUntil=Date.now()+60000;gateStep('codigo');if(again)toast('Código reenviado.');setTimeout(()=>{const i=$('#gate-cod');if(i)i.focus();},200);}
   else{CONTA.err=r.j.error||'Não foi possível enviar o código.';gateRender();}
  }else if(kind==='codigo'){const codigo=(($('#gate-cod')||{}).value||'').replace(/\D/g,'');
-  if(codigo.length<6){CONTA.err='Digite o código de 6 dígitos que chegou no e-mail.';gateRender();return;}
+  if(codigo.length<6){CONTA.err='Digite o código inteiro que chegou no e-mail (todos os números).';gateRender();return;}
   CONTA.busy=true;CONTA.err='';gateRender();
   const r=await contaFetch('entrar',{method:'POST',body:{email:CONTA.email,codigo}}).catch(()=>({j:{ok:false,error:'Sem conexão. Confira a internet e tente de novo.'}}));CONTA.busy=false;
   if(r.j.ok&&r.j.sessao){CONTA.s={...r.j.sessao,email:r.j.sessao.email||CONTA.email};CONTA.p=r.j.perfil||{times:[],ligas:[]};favLoad(CONTA.p);contaSave();favRerender();
@@ -6183,7 +6183,7 @@ function gateWire(){
  const g=$('#gate');if(!g||g.dataset.ok)return;g.dataset.ok='1';
  g.addEventListener('submit',e=>{const f=e.target.closest('[data-gform]');if(!f)return;e.preventDefault();gateSubmit(f.dataset.gform);});
  g.addEventListener('input',e=>{if(e.target.id==='gate-tq'){CONTA.tq=e.target.value;const tabs=g.querySelector('.gate-tabs');if(tabs)tabs.hidden=CONTA.tq.trim().length>=3;clearTimeout(gateWire._q);gateWire._q=setTimeout(gateTeams,380);}
-  if(e.target.id==='gate-cod'){const v=e.target.value.replace(/\D/g,'');if(v.length===6&&!CONTA.busy)gateSubmit('codigo');}});
+  if(e.target.id==='gate-cod'){const v=e.target.value.replace(/\D/g,'');if(v!==e.target.value)e.target.value=v;}});
  g.addEventListener('click',e=>{const t=e.target.closest('button');if(!t||!g.contains(t))return;e.stopPropagation();
   if(t.id==='gate-x'){CONTA.draft=null;gateClose();return;}
   if(t.dataset.gstep){if(t.dataset.gstep==='email')CONTA.err='';gateStep(t.dataset.gstep);return;}
