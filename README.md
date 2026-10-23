@@ -225,6 +225,38 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
 - Plataformas novas: **Post único** (uma imagem 1080×1350 com capa e os 3 pontos principais) e **WhatsApp e Telegram** (mensagem com *negrito* e _itálico_ pronta para grupos e canais).
 - **Vídeo animado das tabelas:** agora funciona nos posts de tabela, com abertura em pódio (1º, 2º e 3º), a classificação animada e as leituras.
 
+## Estúdio: mata-mata (chaveamento)
+
+Em **Estúdio → Tabelas**, ao escolher uma copa (Libertadores, Sul-Americana, Champions, Europa League, Conference League ou **Copa do Brasil**), aparece a chave **Fase de grupos (ou Fase de liga) · Mata-mata · chaveamento** logo acima dos formatos. Quando o mata-mata já começou, o Estúdio abre direto nele. Na aba **Ligas**, cada copa também tem o botão **Gerar post do mata-mata** (ou da tabela). Os formatos do mata-mata:
+
+- **Chaveamento:** a chave das oitavas até a final, com escudos, placar agregado, pênaltis entre parênteses e quem avançou em vermelho; depois, um slide por fase.
+- **Confrontos da fase:** cada duelo da fase atual, com ida e volta e o que cada time precisa ("precisa vencer por 2 gols; vitória por 1 leva aos pênaltis").
+- **Quem avançou:** os classificados da última fase, a classificação mais tranquila, os jogos decididos nos pênaltis e a média de gols.
+- **Agenda do mata-mata:** os próximos jogos com data e hora e, entre parênteses, o placar da ida.
+- **O caminho de cada um:** quem cada time vivo eliminou até aqui (e a campanha na fase de grupos). Escolha um time em "Foco" para ele aparecer primeiro.
+- **Enquete: quem leva?:** com o chaveamento e as opções.
+
+Funciona em todos os formatos de saída (carrossel, post único, story, vídeo animado, WhatsApp, X etc.). Os confrontos saem da lista de jogos da competição, atualizada a cada 30 minutos.
+
+## Revisão dos posts
+
+- O carrossel agora tem até 10 slides (antes 5): nenhuma informação do post fica de fora; o que sobra entra no slide anterior.
+- Na classificação das copas com grupos, todos os grupos aparecem (antes, só 7).
+- O vídeo animado tem até 6 cenas de análise (8 no Guia completo e no mata-mata), com títulos de cena tirados do próprio texto.
+- **Pré-jogo:** todo vídeo ganhou a cena **Comparativo** (aproveitamento, gols marcados e sofridos por jogo, pontos nos últimos 5, xG da temporada e jogos sem sofrer gol, lado a lado). "Momento dos times" compara campanha e mandante em casa x visitante fora; "Jogadores para ficar de olho" abre com os artilheiros frente a frente.
+- O perfil do árbitro mostra o nome das competições em português.
+- Os escudos ficam inteiros dentro da bolinha, no site e nas imagens dos posts.
+
+### Revisão 2: comparação completa entre os times
+
+- **Estatísticas lado a lado:** novo visual com os dois times e até 10 números, cada um com barra saindo do centro e o melhor em vermelho (estilo app de placar).
+  - **Pós-jogo:** posse, xG, finalizações, no alvo, dentro da área, escanteios, passes, precisão, defesas do goleiro, faltas e cartões. Entra em Resumo em números, O placar mentiu?, Quem mandou no jogo, Frente a frente, Eficiência, Posse × perigo, Desenho tático, Ajuste do intervalo, Debate, Jogo pegado?, Números que ninguém viu, Enquete e Opinião forte.
+  - **Pré-jogo ("Frente a frente"):** posição e pontos na tabela, aproveitamento, gols marcados e sofridos por jogo, mandante em casa x visitante fora, jogos sem sofrer gol, xG criado e cedido, pontos nos últimos jogos e jogos com mais de 2,5 gols. Entra em quase todos os pré-jogos.
+- **Vídeo animado:** a cena de números agora é o "lado a lado" completo (antes eram só 5 barras), em tamanho grande para o celular.
+- **Slides que cortavam informação:** o slide de gols mostra todos os gols; o carrossel vai até 13 slides antes de juntar conteúdo; "Notas dos jogadores" mostra a nota certa no card de cada jogador.
+- **Prévia do jogo:** desfalques com os nomes (antes só a quantidade) e o confronto direto com os últimos jogos. No Guia completo, até 4 desfalques por time.
+- **Fase de grupos:** dois grupos por slide, com J, V, E, D, SG e PTS. As tabelas de liga também ganharam V, E e D.
+
 ## Foto do estádio na capa
 
 - A capa confere se a foto do estádio realmente abre. Se a API não tiver foto (ou o jogo vier sem estádio cadastrado), tenta a foto do estádio do clube mandante, quando é o mesmo estádio.
