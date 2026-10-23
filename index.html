@@ -1312,6 +1312,19 @@ body.gated{overflow:hidden}
   .gate-teams{max-height:none}
   .fav-btn{padding:5px 11px;font-size:12px}
 }
+
+.refresh.acct{position:relative}
+/* sem conta: botão "Entrar" (no celular, só o bonequinho em contorno); com conta: bonequinho preenchido em vermelho */
+.refresh.acct:not(.on){width:auto;padding:0 14px 0 11px;gap:6px;border-radius:999px;display:inline-flex;align-items:center}
+.refresh.acct svg{width:18px;height:18px}
+.refresh~.refresh{margin-left:6px!important}
+.refresh.acct:not(.on) .acct-t{font-weight:700;font-size:13px}
+.refresh.acct.on .acct-t{display:none}
+.refresh.acct.on{background:var(--red);border-color:var(--red);color:#fff}
+.refresh.acct.on svg{fill:#fff}
+@media (max-width:760px){.refresh.acct:not(.on){padding:0 12px 0 9px}}
+.acct-dot{position:absolute;right:5px;bottom:5px;width:9px;height:9px;border-radius:50%;background:#1FA45B;box-shadow:0 0 0 2px var(--bg)}
+.acct-dot[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -1330,7 +1343,7 @@ body.gated{overflow:hidden}
         <button class="tab" role="tab" data-v="lab" id="tab-lab">Análise tática</button>
         <button class="tab" role="tab" data-v="estudio" id="tab-estudio">Estúdio de posts</button>
       </nav>
-      <span class="mode" id="mode-pill" hidden></span><button class="refresh" id="btn-search" aria-label="Buscar time, liga ou jogo" title="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></button><button class="refresh" id="btn-refresh" aria-label="Atualizar jogos e placares" title="Atualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button><div class="theme" role="group" aria-label="Tema do site"><button data-theme-set="light" aria-pressed="false" title="Modo dia" aria-label="Modo dia"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg></button><button data-theme-set="dark" aria-pressed="false" title="Modo noturno" aria-label="Modo noturno"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8z"/></svg></button><button data-theme-set="auto" aria-pressed="false" title="Automático (segue o aparelho)" aria-label="Automático, segue o aparelho"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.6"/><path d="M8 2.4v11.2A5.6 5.6 0 0 0 8 2.4z" fill="currentColor" stroke="none"/></svg></button></div><div class="clock" id="clock"></div>
+      <span class="mode" id="mode-pill" hidden></span><button class="refresh acct" id="btn-conta" aria-label="Minha conta: entrar e favoritos" title="Minha conta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.4-4 4.4-6 8-6s6.6 2 8 6"/></svg><span class="acct-t">Entrar</span><i class="acct-dot" hidden></i></button><button class="refresh" id="btn-search" aria-label="Buscar time, liga ou jogo" title="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></button><button class="refresh" id="btn-refresh" aria-label="Atualizar jogos e placares" title="Atualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button><div class="theme" role="group" aria-label="Tema do site"><button data-theme-set="light" aria-pressed="false" title="Modo dia" aria-label="Modo dia"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg></button><button data-theme-set="dark" aria-pressed="false" title="Modo noturno" aria-label="Modo noturno"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8z"/></svg></button><button data-theme-set="auto" aria-pressed="false" title="Automático (segue o aparelho)" aria-label="Automático, segue o aparelho"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.6"/><path d="M8 2.4v11.2A5.6 5.6 0 0 0 8 2.4z" fill="currentColor" stroke="none"/></svg></button></div><div class="clock" id="clock"></div>
     </div>
   </div>
   <div class="wrap"><div class="ticker" aria-label="Placar dos jogos de hoje"><div class="tk-track" id="ticker"></div></div></div>
@@ -5890,6 +5903,7 @@ document.addEventListener('click',e=>{
  if(e.target.closest('#btn-refresh,#more-refresh')){doRefresh();}
  if(e.target.closest('#bn-more')){moreOpen();return;}
  if(e.target.closest('#btn-search')){buscaOpen();return;}
+ if(e.target.closest('#btn-conta')){if(CONTA.s)moreOpen();else gateOpen('email',!!(CONTA.cfg&&CONTA.cfg.login));return;}
  {const go=e.target.closest('[data-gopen]');if(go){const st=go.dataset.gopen;moreClose();setTimeout(()=>gateOpen(st,false),180);return;}}
  if(e.target.closest('[data-gsair]')){contaSair();return;}
  if(e.target.closest('[data-allg]')){REAL.allOpen=!REAL.allOpen;renderPartidasReal();return;}
@@ -6062,7 +6076,7 @@ async function contaFetch(acao,{method='GET',body,auth=false}={}){
 function contaEnd(msg){CONTA.s=null;CONTA.p={times:[],ligas:[]};favLoad(CONTA.p);contaSave();favRerender();
  if(CONTA.cfg&&CONTA.cfg.login){CONTA.email='';gateOpen('email',true);if(msg){CONTA.err=msg;gateRender();}}else if(msg)toast(msg);}
 async function contaBoot(){
- contaRead();
+ contaRead();try{favRerender();}catch(e){}
  let old=null;try{old=JSON.parse(localStorage.getItem('ts-conta-cfg')||'null');}catch(e){}
  if(location.protocol==='file:')return;
  const fresh=fetch('/api/conta?acao=config',{headers:{accept:'application/json'}}).then(r=>r.json()).then(j=>{if(j&&j.ok){CONTA.cfg=j;try{localStorage.setItem('ts-conta-cfg',JSON.stringify(j));}catch(e){}return j;}return null;}).catch(()=>null);
@@ -6077,6 +6091,7 @@ async function contaBoot(){
  }
 }
 function favRerender(){
+ try{const b=$('#btn-conta');if(b){const on=!!CONTA.s;b.classList.toggle('on',on);b.querySelector('.acct-dot').hidden=!on;b.title=on?`Minha conta (${CONTA.s.email||''})`:'Entrar';b.setAttribute('aria-label',on?`Minha conta: ${CONTA.s.email||''}`:'Entrar na TEL.SCORE');}}catch(e){}
  try{if(view==='partidas'&&REAL.on)renderPartidasReal();}catch(e){}
  try{favBtns();}catch(e){}
  try{if(!$('#more').hidden)moreConta();}catch(e){}
@@ -6100,7 +6115,7 @@ function gateOpen(step,mand){
  CONTA.err='';CONTA.step=step;gateRender();
  setTimeout(()=>{const i=g.querySelector('input');if(i&&window.innerWidth>720)i.focus();},250);
 }
-function gateClose(){if(CONTA.mand&&!CONTA.s)return;const g=$('#gate');g.classList.remove('on');document.body.classList.remove('noscroll','gated');setTimeout(()=>{g.hidden=true;},220);}
+function gateClose(){if(CONTA.mand&&!CONTA.s)return;try{favRerender();}catch(e){}const g=$('#gate');g.classList.remove('on');document.body.classList.remove('noscroll','gated');setTimeout(()=>{g.hidden=true;},220);}
 function gateStep(s){CONTA.step=s;CONTA.err='';if((s==='ligas'||s==='times')&&!CONTA.draft)CONTA.draft={ligas:new Set(FAV.ligas),times:new Map(FAV.times)};gateRender();const sc=$('#gate .gate-card');if(sc)sc.scrollTop=0;}
 const lgLogo=id=>imgUrl(`https://media.api-sports.io/football/leagues/${id}.png`);
 function gateRender(){
@@ -6155,7 +6170,7 @@ async function gateSubmit(kind){
   if(codigo.length<6){CONTA.err='Digite o código de 6 dígitos que chegou no e-mail.';gateRender();return;}
   CONTA.busy=true;CONTA.err='';gateRender();
   const r=await contaFetch('entrar',{method:'POST',body:{email:CONTA.email,codigo}}).catch(()=>({j:{ok:false,error:'Sem conexão. Confira a internet e tente de novo.'}}));CONTA.busy=false;
-  if(r.j.ok&&r.j.sessao){CONTA.s={...r.j.sessao,email:r.j.sessao.email||CONTA.email};CONTA.p=r.j.perfil||{times:[],ligas:[]};favLoad(CONTA.p);contaSave();
+  if(r.j.ok&&r.j.sessao){CONTA.s={...r.j.sessao,email:r.j.sessao.email||CONTA.email};CONTA.p=r.j.perfil||{times:[],ligas:[]};favLoad(CONTA.p);contaSave();favRerender();
    if(r.j.perfil&&(r.j.perfil.novo||(!r.j.perfil.times.length&&!r.j.perfil.ligas.length))){CONTA.draft=null;gateStep('ligas');}
    else{gateClose();favRerender();toast('Bem-vindo de volta! Seus favoritos já estão aqui.');}}
   else{CONTA.err=r.j.error||'Código errado ou vencido.';gateRender();}
