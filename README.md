@@ -173,10 +173,11 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
 ## Banco de jogos (partes 2 e 3)
 
 - Tabela `jogos` no Supabase, criada com `supabase/02_jogos_arbitros_posts.sql`. Guarda todo jogo encerrado das ligas acompanhadas com placar, xG (oficial ou estimado pelos chutes), finalizações, posse, escanteios, faltas, cartões, pênaltis, VAR e árbitro.
-- A coleta (`api/banco.js?acao=coletar`) roda sozinha 3 vezes por dia (01h15, 10h15 e 16h15 de Brasília): primeiro os jogos de ontem e de hoje, depois completa a temporada atual de cada liga e, por fim, a temporada anterior. Busca 20 jogos por requisição, usa no máximo 15 requisições por vez e nunca deixa o dia com menos de 35 requisições para o site.
+- A coleta (`api/banco.js?acao=coletar`) roda sozinha 5 vezes por dia (01h15, 05h15, 10h15, 16h15 e 20h15 de Brasília): completa a temporada atual de cada liga e, depois, a temporada anterior das ligas principais. Busca 20 jogos por requisição, usa no máximo 70 requisições por vez no plano Pro (15 no grátis) e nunca deixa o dia com menos de 1.500 requisições para o site (35 no grátis).
+- **Para o banco não crescer demais:** as ligas da segunda prateleira (Portugal, Holanda, Argentina, Colômbia, Conference League e as segundas divisões) guardam só a temporada atual, e a Conference League não guarda as fases qualificatórias. Cada jogo ocupa uns 2 KB; com as 22 ligas o banco fica na casa de 20 a 30 MB por ano, bem longe do limite de 500 MB do Supabase grátis. O total aparece em `total_jogos` no resumo.
 - Jogo que acabou de terminar e ainda não tem estatísticas na API é buscado de novo na coleta seguinte.
 - O que o site ganha:
-  - **Tabela das ligas:** colunas xG e xGC (por jogo) e ±xPts (pontos reais menos os pontos que o xG daria), gráfico "Pontos − xPts" e novas leituras ("soma mais do que joga"). No celular aparece só o ±xPts.
+  - **Tabela das ligas:** colunas xG e xGC (por jogo) e ±xPts (pontos reais menos os pontos que o xG daria), gráfico "Pontos − xPts" e novas leituras ("soma mais do que joga"). No celular, a tabela mostra tudo e é só arrastar para o lado.
   - **Análise TEL.SCORE:** usa o xG da temporada inteira junto com o dos últimos 5 jogos, e mostra os dois lado a lado.
   - **Temporada (Central do jogo):** card "xG na temporada", com casa e fora e xPts.
   - **Arbitragem:** perfil do árbitro em todas as competições guardadas: amarelos, vermelhos, faltas e pênaltis por jogo, e resultados.
@@ -249,7 +250,22 @@ O plano grátis serve para testar. Para acompanhar rodadas inteiras ao vivo, o p
 
 ## Ligas acompanhadas
 
-Estão na lista `RL` dentro do `index.html` (procure por "Ligas acompanhadas"). Para incluir outra, adicione o id da competição na API-Football.
+São 22, organizadas em grupos no site (aba Ligas, menu Mais e seletores do Estúdio):
+
+| Grupo | Ligas (id na API-Football) |
+|---|---|
+| Brasil | Brasileirão Série A (71), Série B (72), Copa do Brasil (73) |
+| Copas | Libertadores (13), Sul-Americana (11), Champions League (2), Europa League (3), Conference League (848) |
+| Europa | Premier League (39), La Liga (140), Serie A (135), Bundesliga (78), Ligue 1 (61) |
+| Mais Europa | Liga Portugal (94), Eredivisie (88) |
+| América do Sul | Liga Argentina (128), Liga Colombiana (239) |
+| Segundas divisões | Championship (40), La Liga 2 (141), Serie B italiana (136), 2. Bundesliga (79), Ligue 2 (62) |
+
+- Estão na lista `RL` dentro do `index.html` (procure por "Ligas acompanhadas"), com o grupo de cada uma. Para incluir outra, adicione o id da API-Football ali **e** na lista `LIGAS` do `api/banco.js` (para o banco guardar os jogos).
+- **Ligas em fases (Argentina e Colômbia):** a tabela mostra a fase atual (por exemplo, Clausura · Grupo A) e botões para as outras fases: o outro grupo, a tabela anual e as fases já encerradas. As rodadas aparecem como "Clausura · Rodada 12".
+- **Zonas novas na tabela:** acesso direto, playoff de acesso (segundas divisões) e "classifica para os playoffs" (Argentina e Colômbia).
+- A Conference League funciona como a Champions e a Europa League: fase de liga com 36 clubes e aba de mata-mata.
+- O nome da liga colombiana aparece como "Liga Colombiana", sem o nome do patrocinador.
 
 ## Créditos
 
