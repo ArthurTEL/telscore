@@ -157,6 +157,7 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
    - `SUPABASE_SECRET_KEY` = chave secreta do Supabase (`sb_secret_...`, em Settings → API Keys). Fica só no servidor.
    - `CRON_SECRET` = uma senha longa inventada por você. A Vercel manda essa senha quando roda a conferência agendada.
    - `POSTS_SENHA` = a senha que você digita no Estúdio para ligar os posts na nuvem (use uma senha longa, só sua).
+   - `LOGIN_ATIVO` = `sim` para exigir a entrada por código antes do site (só depois de configurar o envio de e-mails; veja "Contas, favoritos e busca").
    - Opcional: `COLETA_MAX` (padrão `15`) = máximo de requisições da API por coleta; `COLETA_RESERVA` (padrão `35`) = requisições do dia que ficam guardadas para o site.
 2. Faça um novo deploy (**Deployments → ⋯ → Redeploy**). Variáveis novas só valem depois de um deploy.
 
@@ -184,6 +185,32 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
   - **Confronto direto:** médias de xG, finalizações, posse, escanteios e cartões nos confrontos guardados.
 - Progresso da coleta: abra `https://www.telscore.com.br/api/banco?acao=resumo` (jogos guardados por liga e, em `ultima_coleta`, o resultado da última coleta: quando rodou, quantas requisições usou, quantos jogos salvou e, se deu errado, o erro).
 - A coleta trabalha no máximo uns 40 segundos por vez e continua de onde parou na próxima.
+
+## Contas, favoritos e busca (parte 5)
+
+- **Entrada por código no e-mail (sem senha):** a pessoa digita o e-mail, recebe um código de 6 dígitos e entra. A sessão fica salva no aparelho (renova sozinha); os favoritos ficam no Supabase e aparecem em qualquer aparelho.
+- **Primeiro acesso:** depois do código, escolhe as ligas e os times favoritos (busca pelo nome ou lista de cada liga).
+- **Jogos:** a página abre com **Seus times** no topo, depois as **ligas favoritas**; os outros jogos ficam recolhidos no botão **Ver todos os jogos do dia**. Escolhendo uma liga nos filtros, aparece tudo daquela liga.
+- **Seguir:** botão **☆ Seguir** na página de cada time e de cada liga. A Central do jogo abre de preferência num jogo dos favoritos.
+- **Minha conta** (menu Mais): e-mail, atalhos para os times favoritos, **Editar favoritos** e **Sair**.
+- **Busca** (lupa no topo): times (inclusive de outras ligas, pela API), ligas e jogos de ontem até daqui a 5 dias. A estrela ao lado do time favorita na hora.
+- **Login obrigatório:** só liga com a variável `LOGIN_ATIVO=sim` na Vercel. Sem ela, o site funciona aberto e o login fica no menu Mais (para testar antes de travar o site).
+- Arquivos: `api/conta.js` (login e favoritos), `supabase/03_contas_favoritos.sql` (tabela `perfis`), `supabase/email_codigo.html` (modelo do e-mail).
+
+### Como ligar (passo a passo)
+
+1. **Tabela:** Supabase → SQL Editor → New query → cole `supabase/03_contas_favoritos.sql` → Run.
+2. **Envio de e-mails (Resend, grátis até 3.000 por mês e 100 por dia):** o envio padrão do Supabase só manda e-mail para os membros da equipe do projeto, por isso é preciso um serviço de e-mail.
+   1. Crie a conta em resend.com → **Domains → Add domain** → `telscore.com.br`.
+   2. O Resend mostra alguns registros DNS (TXT e MX). Cadastre-os onde o DNS do domínio é administrado (na Vercel: Domains → telscore.com.br → DNS Records; ou no Registro.br) e espere ficar **Verified**.
+   3. **API Keys → Create API key** (acesso de envio). Copie a chave e guarde: ela vai só no Supabase, nunca no chat ou no GitHub.
+3. **Supabase → Authentication → Emails → SMTP Settings:** ative o SMTP personalizado com:
+   - Sender email: `nao-responda@telscore.com.br` · Sender name: `TEL.SCORE`
+   - Host: `smtp.resend.com` · Port: `465` · Username: `resend` · Password: a chave do Resend
+4. **Supabase → Authentication → Emails → Templates:** em **Magic Link** e em **Confirm signup**, troque o assunto para `Seu código de acesso à TEL.SCORE` e cole o conteúdo de `supabase/email_codigo.html` (ele usa `{{ .Token }}`, que é o código).
+5. **Supabase → Authentication → Rate Limits:** suba "emails sent per hour" para 60 ou mais (o padrão com SMTP próprio é 30).
+6. **Teste:** depois do deploy, abra o site → Mais → **Entrar** → seu e-mail → digite o código → escolha os favoritos.
+7. **Travar o site:** com o teste funcionando, Vercel → Settings → Environment Variables → `LOGIN_ATIVO` = `sim` → Redeploy. A partir daí, quem não entrou vê a tela de entrada antes do site.
 
 ## Página da liga
 
