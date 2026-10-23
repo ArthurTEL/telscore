@@ -91,8 +91,13 @@ module.exports = async (req, res) => {
     if (acao === 'entrar' && req.method === 'POST') {
       const email = String(body.email || '').trim().toLowerCase();
       const codigo = String(body.codigo || '').replace(/\D/g, '');
-      if (!EMAIL.test(email) || !/^\d{6,10}$/.test(codigo)) return send(res, 400, { ok: false, error: 'Digite o código de 6 dígitos que chegou no e-mail.' });
-      const r = await auth(c, 'verify', { body: { type: 'email', email, token: codigo } });
+      if (!EMAIL.test(email) || !/^\d{6,10}$/.test(codigo)) return send(res, 400, { ok: false, error: 'Digite o código inteiro que chegou no e-mail.' });
+      // "email" vale para o login e para o primeiro cadastro; os outros tipos cobrem versões antigas do Supabase Auth
+      let r = await auth(c, 'verify', { body: { type: 'email', email, token: codigo } });
+      for (const type of ['signup', 'magiclink']) {
+        if (r.ok || r.status === 429) break;
+        r = await auth(c, 'verify', { body: { type, email, token: codigo } });
+      }
       if (!r.ok || !r.j || !r.j.access_token) {
         await new Promise(ok => setTimeout(ok, 500)); // freia quem tenta adivinhar códigos
         return send(res, r.status === 429 ? 429 : 401, { ok: false, error: erroPT(r.j, r.status) });
