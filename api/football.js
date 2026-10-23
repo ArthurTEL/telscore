@@ -13,7 +13,7 @@ const ALLOWED = {
   standings: ['league', 'season'],
   'fixtures/headtohead': ['h2h', 'last', 'timezone'],
   odds: ['fixture', 'bookmaker', 'bet'],
-  teams: ['id'],
+  teams: ['id', 'search'],
   'players/squads': ['team'],
   'teams/statistics': ['league', 'season', 'team'],
   players: ['team', 'season', 'page'],
