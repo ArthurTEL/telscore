@@ -1364,6 +1364,22 @@ body.gated{overflow:hidden}
   .tbl td .tmc .crest.img,#lg-table .tbl td .tmc .crest.img{width:22px;height:22px}
   .tk-item .crest.img{width:22px;height:22px}
 }
+
+/* v46g: nomes dos times inteiros no celular (sem quebrar palavra) */
+.mrow .tm .tnm{min-width:0}
+@media (max-width:760px){
+  .mrow{grid-template-columns:32px minmax(0,1fr) auto minmax(0,1fr);column-gap:5px}
+  .mrow .tm{gap:5px}
+  .mrow .tm .crest{display:inline-grid}
+  .mrow .tm .crest.img{width:24px;height:24px}
+  .mrow .sc{min-width:48px;padding:4px 6px}
+  .mrow .st{font-size:8.5px;line-height:1.15;word-break:keep-all;letter-spacing:-.02em}
+  .mrow .stc svg{width:30px;height:30px}
+  .mrow .tm .tnm{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:normal;hyphens:manual;line-height:1.15}
+  .mrow .tm .tnm.nm-s{font-size:12px}
+  .mrow .tm .tnm.nm-xs{font-size:11px}
+}
+@media (max-width:360px){.mrow .tm .tnm{font-size:12px}.mrow .tm .tnm.nm-s{font-size:11px}.mrow .tm .tnm.nm-xs{font-size:10.5px}}
 </style>
 </head>
 <body>
@@ -2996,12 +3012,15 @@ async function renderPartidasReal(){
   const L=useFav?favs:list;renderFeatReal(L,useFav);renderInsReal(L,useFav);}
 }
 const dayRel=d=>{const t=new Date(NOW());const k=x=>ymd(x);const tm=new Date(t);tm.setDate(tm.getDate()+1);const ye=new Date(t);ye.setDate(ye.getDate()-1);return k(d)===k(t)?'Hoje':k(d)===k(tm)?'Amanhã':k(d)===k(ye)?'Ontem':shortDate(d);};
+// nome do time na lista de jogos: palavra comprida ganha letra um pouco menor (nunca quebra no meio da palavra)
+const TN_SHORT={'Borussia Mönchengladbach':'Gladbach','Borussia Monchengladbach':'Gladbach','Wolverhampton Wanderers':'Wolves','Independiente del Valle':'Indep. del Valle','Deportivo La Coruña':'La Coruña','Deportivo La Coruna':'La Coruña'};
+const tNm=n=>{const t=TN_SHORT[n]||n;const w=Math.max(0,...String(t).split(/[\s\-\/]+/).map(x=>x.length));return `<span class="tnm${w>=13?' nm-xs':w>=11?' nm-s':''}" title="${esc(n)}">${esc(t)}</span>`;};
 function rowReal(f){
  const st=rStatus(f),h=f.teams.home,a=f.teams.away,g=f.goals,v=f.fixture.venue||{};let sc,stc,ex;
  if(st.k==='pre'||st.k==='off'){sc=`<span class="sc pre">${esc(st.label)}</span>`;stc=`<span class="st">${st.k==='off'?esc(st.label):esc(dayRel(new Date(f.fixture.date)))}</span>`;ex=`<div class="mini-prob"><small><span>${esc(roundTxt(f.league.round))}</span></small><small><span>${esc(v.name||'')}</span></small></div>`;}
  else{const ht=f.score&&f.score.halftime;sc=`<span class="sc ${st.k==='live'?'live':''}">${g.home} – ${g.away}${ht&&ht.home!=null&&(st.k==='ft'||st.min>45)?`<span class="xg">1º T ${ht.home}–${ht.away}</span>`:''}</span>`;
   stc=st.k==='live'?ring(st,42):'<span class="st">FIM</span>';ex=`<div class="mini-prob"><small><span>${esc(v.name||'')}</span></small><small><span>${f.fixture.referee?'Árb. '+esc(refName(f.fixture.referee)):''}</span></small></div>`;}
- return `<button class="mrow" data-rcm="${f.fixture.id}" aria-label="${esc(h.name)} contra ${esc(a.name)}, ${esc(st.label)}"><span class="stc">${stc}</span><span class="tm h"><span>${esc(h.name)}</span>${rCrest(h)}</span>${sc}<span class="tm">${rCrest(a)}<span>${esc(a.name)}</span></span>${ex}<span class="chev">${IC.chev}</span></button>`;
+ return `<button class="mrow" data-rcm="${f.fixture.id}" aria-label="${esc(h.name)} contra ${esc(a.name)}, ${esc(st.label)}"><span class="stc">${stc}</span><span class="tm h">${tNm(h.name)}${rCrest(h)}</span>${sc}<span class="tm">${rCrest(a)}${tNm(a.name)}</span>${ex}<span class="chev">${IC.chev}</span></button>`;
 }
 function renderFeatReal(list,favMode){
  // nos favoritos, jogo dos seus times vem antes do jogo só da liga favorita
