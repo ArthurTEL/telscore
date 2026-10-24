@@ -3262,10 +3262,22 @@ const fx2=v=>v==null?'–':f1(v,2);
 const sgn1=v=>(v>0?'+':v<0?'−':'')+f1(Math.abs(v));
 /* tabela ao vivo: aplica os placares dos jogos em andamento na classificação */
 async function liveFor(id){try{const list=await rDay(0);return (list||[]).filter(f=>f.league&&f.league.id===id&&rStatus(f).k==='live');}catch(e){return [];}}
-function applyLive(rows,live){
- if(!live||!live.length)return {rows,on:false};const ids=new Set(rows.map(r=>r.team.id));const L=live.filter(f=>ids.has(f.teams.home.id)||ids.has(f.teams.away.id));if(!L.length)return {rows,on:false};
+/* a API demora para somar na classificação os jogos que acabaram de terminar.
+   Compara os jogos encerrados de cada time (lista da temporada) com os jogos da tabela e soma os que faltam. */
+function recentFix(rows,season){
+ if(!Array.isArray(season)||!season.length)return [];
+ const fin=season.filter(f=>f.league&&/regular season/i.test(f.league.round||'')&&FT_S.includes(f.fixture.status.short)).sort((a,b)=>new Date(b.fixture.date)-new Date(a.fixture.date));
+ const out=[];rows.forEach(r=>{const tid=r.team.id;const mine=fin.filter(f=>f.teams.home.id===tid||f.teams.away.id===tid);const miss=mine.length-(r.all&&r.all.played||0);
+  if(miss<=0||miss>2)return; // mais de 2 de diferença: é outro motivo (ex.: jogo anulado), melhor não mexer
+  mine.slice(0,miss).forEach(f=>{const home=f.teams.home.id===tid;const my=(home?f.goals.home:f.goals.away)||0,op=(home?f.goals.away:f.goals.home)||0;out.push({tid,my,op,opp:(home?f.teams.away:f.teams.home).name});});});
+ return out;
+}
+function applyLive(rows,live,fix){
+ fix=fix||[];const ids=new Set(rows.map(r=>r.team.id));const L=(live||[]).filter(f=>ids.has(f.teams.home.id)||ids.has(f.teams.away.id));if(!L.length&&!fix.length)return {rows,on:false};
  const desc={};rows.forEach(r=>{desc[r.rank]=r.description;});
  const R=rows.map(r=>({...r,all:{...r.all,goals:{...r.all.goals}},_old:r.rank}));const by=new Map(R.map(r=>[r.team.id,r]));
+ fix.forEach(x=>{const r=by.get(x.tid);if(!r)return;r.all.played++;r.all.goals.for+=x.my;r.all.goals.against+=x.op;r.goalsDiff+=x.my-x.op;if(x.my>x.op){r.all.win++;r.points+=3;}else if(x.my===x.op){r.all.draw++;r.points+=1;}else r.all.lose++;
+  if(!r._live)r._live={my:x.my,op:x.op,opp:x.opp,min:'FIM',res:x.my>x.op?'V':x.my<x.op?'D':'E',fin:true};});
  L.forEach(f=>{const gh=f.goals.home||0,ga=f.goals.away||0,st=rStatus(f);[[f.teams.home,gh,ga,f.teams.away],[f.teams.away,ga,gh,f.teams.home]].forEach(([t,my,op,o])=>{const r=by.get(t.id);if(!r)return;
   r.all.played++;r.all.goals.for+=my;r.all.goals.against+=op;r.goalsDiff+=my-op;if(my>op){r.all.win++;r.points+=3;}else if(my===op){r.all.draw++;r.points+=1;}else r.all.lose++;
   r._live={my,op,opp:o.name,min:st.label,res:my>op?'V':my<op?'D':'E'};});});
@@ -3273,8 +3285,8 @@ function applyLive(rows,live){
  R.forEach((r,i)=>{r.rank=i+1;r.description=desc[r.rank];r._mv=r._old-r.rank;});
  return {rows:R,on:true};
 }
-const liveCell=r=>`${r._mv?`<em class="mv ${r._mv>0?'up':'dn'}">${r._mv>0?'▲':'▼'}${Math.abs(r._mv)}</em>`:''}${r._live?`<span class="lvchip ${r._live.res}" title="Ao vivo contra ${esc(r._live.opp)}">${r._live.my}–${r._live.op} · ${esc(r._live.min)}</span>`:''}`;
-const LIVE_NOTE='<div class="lvnote"><span class="dot pulse"></span><span><b>Tabela ao vivo:</b> considera os placares dos jogos em andamento. As setas mostram quem sobe e quem desce.</span></div>';
+const liveCell=r=>`${r._mv?`<em class="mv ${r._mv>0?'up':'dn'}">${r._mv>0?'▲':'▼'}${Math.abs(r._mv)}</em>`:''}${r._live?`<span class="lvchip ${r._live.res}" title="${r._live.fin?'Encerrado':'Ao vivo'} contra ${esc(r._live.opp)}">${r._live.my}–${r._live.op} · ${esc(r._live.min)}</span>`:''}`;
+const LIVE_NOTE='<div class="lvnote"><span class="dot pulse"></span><span><b>Tabela ao vivo:</b> considera os placares dos jogos em andamento e os resultados de hoje que a tabela oficial ainda não somou. As setas mostram quem sobe e quem desce.</span></div>';
 // seletor da aba Ligas: primeiro o grupo (Brasil, Copas, Europa...), depois a liga
 function renderLgPicker(my){
  const g=lgGroupOf(my),gb=$('#lg-grp');
@@ -3293,10 +3305,10 @@ async function renderLigasReal(quiet){
  $('#lg-luck-title').textContent='Saldo de gols';$('#lg-luck-sub').textContent='Gols marcados menos gols sofridos';$('#lg-leg-note').textContent='Últimos 5 jogos';
  if(!quiet){$('#lg-table').innerHTML='<div class="empty">Carregando tabela…</div>';$('#lg-luck').innerHTML='';$('#lg-insights').innerHTML='';}
  let rows,LV={on:false},BX=null,GRP=null;
- try{const [r,lv,bx]=await Promise.all([apiGet('standings',{league:my,season:seasonFor(my)},300000),liveFor(my),bancoGet({acao:'liga',id:my,season:seasonFor(my)})]);BX=bx;
+ try{const [r,lv,bx,sf]=await Promise.all([apiGet('standings',{league:my,season:seasonFor(my)},120000),liveFor(my),bancoGet({acao:'liga',id:my,season:seasonFor(my)}),apiGet('fixtures',{league:my,season:seasonFor(my),timezone:TZ},90000).catch(()=>null)]);BX=bx;
   // ligas com fases (Apertura/Clausura, zonas, tabela anual): mostra a fase escolhida; por padrão, a atual
   const G=stGroups(r);let gi=0;if(G.length>1&&REAL.lgGrp&&REAL.lgGrp.id===my){const k=G.findIndex(g=>grpName(g)===REAL.lgGrp.name);if(k>=0)gi=k;}
-  rows=G[gi];GRP={G,gi};if(rows){LV=applyLive(rows,lv);rows=LV.rows;}}
+  rows=G[gi];GRP={G,gi};if(rows){LV=applyLive(rows,lv,G.length===1?recentFix(rows,sf):[]);rows=LV.rows;}}
  catch(e){if(view==='ligas'&&REAL.lgTab===my)$('#lg-table').innerHTML=`<div class="empty">Não foi possível carregar a tabela. ${esc(e.message)}</div>`;return;}
  if(view!=='ligas'||REAL.lgTab!==my)return;
  if(ph){const multi=GRP&&GRP.G.length>1;ph.hidden=!multi;ph.innerHTML=multi?GRP.G.map((g,i)=>`<button class="chip" aria-pressed="${i===GRP.gi}" data-lgph="${esc(grpName(g)||('Tabela '+(i+1)))}">${esc(grpName(g)||('Tabela '+(i+1)))}${i<stCur(GRP.G).length?'':' <small>encerrada</small>'}</button>`).join(''):'';if(multi)$('#lg-desc').textContent=`Temporada ${seasonLabel(my)}, em fases. Mostrando: ${grpName(GRP.G[GRP.gi])||'tabela principal'}. Toque nas fases para ver as outras tabelas.`;}
@@ -5858,7 +5870,9 @@ async function lgLoad(){
  if(!cur){const lastR=done.length?done[done.length-1].league.round:null,nextR=up?up.league.round:null;
   const lastRound=rounds.find(r=>r.name===lastR),lastFinished=lastRound&&lastRound.games.every(g=>FT_S.includes(g.fixture.status.short)||OFF_S.includes(g.fixture.status.short));
   cur=nextR&&(!lastR||lastR===nextR||!lastFinished||new Date(up.fixture.date)-now<4*86400000)?nextR:(lastR||nextR||(rounds[0]&&rounds[0].name));}
- const groups=stCur(st),allGroups=stAll(st);
+ const groups=stCur(st).slice(),allGroups=stAll(st);
+ // jogos que já terminaram mas a API ainda não somou na tabela
+ if(groups.length===1){const fx2=recentFix(groups[0],list);if(fx2.length)groups[0]=applyLive(groups[0],[],fx2).rows;}
  LGP.ctx={id,season,L,list,rounds,cur,groups,allGroups,done,live,cup:CUPS.has(id)||groups.length>1,logo:L.logo||'',country:L.country||''};
  if(LGP.round==null||!rounds.some(r=>r.name===LGP.round))LGP.round=cur;
 }
