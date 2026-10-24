@@ -1341,6 +1341,11 @@ body.gated{overflow:hidden}
 .mc-teams button{width:70px;min-width:70px;flex:none;padding:2px}
 .mc-teams button .crest{width:40px;height:40px}
 .mc-teams button span:not(.crest){display:block;width:100%;max-width:70px;font-size:10.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+
+/* destaques: seus favoritos x todos os jogos */
+.scope-seg{display:flex;width:100%;margin:0 0 10px}.scope-seg[hidden]{display:none}
+.scope-seg button{flex:1;text-align:center}
+.scope-note{margin:-4px 2px 10px;font-size:12.5px;color:var(--muted)}.scope-note[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -1376,8 +1381,10 @@ body.gated{overflow:hidden}
     <div class="pd-layout">
       <div id="pd-list"></div>
       <aside class="side-col">
+        <div class="seg scope-seg" id="pd-scope" role="group" aria-label="Destaques de quais jogos" hidden></div>
+        <p class="scope-note" id="pd-scope-note" hidden></p>
         <div id="pd-feat"></div>
-        <div class="card"><div class="card-h"><div><h3>Radar do dia</h3><div class="sub">Destaques dos jogos já encerrados</div></div></div><div class="insight" id="pd-ins"></div></div>
+        <div class="card"><div class="card-h"><div><h3>Radar do dia</h3><div class="sub" id="pd-ins-sub">Destaques dos jogos já encerrados</div></div></div><div class="insight" id="pd-ins"></div></div>
         <div class="card acc-card" id="pd-acc" hidden></div>
       </aside>
     </div>
@@ -2962,7 +2969,13 @@ async function renderPartidasReal(){
    +groupsHTML(mineL)
    +(!mineT.length&&!mineL.length?`<div class="empty my-empty">Nenhum jogo dos seus times e ligas favoritos neste dia.${rest.length?' Toque abaixo para ver os outros jogos.':''}</div>`:'')
    +(rest.length?`<button class="btn all-games" data-allg aria-expanded="${!!REAL.allOpen}">${REAL.allOpen?'Esconder os outros jogos':`Ver todos os jogos do dia (+${rest.length})`}<span aria-hidden="true">${REAL.allOpen?'▴':'▾'}</span></button>${REAL.allOpen?`<div class="others-games">${groupsHTML(rest)}</div>`:''}`:'');}
- renderFeatReal(list);renderInsReal(list);
+ // destaque e radar: com favoritos, olham primeiro para os jogos deles (botão para ver todos)
+ {const sc=$('#pd-scope'),note=$('#pd-scope-note');const fav=hasFav();if(!REAL.scope)REAL.scope='fav';
+  const favs=fav?list.filter(favGame):[];const useFav=fav&&REAL.scope==='fav'&&favs.length>0;
+  if(sc){sc.hidden=!fav;sc.innerHTML=fav?[['fav',`★ Seus favoritos${favs.length?` (${favs.length})`:''}`],['all',`Todos os jogos (${list.length})`]].map(([k,l])=>`<button aria-pressed="${REAL.scope===k}" data-scope="${k}">${esc(l)}</button>`).join(''):'';}
+  if(note){const empty=fav&&REAL.scope==='fav'&&!favs.length&&list.length>0;note.hidden=!empty;note.textContent=empty?'Nenhum jogo dos seus favoritos neste dia. Mostrando os destaques de todos os jogos.':'';}
+  const sub=$('#pd-ins-sub');if(sub)sub.textContent=useFav?'Só os jogos dos seus times e ligas favoritos':'Destaques dos jogos já encerrados';
+  const L=useFav?favs:list;renderFeatReal(L,useFav);renderInsReal(L,useFav);}
 }
 const dayRel=d=>{const t=new Date(NOW());const k=x=>ymd(x);const tm=new Date(t);tm.setDate(tm.getDate()+1);const ye=new Date(t);ye.setDate(ye.getDate()-1);return k(d)===k(t)?'Hoje':k(d)===k(tm)?'Amanhã':k(d)===k(ye)?'Ontem':shortDate(d);};
 function rowReal(f){
@@ -2972,27 +2985,29 @@ function rowReal(f){
   stc=st.k==='live'?ring(st,42):'<span class="st">FIM</span>';ex=`<div class="mini-prob"><small><span>${esc(v.name||'')}</span></small><small><span>${f.fixture.referee?'Árb. '+esc(refName(f.fixture.referee)):''}</span></small></div>`;}
  return `<button class="mrow" data-rcm="${f.fixture.id}" aria-label="${esc(h.name)} contra ${esc(a.name)}, ${esc(st.label)}"><span class="stc">${stc}</span><span class="tm h"><span>${esc(h.name)}</span>${rCrest(h)}</span>${sc}<span class="tm">${rCrest(a)}<span>${esc(a.name)}</span></span>${ex}<span class="chev">${IC.chev}</span></button>`;
 }
-function renderFeatReal(list){
- const live=list.filter(f=>rStatus(f).k==='live').sort((a,b)=>lgRank(a.league.id)-lgRank(b.league.id));
- const pre=list.filter(f=>rStatus(f).k==='pre').sort((a,b)=>lgRank(a.league.id)-lgRank(b.league.id)||new Date(a.fixture.date)-new Date(b.fixture.date));
+function renderFeatReal(list,favMode){
+ // nos favoritos, jogo dos seus times vem antes do jogo só da liga favorita
+ const ft2=f=>favMode&&favTeamGame(f)?0:1;
+ const live=list.filter(f=>rStatus(f).k==='live').sort((a,b)=>ft2(a)-ft2(b)||lgRank(a.league.id)-lgRank(b.league.id));
+ const pre=list.filter(f=>rStatus(f).k==='pre').sort((a,b)=>ft2(a)-ft2(b)||new Date(a.fixture.date)-new Date(b.fixture.date)||lgRank(a.league.id)-lgRank(b.league.id));
  const ft=list.filter(f=>rStatus(f).k==='ft').sort((a,b)=>(b.goals.home+b.goals.away)-(a.goals.home+a.goals.away));
  const f=live[0]||pre[0]||ft[0];if(!f){$('#pd-feat').innerHTML='';return;}
  const st=rStatus(f),h=f.teams.home,a=f.teams.away;
  let mid;
  if(st.k==='pre'){const mins=Math.max(0,Math.round((new Date(f.fixture.date)-NOW())/60000));mid=`<div style="display:grid;justify-items:center;gap:6px"><div class="score" style="font-size:34px">${esc(st.label)}</div><span class="eyebrow">${mins>0?'em '+durTxt(mins):'em instantes'}</span></div>`;}
  else mid=`<div style="display:grid;justify-items:center;gap:8px"><div class="score">${f.goals.home}<i>×</i>${f.goals.away}</div>${st.k==='live'?ring(st,46,true):'<span class="pill">Encerrado</span>'}</div>`;
- $('#pd-feat').innerHTML=`<div class="stage feat">${ARCS}<div class="cm-stage-top"><span class="eyebrow">${st.k==='live'?'Em destaque agora':st.k==='pre'?'Próximo grande jogo':'Jogo do dia'}</span>${st.k==='live'?'<span class="pill live">Ao vivo</span>':`<span class="pill">${esc(lgShort(f))}</span>`}</div>
+ $('#pd-feat').innerHTML=`<div class="stage feat">${ARCS}<div class="cm-stage-top"><span class="eyebrow">${favMode&&favTeamGame(f)?(st.k==='live'?'★ Seu time ao vivo':st.k==='pre'?'★ Próximo jogo do seu time':'★ Seu time hoje'):favMode?(st.k==='live'?'★ Ao vivo nos seus favoritos':st.k==='pre'?'★ Próximo nos seus favoritos':'★ Destaque dos favoritos'):(st.k==='live'?'Em destaque agora':st.k==='pre'?'Próximo grande jogo':'Jogo do dia')}</span>${st.k==='live'?'<span class="pill live">Ao vivo</span>':`<span class="pill">${esc(lgShort(f))}</span>`}</div>
  <div class="row"><div class="tmx">${rCrest(h,'lg')}${esc(h.name)}</div>${mid}<div class="tmx">${rCrest(a,'lg')}${esc(a.name)}</div></div>
  <div class="xl">${esc((f.fixture.venue||{}).name||'')}${f.fixture.referee?' · árbitro '+esc(refName(f.fixture.referee)):''}</div>
  <div class="acts"><button class="btn primary" data-rcm="${f.fixture.id}">${st.k==='live'?'Acompanhar ao vivo':st.k==='pre'?'Ver pré-jogo':'Abrir central'}</button></div></div>`;
 }
-function renderInsReal(list){
+function renderInsReal(list,favMode){
  const ft=list.filter(f=>rStatus(f).k==='ft'),live=list.filter(f=>rStatus(f).k==='live');const played=[...ft,...live];
- if(!played.length){$('#pd-ins').innerHTML='<p style="color:var(--muted);margin:0;font-size:13px">Os destaques aparecem aqui quando os jogos começarem.</p>';return;}
+ if(!played.length){$('#pd-ins').innerHTML=`<p style="color:var(--muted);margin:0;font-size:13px">${favMode?'Os destaques aparecem aqui quando os jogos dos seus favoritos começarem.':'Os destaques aparecem aqui quando os jogos começarem.'}</p>`;return;}
  const gs=f=>(f.goals.home||0)+(f.goals.away||0);const goals=sum(played,gs);
  const most=maxBy(played,gs),big=maxBy(played,f=>Math.abs((f.goals.home||0)-(f.goals.away||0)));
  const hw=ft.filter(f=>f.goals.home>f.goals.away).length,dr=ft.filter(f=>f.goals.home===f.goals.away).length;
- const rows=[[String(goals),'Gols no dia',`${played.length===1?'1 jogo iniciado':played.length+' jogos iniciados'}, média de ${f1(goals/played.length)}`],[String(gs(most)),'Jogo com mais gols',`${most.teams.home.name} ${most.goals.home}×${most.goals.away} ${most.teams.away.name}`],[String(Math.abs(big.goals.home-big.goals.away)),'Maior diferença',`${big.teams.home.name} ${big.goals.home}×${big.goals.away} ${big.teams.away.name}`],
+ const rows=[[String(goals),favMode?'Gols nos seus jogos':'Gols no dia',`${played.length===1?'1 jogo iniciado':played.length+' jogos iniciados'}, média de ${f1(goals/played.length)}`],[String(gs(most)),'Jogo com mais gols',`${most.teams.home.name} ${most.goals.home}×${most.goals.away} ${most.teams.away.name}`],[String(Math.abs(big.goals.home-big.goals.away)),'Maior diferença',`${big.teams.home.name} ${big.goals.home}×${big.goals.away} ${big.teams.away.name}`],
   ft.length?[`${Math.round(hw/ft.length*100)}%`,'Vitórias dos mandantes',`${hw} de ${ft.length} encerrados, ${pl(dr,'empate(s)')}`]:[String(live.length),'Jogos ao vivo agora','Toque em um jogo para acompanhar']];
  $('#pd-ins').innerHTML=rows.map(([a,b,c])=>`<div class="ins"><span class="ix num">${esc(a)}</span><p>${esc(b)}<small>${esc(c)}</small></p></div>`).join('');
 }
@@ -5923,6 +5938,7 @@ document.addEventListener('click',e=>{
  {const go=e.target.closest('[data-gopen]');if(go){const st=go.dataset.gopen;moreClose();setTimeout(()=>gateOpen(st,false),180);return;}}
  if(e.target.closest('[data-gsair]')){contaSair();return;}
  if(e.target.closest('[data-allg]')){REAL.allOpen=!REAL.allOpen;renderPartidasReal();return;}
+ {const sp=e.target.closest('[data-scope]');if(sp){REAL.scope=sp.dataset.scope;renderPartidasReal();return;}}
  {const ft=e.target.closest('[data-favt]');if(ft){favToggleTeam({id:+ft.dataset.favt,nome:ft.dataset.favn||'Time',logo:ft.dataset.favlogo||null});return;}}
  {const fl=e.target.closest('[data-favl]');if(fl){favToggleLeague(+fl.dataset.favl);return;}}
  if(e.target.closest('#upd-go')){location.reload();return;}
