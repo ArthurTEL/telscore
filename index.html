@@ -1346,6 +1346,24 @@ body.gated{overflow:hidden}
 .scope-seg{display:flex;width:100%;margin:0 0 10px}.scope-seg[hidden]{display:none}
 .scope-seg button{flex:1;text-align:center}
 .scope-note{margin:-4px 2px 10px;font-size:12.5px;color:var(--muted)}.scope-note[hidden]{display:none}
+
+/* v46f: escudos maiores e sem o círculo branco (mais limpo); o escudo inteiro sempre aparece */
+:root{--crest-sh:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--crest-sh:drop-shadow(0 0 1.2px rgba(255,255,255,.55))}}
+:root[data-theme="dark"]{--crest-sh:drop-shadow(0 0 1.2px rgba(255,255,255,.55))}
+.crest.img{background:transparent!important;box-shadow:none!important;border-radius:0;overflow:visible}
+.crest.img img{left:0;top:0;width:100%;height:100%;filter:var(--crest-sh)}
+.stage .crest.img img,.feat .crest.img img,.tm-stage .crest.img img{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.55)) drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.mrow .tm .crest.img{width:28px;height:28px}
+.tbl td .tmc .crest.img{width:24px;height:24px}
+.lg-badge.img{background:transparent!important;box-shadow:none!important;border-radius:0}
+.lg-badge.img img{left:0;top:0;width:100%;height:100%;filter:var(--crest-sh)}
+@media (max-width:760px){
+  .mrow .tm .crest.img{width:26px;height:26px}
+  .mrow .tm{gap:7px}
+  .tbl td .tmc .crest.img,#lg-table .tbl td .tmc .crest.img{width:22px;height:22px}
+  .tk-item .crest.img{width:22px;height:22px}
+}
 </style>
 </head>
 <body>
