@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
     let ttl = 600;
     if (errors) ttl = 30;
     else if (endpoint === 'status') ttl = 60;
-    else if (endpoint === 'standings') ttl = 3600;
+    else if (endpoint === 'standings') ttl = 600; // a classificação muda ao fim de cada jogo
     else if (endpoint === 'predictions') ttl = 3600;
     else if (endpoint === 'odds') ttl = 3600;
     else if (endpoint === 'injuries') ttl = 1800;
