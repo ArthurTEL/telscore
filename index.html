@@ -1421,7 +1421,6 @@ body.gated{overflow:hidden}
         <p class="scope-note" id="pd-scope-note" hidden></p>
         <div id="pd-feat"></div>
         <div class="card"><div class="card-h"><div><h3>Radar do dia</h3><div class="sub" id="pd-ins-sub">Destaques dos jogos já encerrados</div></div></div><div class="insight" id="pd-ins"></div></div>
-        <div class="card acc-card" id="pd-acc" hidden></div>
       </aside>
     </div>
   </section>
@@ -1453,11 +1452,6 @@ body.gated{overflow:hidden}
   </section>
 
   <!-- PLACAR DE ACERTOS -->
-  <section class="view" id="v-acertos" aria-labelledby="acc-title" hidden>
-    <div class="sec-head"><div><h2 class="sec" id="acc-title">Placar de acertos</h2><p>Toda análise TEL.SCORE aberta antes de um jogo fica registrada. Depois do apito final, ela é conferida com o resultado, com os acertos e os erros.</p></div><button class="btn sm" data-go="partidas">← Voltar aos jogos</button></div>
-    <div id="acc-body"></div>
-  </section>
-
   <!-- LIGAS -->
   <section class="view" id="v-ligas" role="tabpanel" aria-labelledby="tab-ligas" hidden>
     <div class="sec-head"><button class="btn sm lg-pagebtn" id="lg-page">Jogos, rodadas e artilheiros →</button><div><h2 class="sec" id="lg-title">Ligas</h2><p id="lg-desc">Tabela com pontos esperados (xPts). A diferença entre pontos reais e esperados mostra quem está acima ou abaixo do próprio desempenho.</p></div></div>
@@ -1537,7 +1531,7 @@ body.gated{overflow:hidden}
  <div class="sheet-sec">Ir para</div>
  <div class="sheet-grid">
   <button data-go="lab" data-more-close><span class="si">📊</span>Análise tática</button>
-  <button data-go="acertos" data-more-close><span class="si">🎯</span>Placar de acertos</button>
+  <button data-go="centro" data-more-close><span class="si">📺</span>Central do jogo</button>
   <button data-go="ligas" data-more-close><span class="si">🏆</span>Tabelas</button>
   <button data-go="estudio" data-more-close><span class="si">🎨</span>Estúdio de posts</button>
  </div>
@@ -1587,7 +1581,7 @@ const shortDate=d=>`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()
 const initials=n=>n.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,ms||2400);}
 const IC={
- ball:'<svg viewBox="0 0 16 16" class="ic" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="#fff" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.2l2.6 1.9-1 3.1H6.4l-1-3.1z" fill="currentColor"/><path d="M8 5.2V1.6M10.6 7.1l3.4-1.1M9.6 10.2l2.1 2.9M6.4 10.2l-2.1 2.9M5.4 7.1 2 6" stroke="currentColor" stroke-width="1.1"/></svg>',
+ ball:'<svg viewBox="0 0 16 16" class="ic ic-ball" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#fff" stroke="#16161a" stroke-width="1"/><path d="M8 5.1l2.75 2-1.05 3.25H6.3L5.25 7.1z" fill="#16161a"/><path d="M8 1.1v4M10.75 7.1l3.8-1.25M9.7 10.35l2.35 3.2M6.3 10.35l-2.35 3.2M5.25 7.1 1.45 5.85" stroke="#16161a" stroke-width="1.05"/><path d="M6.4 1.3 8 2.5l1.6-1.2M13.6 4.4l.1 2 1.3 1.1M13.4 12.1l-1.9.4-.8 1.7M5.3 14.2l-.8-1.7-1.9-.4M1 7.5l1.3-1.1.1-2" fill="none" stroke="#16161a" stroke-width=".9"/></svg>',
  card:c=>`<svg viewBox="0 0 16 16" class="ic" aria-hidden="true"><rect x="4.5" y="2.5" width="7" height="11" rx="1.6" fill="${c}"/></svg>`,
  sub:'<svg viewBox="0 0 16 16" class="ic" fill="none" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 12.5V3.5M2.5 6L5 3.5 7.5 6" stroke="var(--good)"/><path d="M11 3.5v9M8.5 10l2.5 2.5 2.5-2.5" stroke="var(--red)"/></svg>',
  flag:'<svg viewBox="0 0 16 16" class="ic" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 14V2.5"/><path d="M4 3h7l-2 2.5L11 8H4z" fill="currentColor"/></svg>',
@@ -2825,6 +2819,11 @@ const durTxt=m=>m>=1440?`${Math.floor(m/1440)}d ${Math.floor(m%1440/60)}h`:m>=60
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
 const refName=raw=>String(raw||'').split(',')[0].trim();
 const lastName=n=>String(n||'').split(' ').slice(-1)[0];
+// nome pelo qual o jogador é conhecido: o da escalação ("Rayan", "Vitor Roque"); tira só a inicial ("B. Saka" vira "Saka")
+const famName=n=>{n=String(n||'').trim();const m=n.match(/^[A-ZÀ-Ý]\.\s*(.+)$/);return m?m[1]:n;};
+function nameMap(f){const M={};(f.lineups||[]).forEach(L=>[...(L.startXI||[]),...(L.substitutes||[])].forEach(x=>{const p=x&&x.player;if(p&&p.id&&p.name)M[p.id]=p.name;}));(f.players||[]).forEach(t=>(t.players||[]).forEach(p=>{if(p.player&&p.player.id&&!M[p.player.id]&&p.player.name)M[p.player.id]=p.player.name;}));return M;}
+const evFull=(M,pl)=>!pl?'':(pl.id&&M[pl.id]?M[pl.id]:pl.name)||'';
+const evName=(M,pl)=>{if(!pl)return '';const n=pl.id&&M[pl.id]?M[pl.id]:pl.name;const fn=famName(n);return fn.length>18?lastName(fn):fn;};
 const lgName=f=>(RLmap[f.league.id]||{}).name||f.league.name;
 const lgShort=f=>(RLmap[f.league.id]||{}).short||f.league.name;
 const lgNomeId=l=>(RLmap[l&&l.id]||{}).name||(l&&l.nome)||'';
@@ -2975,7 +2974,6 @@ function renderDaysReal(){
 }
 /* partidas */
 async function renderPartidasReal(){
- renderAccCard();
  renderDaysReal();
  const d0=new Date(today0);d0.setDate(d0.getDate()+REAL.day);
  $('#pd-title').textContent=REAL.day===0?'Partidas de hoje':REAL.day===1?'Partidas de amanhã':REAL.day===-1?'Partidas de ontem':`Partidas · ${dateTxt(d0)}${d0.getFullYear()!==today0.getFullYear()?' de '+d0.getFullYear():''}`;
@@ -3057,7 +3055,7 @@ function statMap(f){const out={};(f.statistics||[]).forEach(s=>{const side=sideO
 const sv=v=>v==null?0:typeof v==='string'?(parseFloat(v.replace('%','').replace(',','.'))||0):v;
 const STAT_PT=[['Ball Possession','Posse (%)',0],['expected_goals','xG',2],['Total Shots','Finalizações',0],['Shots on Goal','No alvo',0],['Shots off Goal','Para fora',0],['Blocked Shots','Bloqueadas',0],['Shots insidebox','Dentro da área',0],['Shots outsidebox','Fora da área',0],['Goalkeeper Saves','Defesas do goleiro',0],['Total passes','Passes',0],['Passes accurate','Passes certos',0],['Passes %','Precisão de passe (%)',0],['Corner Kicks','Escanteios',0],['Fouls','Faltas',0],['Offsides','Impedimentos',0],['Yellow Cards','Amarelos',0],['Red Cards','Vermelhos',0],['goals_prevented','Gols evitados',2]];
 function statRows(sm,only){return STAT_PT.filter(([k])=>sm[k]&&(sm[k].h!=null||sm[k].a!=null)&&(!only||only.includes(k))).map(([k,l,dp])=>[l,sv(sm[k].h),sv(sm[k].a),dp]);}
-function goalFlashReal(f,e){if(!e)return;const el=$('#goal-flash');el.innerHTML=`<span class="bl">${IC.ball}</span><div><b>GOL!</b><span style="display:block">${esc(e.player&&e.player.name||'')} · ${esc(e.team&&e.team.name||'')} · ${f.goals.home}×${f.goals.away}</span></div>`;el.hidden=false;clearTimeout(goalFlashReal._t);goalFlashReal._t=setTimeout(()=>el.hidden=true,3600);}
+function goalFlashReal(f,e){if(!e)return;const el=$('#goal-flash');el.innerHTML=`<span class="bl">${IC.ball}</span><div><b>GOL!</b><span style="display:block">${esc(evName(nameMap(f),e.player))} · ${esc(e.team&&e.team.name||'')} · ${f.goals.home}×${f.goals.away}</span></div>`;el.hidden=false;clearTimeout(goalFlashReal._t);goalFlashReal._t=setTimeout(()=>el.hidden=true,3600);}
 async function renderCentroReal(){
  let today=[];try{today=await rDay(0);}catch(e){}
  if(!REAL.key){const live=today.filter(f=>rStatus(f).k==='live').sort((a,b)=>(favGame(b)-favGame(a))||lgRank(a.league.id)-lgRank(b.league.id));const pre=today.filter(f=>rStatus(f).k==='pre');const f0=live[0]||pre.find(favGame)||(hasFav()&&today.filter(favGame).slice(-1)[0])||pre[0]||today[today.length-1];REAL.key=f0?String(f0.fixture.id):null;}
@@ -3080,8 +3078,8 @@ async function renderCentroReal(){
  REAL.goals=gnow;
  const L=id=>lu.find(x=>x.team.id===id)||{};
  const co=t=>[L(t.id).formation,L(t.id).coach&&L(t.id).coach.name?'téc. '+L(t.id).coach.name:''].filter(Boolean).join(' · ');
- const scorers=s=>{const tid=f.teams[s==='h'?'home':'away'].id;const goals=ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty'&&e.team.id===tid).map(e=>`<span>${s==='a'?IC.ball:''}${esc(lastName(e.player.name))} ${evMin(e)}${e.detail==='Penalty'?' (p)':e.detail==='Own Goal'?' (contra)':''}${s==='h'?IC.ball:''}</span>`);
-  const reds=ev.filter(e=>e.type==='Card'&&/Red|Second/i.test(e.detail)&&e.team.id===tid).map(e=>`<span>${s==='a'?IC.card('var(--p-home)'):''}${esc(lastName(e.player.name))} ${evMin(e)}${s==='h'?IC.card('var(--p-home)'):''}</span>`);return goals.concat(reds).join('');};
+ const NM=nameMap(f);const scorers=s=>{const tid=f.teams[s==='h'?'home':'away'].id;const goals=ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty'&&e.team.id===tid).map(e=>`<span>${s==='a'?IC.ball:''}${esc(evName(NM,e.player))} ${evMin(e)}${e.detail==='Penalty'?' (p)':e.detail==='Own Goal'?' (contra)':''}${s==='h'?IC.ball:''}</span>`);
+  const reds=ev.filter(e=>e.type==='Card'&&/Red|Second/i.test(e.detail)&&e.team.id===tid).map(e=>`<span>${s==='a'?IC.card('var(--p-home)'):''}${esc(evName(NM,e.player))} ${evMin(e)}${s==='h'?IC.card('var(--p-home)'):''}</span>`);return goals.concat(reds).join('');};
  const sm=statMap(f);const poss=sm['Ball Possession'];const ph=poss?sv(poss.h):0,pa=poss?sv(poss.a):0;const ht=f.score&&f.score.halftime;
  const pill=st.k==='live'?`<span class="pill live">Ao vivo · ${esc(st.label)}</span>`:`<span class="pill">${esc(st.k==='pre'?'Pré-jogo':st.label)}</span>`;
  $('#cm-stage').innerHTML=`<div class="stage">${ARCS}${ARCS.replace('class="arcs"','class="arcs l"')}
@@ -3118,8 +3116,8 @@ function readCardHTML(c){
 }
 const CARD_WHY={Foul:'falta',Argument:'reclamação','Time wasting':'cera','Unsportsmanlike conduct':'conduta antidesportiva',Simulation:'simulação',Handball:'mão na bola','Professional foul':'falta tática',Roughing:'jogo brusco','Violent conduct':'conduta violenta','Off the ball foul':'falta sem bola','Delay of game':'retardar o jogo'};
 const VAR_PT={'Goal cancelled':'gol anulado','Goal Disallowed - offside':'gol anulado por impedimento','Goal Disallowed - handball':'gol anulado por mão na bola','Goal Disallowed - foul':'gol anulado por falta','Penalty confirmed':'pênalti confirmado','Penalty cancelled':'pênalti cancelado','Goal confirmed':'gol confirmado','Card upgrade':'cartão alterado','Card reviewed':'cartão revisado','Red card cancelled':'vermelho cancelado'};
-function narrReal(e,sc){
- const tn=e.team&&e.team.name||'',p=e.player&&e.player.name||'Jogador',as=e.assist&&e.assist.name,tag='placar '+sc.h+'×'+sc.a;
+function narrReal(e,sc,M){
+ M=M||{};const tn=e.team&&e.team.name||'',p=evFull(M,e.player)||'Jogador',as=e.assist&&e.assist.name?evFull(M,e.assist):'',tag='placar '+sc.h+'×'+sc.a;
  if(e.type==='Goal'){
   if(e.detail==='Missed Penalty')return {k:'Pênalti perdido',t:`${p} (${tn}) desperdiça a cobrança de pênalti.`,big:true,ic:IC.ball};
   if(e.detail==='Own Goal')return {k:'Gol contra',t:`Gol contra de ${p}.`,goal:true,tag,ic:IC.ball};
@@ -3131,7 +3129,7 @@ function narrReal(e,sc){
   return {k:'Cartão amarelo',t:`Amarelo para ${p} (${tn})${why?' por '+why:''}.`,ic:IC.card('var(--yellow)')};}
  if(e.type==='subst')return {k:'Substituição',t:`Substituição no ${tn}: ${p} ⇄ ${as||'?'}.`,ic:IC.sub};
  if(e.type==='Var')return {k:'VAR',t:`VAR: ${VAR_PT[e.detail]||e.detail||'revisão'}${e.player&&e.player.name?' · '+p:''}.`,big:true,ic:IC.var};
- return {k:e.type||'Lance',t:`${e.detail||''} ${e.player&&e.player.name||''}`.trim(),ic:IC.whistle};
+ return {k:e.type||'Lance',t:`${e.detail||''} ${e.player&&e.player.name?p:''}`.trim(),ic:IC.whistle};
 }
 function lanceReal(f,sm){
  const st=rStatus(f),sh=f.fixture.status.short;
@@ -3140,12 +3138,12 @@ function lanceReal(f,sm){
  if(['HT','2H','ET','BT','P','FT','AET','PEN'].includes(sh))items.push({m:45.99,ph:'ht'});
  if(st.k==='ft')items.push({m:9999,ph:'ft'});
  items.sort((x,y)=>x.m-y.m);
- const sc={h:0,a:0};
+ const sc={h:0,a:0};const NM2=nameMap(f);
  const html=items.map(it=>{
   if(it.ph){const n=it.ph==='ko'?{k:'Início',t:`Rola a bola: ${f.teams.home.name} × ${f.teams.away.name}.`}:it.ph==='ht'?{k:'Intervalo',t:`Fim do primeiro tempo: ${f.teams.home.name} ${sc.h} × ${sc.a} ${f.teams.away.name}.`}:{k:'Fim de jogo',t:`Apito final: ${f.teams.home.name} ${sc.h} × ${sc.a} ${f.teams.away.name}.`};
    return `<div class="ev phase"><span class="mn">${it.ph==='ko'?"0'":it.ph==='ht'?'INT':'FIM'}</span><div class="bd"><div class="k">${IC.whistle}${n.k}</div><p>${esc(n.t)}</p></div></div>`;}
   const e=it.e;const s=sideOf(f,e.team&&e.team.id);if(e.type==='Goal'&&e.detail!=='Missed Penalty')sc[s]++;
-  const n=narrReal(e,{...sc});const cls=n.goal?'goal':n.big?'big':'';
+  const n=narrReal(e,{...sc},NM2);const cls=n.goal?'goal':n.big?'big':'';
   return `<div class="ev ${cls}"><span class="mn">${evMin(e)}</span><div class="bd"><div class="k">${n.ic||''}${esc(n.k)} · <span class="side-dot" style="background:${sideColor(s)}"></span>${esc(e.team&&e.team.name||'')}</div><p>${esc(n.t)}</p>${n.tag?`<div class="tag">${esc(n.tag)}</div>`:''}</div></div>`;
  }).reverse().join('');
  const poss=sm['Ball Possession'];const rows=statRows(sm,['Total Shots','Shots on Goal','expected_goals','Corner Kicks','Fouls','Yellow Cards']);
@@ -3168,10 +3166,10 @@ function lineupReal(f){
   else{const ord={G:1,D:2,M:3,F:4};xi.forEach(p=>{const r=ord[p.pos]||3;rows[r]=rows[r]||[];rows[r].push({p,c:rows[r].length+1});});}
   const rk=Object.keys(rows).map(Number).sort((a,b)=>a-b);const R=rk.length;const out=[];
   rk.forEach((r,ri)=>{const arr=rows[r].sort((a,b)=>a.c-b.c);arr.forEach((o,ci)=>out.push({p:o.p,fr:R>1?ri/(R-1):0,fc:(ci+.5)/arr.length,n:arr.length}));});return out;};
- const W=68,H=105;
+ const W=68,H=128,HB=H/2-13;
  const BALL=(x,y,r)=>{const pg=[0,1,2,3,4].map(k=>{const a=-Math.PI/2+k*2*Math.PI/5;return `${(x+r*.42*Math.cos(a)).toFixed(2)},${(y+r*.42*Math.sin(a)).toFixed(2)}`;}).join(' ');const sp=[0,1,2,3,4].map(k=>{const a=-Math.PI/2+k*2*Math.PI/5;return `M${(x+r*.42*Math.cos(a)).toFixed(2)} ${(y+r*.42*Math.sin(a)).toFixed(2)}L${(x+r*.92*Math.cos(a)).toFixed(2)} ${(y+r*.92*Math.sin(a)).toFixed(2)}`;}).join('');return `<g><circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#111" stroke-width="${(r*.16).toFixed(2)}"/><polygon points="${pg}" fill="#111"/><path d="${sp}" stroke="#111" stroke-width="${(r*.14).toFixed(2)}"/></g>`;};
- const node=(o,s)=>{const X=s==='h'?o.fc*W:W-o.fc*W,Y=s==='h'?H-6.8-o.fr*40.5:6.8+o.fr*40.5;const p=o.p,i=info(p.id);const fill=s==='h'?'var(--p-home)':'var(--p-away)',txt=s==='h'?'#fff':'#111';const ph=plPh(p.id),cid=`pc${s}${p.id}`,R=3.1;const num=p.number==null?'':p.number;
-  let nm=lastName(p.name);const mxc=o.n<=2?18:o.n===3?15:o.n===4?12:10;if(nm.length>mxc)nm=nm.slice(0,mxc-1)+'…';
+ const node=(o,s)=>{const X=s==='h'?o.fc*W:W-o.fc*W,Y=s==='h'?H-7.2-o.fr*HB:7.2+o.fr*HB;const p=o.p,i=info(p.id);const fill=s==='h'?'var(--p-home)':'var(--p-away)',txt=s==='h'?'#fff':'#111';const ph=plPh(p.id),cid=`pc${s}${p.id}`,R=3.1;const num=p.number==null?'':p.number;
+  const mxc=o.n<=2?18:o.n===3?15:o.n===4?12:10;let nm=famName(p.name);if(nm.length>mxc)nm=lastName(p.name);if(nm.length>mxc)nm=nm.slice(0,mxc-1)+'…';
   const halo='stroke="rgba(8,8,10,.85)" stroke-width=".6" paint-order="stroke" stroke-linejoin="round"';
   let g=`<circle cx="${X}" cy="${Y}" r="${R}" fill="${fill}"/><text x="${X}" y="${Y+1}" text-anchor="middle" font-size="2.5" font-weight="800" font-family="Orbitron, sans-serif" fill="${txt}">${num}</text>`;
   if(ph)g+=`<clipPath id="${cid}"><circle cx="${X}" cy="${Y}" r="${R-.3}"/></clipPath><image href="${esc(ph)}" x="${X-R}" y="${Y-R}" width="${2*R}" height="${2*R}" clip-path="url(#${cid})" preserveAspectRatio="xMidYMid slice"/>`;
@@ -3183,7 +3181,7 @@ function lineupReal(f){
   if(i.y||i.r)g+=`<rect x="${X+R-.3}" y="${Y-.4}" width="1.3" height="1.8" rx=".25" fill="${i.r?'#FF2533':'#F2C200'}" stroke="var(--pitch)" stroke-width=".2"/>`;
   if(i.sub)g+=`<g><circle cx="${X+2.55}" cy="${Y+2.25}" r="1.1" fill="#1FA45B" stroke="var(--pitch)" stroke-width=".25"/><path d="M${X+2.2} ${Y+2.9}v-1.2l-.35.35M${X+2.2} ${Y+1.7}l.35.35M${X+2.9} ${Y+1.6}v1.2l.35-.35M${X+2.9} ${Y+2.8}l-.35-.35" stroke="#fff" stroke-width=".28" fill="none" stroke-linecap="round"/></g>`;
   return `<g>${g}</g>`;};
- const pitch=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Escalações em campo"><rect width="${W}" height="${H}" fill="var(--pitch)"/>${[1,3,5,7,9].map(i=>`<rect y="${i*10.5}" width="${W}" height="10.5" fill="var(--pitch2)"/>`).join('')}<g fill="none" stroke="var(--pitch-line)" stroke-width=".35"><rect x="1" y="1" width="${W-2}" height="${H-2}" rx="1"/><line x1="1" y1="${H/2}" x2="${W-1}" y2="${H/2}"/><circle cx="${W/2}" cy="${H/2}" r="9.15"/><rect x="${W/2-20.16}" y="1" width="40.32" height="16.5"/><rect x="${W/2-20.16}" y="${H-17.5}" width="40.32" height="16.5"/></g><text x="2.6" y="4.6" font-size="2.2" fill="rgba(255,255,255,.6)" font-family="JetBrains Mono, monospace">${esc(AL.formation||'')}</text><text x="2.6" y="${H-2.6}" font-size="2.2" fill="rgba(255,255,255,.6)" font-family="JetBrains Mono, monospace">${esc(HL.formation||'')}</text>${place(AL).map(o=>node(o,'a')).join('')}${place(HL).map(o=>node(o,'h')).join('')}</svg>`;
+ const pitch=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Escalações em campo"><rect width="${W}" height="${H}" fill="var(--pitch)"/>${[1,3,5,7,9].map(i=>`<rect y="${i*H/10}" width="${W}" height="${H/10}" fill="var(--pitch2)"/>`).join('')}<g fill="none" stroke="var(--pitch-line)" stroke-width=".35"><rect x="1" y="1" width="${W-2}" height="${H-2}" rx="1"/><line x1="1" y1="${H/2}" x2="${W-1}" y2="${H/2}"/><circle cx="${W/2}" cy="${H/2}" r="9.15"/><rect x="${W/2-20.16}" y="1" width="40.32" height="16.5"/><rect x="${W/2-20.16}" y="${H-17.5}" width="40.32" height="16.5"/></g><text x="2.6" y="4.6" font-size="2.2" fill="rgba(255,255,255,.6)" font-family="JetBrains Mono, monospace">${esc(AL.formation||'')}</text><text x="2.6" y="${H-2.6}" font-size="2.2" fill="rgba(255,255,255,.6)" font-family="JetBrains Mono, monospace">${esc(HL.formation||'')}</text>${place(AL).map(o=>node(o,'a')).join('')}${place(HL).map(o=>node(o,'h')).join('')}</svg>`;
  const list=(Lx,s)=>{const row=(p,isSub)=>{const i=info(p.id);const ics=[i.g?Array(i.g).fill(IC.ball).join(''):'',i.y?IC.card('var(--yellow)'):'',i.r?IC.card('var(--red)'):'',i.sub?IC.sub+evMin(i.sub):'',i.rt?`<span class="rt" style="background:${rcol(i.rt)}">${f1(i.rt)}</span>`:''].join('');
    return `<div class="lp">${lpPh(p.id,null,p.number==null?'':p.number,isSub&&!i.sub?'':s)}<span class="nm">${esc(p.name)}<small>${POS_PT[p.pos]||p.pos||''}</small></span><span class="ics">${ics}</span></div>`;};
   return `<div class="card lu-list"><h4 class="tlink" data-team="${Lx.team.id}" role="link" tabindex="0">${rCrest(Lx.team)}${esc(Lx.team.name)}</h4><div class="coach">Técnico: ${esc(Lx.coach&&Lx.coach.name||'não informado')}${Lx.formation?' · '+esc(Lx.formation):''}</div><h5>Titulares</h5>${(Lx.startXI||[]).map(x=>row(x.player,false)).join('')}<h5>Banco</h5>${(Lx.substitutes||[]).map(x=>row(x.player,true)).join('')||'<p style="color:var(--muted);font-size:12px">Não informado</p>'}</div>`;};
@@ -3559,16 +3557,16 @@ const fx=(v,d=1)=>v==null?'–':f1(v,d);
 
 /* ---------- contexto a partir da API-Football ---------- */
 function ctxFromApi(f){
- const sm=statMap(f),st=rStatus(f),lu=f.lineups||[],ev=f.events||[];
+ const sm=statMap(f),st=rStatus(f),lu=f.lineups||[],ev=f.events||[],NMc=nameMap(f);
  const g=(k,s)=>sm[k]&&sm[k][s]!=null?sv(sm[k][s]):null;
  const PH={};(f.players||[]).forEach(t=>(t.players||[]).forEach(x=>{PH[x.player.id]=x.player.photo;}));
  const P=lvPlayers(f).map(p=>({photo:PH[p.id]||null,id:p.id,name:p.name,side:p.side,pos:POS_PT[p.pos]||p.pos,posName:RPOS[p.pos]||'jogador',gk:p.pos==='G',mins:p.mins,rating:p.rating||0,goals:p.goals,assists:p.assists,shots:p.shots,sot:p.sot,key:p.key,passes:p.passes,acc:p.acc||null,drib:p.drib,tkl:p.tkl,intc:p.intc,def:p.def,duelsW:p.duelsW,duels:p.duels,yc:p.yc,rc:p.rc,sub:p.sub,xg:null,xa:null,prog:null,press:null,heat:null}));
  const team=s=>{const t=s==='h'?f.teams.home:f.teams.away,L=lu.find(x=>x.team.id===t.id)||{};
   return {side:s,id:t.id,name:t.name,short:teamCode(t.name),logo:t.logo||null,goals:(s==='h'?f.goals.home:f.goals.away)||0,xg:g('expected_goals',s),xg1:null,xg2:null,shots:g('Total Shots',s),sot:g('Shots on Goal',s),big:null,poss:g('Ball Possession',s),passes:g('Total passes',s),acc:g('Passes %',s),corners:g('Corner Kicks',s),fouls:g('Fouls',s),yellow:g('Yellow Cards',s)||0,red:g('Red Cards',s)||0,saves:g('Goalkeeper Saves',s),inBox:g('Shots insidebox',s),ppda:null,tilt:null,recHigh:null,press:null,spXg:null,formation:L.formation||'',coach:L.coach&&L.coach.name||''};};
- const goals=ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty').map(e=>({m:e.time.elapsed+(e.time.extra||0)/10,label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:e.player&&e.player.name||'',assist:e.assist&&e.assist.name||null,type:e.detail==='Penalty'?'pênalti':e.detail==='Own Goal'?'gol contra':'jogada',xg:null,dist:null,body:null}));
- const cards=ev.filter(e=>e.type==='Card').map(e=>({m:e.time.elapsed,label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:e.player&&e.player.name||'',card:/Second/i.test(e.detail)?'Y2':/Red/i.test(e.detail)?'R':'Y'}));
- const subs=ev.filter(e=>e.type==='subst').map(e=>({m:e.time.elapsed,label:evMin(e),side:sideOf(f,e.team&&e.team.id),a:e.player&&e.player.name||'',b:e.assist&&e.assist.name||''}));
- const missedPens=ev.filter(e=>e.type==='Goal'&&e.detail==='Missed Penalty').map(e=>({label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:e.player&&e.player.name||''}));
+ const goals=ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty').map(e=>({m:e.time.elapsed+(e.time.extra||0)/10,label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:evFull(NMc,e.player),assist:e.assist&&e.assist.name?evFull(NMc,e.assist):null,type:e.detail==='Penalty'?'pênalti':e.detail==='Own Goal'?'gol contra':'jogada',xg:null,dist:null,body:null}));
+ const cards=ev.filter(e=>e.type==='Card').map(e=>({m:e.time.elapsed,label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:evFull(NMc,e.player),card:/Second/i.test(e.detail)?'Y2':/Red/i.test(e.detail)?'R':'Y'}));
+ const subs=ev.filter(e=>e.type==='subst').map(e=>({m:e.time.elapsed,label:evMin(e),side:sideOf(f,e.team&&e.team.id),a:evFull(NMc,e.player),b:e.assist&&e.assist.name?evFull(NMc,e.assist):''}));
+ const missedPens=ev.filter(e=>e.type==='Goal'&&e.detail==='Missed Penalty').map(e=>({label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:evFull(NMc,e.player)}));
  const vars=ev.filter(e=>e.type==='Var').map(e=>({label:evMin(e),detail:VAR_PT[e.detail]||e.detail||'revisão'}));
  const d=new Date(f.fixture.date);const isToday=ymd(d)===ymd(NOW());
  return baseCtx({src:'api',id:String(f.fixture.id),lg:{name:lgName(f),short:lgShort(f),tag:tagify(lgShort(f))},m:{off:isToday?0:1,date:d},dateLabel:isToday?'hoje':shortDate(d),live:st.k==='live',minute:st.label,stage:roundTxt(f.league.round),
@@ -5056,76 +5054,8 @@ async function preDeep(f,D){
  const g2=wdl(gh,ga);
  const goals={tot,gh,ga,over:Math.round(over*100),btts:Math.round(btts*100),o15:Math.round((1-pois(tot,0)-pois(tot,1))*100),o35:Math.round((1-under-pois(tot,3))*100),attH:att(T[0]),defH:def(T[0]),attA:att(T[1]),defA:def(T[1])};
  goals.trend=goals.over>=58?'mais de 2,5 gols':goals.over<=42?'menos de 2,5 gols':'jogo no limite dos 2,5 gols';
- const R={T,F,dr,lh:gh,la:ga,lhW:lh,laW:la,score:g2.score,final:pct3(p),sameLg,odds:M,goals};regPrev(f,R);return R;
+ const R={T,F,dr,lh:gh,la:ga,lhW:lh,laW:la,score:g2.score,final:pct3(p),sameLg,odds:M,goals};return R;
 }
-/* ================= placar de acertos =================
-   Toda análise pré-jogo calculada no site é registrada uma vez (a primeira vale).
-   O servidor (api/acertos.js) confere depois do jogo e devolve o resumo. */
-const ACC={data:null,t:0,busy:null,sent:new Set()};
-try{JSON.parse(localStorage.getItem('telscore:reg')||'[]').forEach(i=>ACC.sent.add(i));}catch(e){}
-function regPrev(f,X){
- try{
-  if(!REAL.on||!f||!f.fixture||!X||!X.final)return;
-  const id=f.fixture.id,st=f.fixture.status&&f.fixture.status.short;
-  if(st!=='NS'||ACC.sent.has(id))return;
-  if(!(Date.parse(f.fixture.date)>Date.now()+120000))return;
-  ACC.sent.add(id);
-  const P=X.final,G=X.goals||{},L=f.league||{};
-  const body={fixture_id:id,inicio:f.fixture.date,liga_id:L.id,liga_nome:L.name,pais:L.country,temporada:L.season,rodada:L.round,
-   mandante_id:f.teams.home.id,mandante:f.teams.home.name,visitante_id:f.teams.away.id,visitante:f.teams.away.name,
-   p_casa:P.h,p_empate:P.d,p_fora:P.a,placar_prev:X.score?X.score[0]+'-'+X.score[1]:null,over25:G.over,btts:G.btts,gols_esperados:G.tot!=null?Math.round(G.tot*100)/100:null,fonte:'site',versao:'v35'};
-  fetch('/api/acertos?acao=registrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).then(r=>r.json()).then(j=>{if(j&&(j.ok||j.motivo)){try{const k='telscore:reg',a=JSON.parse(localStorage.getItem(k)||'[]');a.push(id);localStorage.setItem(k,JSON.stringify(a.slice(-400)));}catch(e){}}else ACC.sent.delete(id);}).catch(()=>ACC.sent.delete(id));
- }catch(e){}
-}
-function loadAcc(force){
- if(ACC.data&&!force&&Date.now()-ACC.t<300000)return Promise.resolve(ACC.data);
- if(ACC.busy)return ACC.busy;
- ACC.busy=fetch('/api/acertos?acao=placar').then(r=>r.ok?r.json():{ok:false}).catch(()=>({ok:false})).then(j=>{if(!j||typeof j!=='object')j={ok:false};ACC.data=j;ACC.t=Date.now();ACC.busy=null;return j;});
- return ACC.busy;
-}
-const accPct=b=>b&&b.n?b.pct+'%':'–';
-const accOf=(b,w)=>b&&b.n?`${b.acertos} de ${pl(b.n,w)}`:'sem jogos ainda';
-async function renderAccCard(){
- const box=$('#pd-acc');if(!box)return;
- if(!REAL.on){box.hidden=true;return;}
- const A=await loadAcc();
- if(!A||!A.ok){box.hidden=true;return;}
- box.hidden=false;
- const R=A.resultado||{};
- box.innerHTML=`<div class="card-h"><div><h3>Placar de acertos</h3><div class="sub">Análise TEL.SCORE conferida com o resultado</div></div></div>
- ${R.n?`<div class="acc-mini"><div class="acc-big"><b class="num">${R.pct}%</b><span>acertou o resultado em ${R.acertos} de ${pl(R.n,'jogo(s)')}</span></div>
- <div class="acc-tiles"><div><b class="num">${accPct(A.gols)}</b><span>gols (2,5)</span></div><div><b class="num">${accPct(A.btts)}</b><span>os dois marcam</span></div><div><b class="num">${accPct(A.placar)}</b><span>placar exato</span></div></div></div>`
- :`<p class="acc-wait">Os primeiros resultados aparecem aqui depois dos jogos.${A.pendentes?` ${pl(A.pendentes,'análise(s)')} aguardando o apito final.`:''}</p>`}
- <button class="btn sm acc-go" data-go="acertos">Ver placar completo →</button>`;
-}
-function accDate(iso){try{return new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',timeZone:TZ});}catch(e){return '';}}
-async function renderAcertos(force){
- const box=$('#acc-body');if(!box)return;
- if(!REAL.on){box.innerHTML='<div class="empty">O placar de acertos usa os jogos reais. Ele aparece quando o site está ligado à API-Football.</div>';return;}
- if(!ACC.data||force)box.innerHTML='<div class="empty">Carregando o placar de acertos…</div>';
- const A=await loadAcc(force);if(view!=='acertos')return;
- if(!A||!A.ok){box.innerHTML=`<div class="empty">${A&&A.configurado===false?'O placar de acertos está sendo configurado. Volte em breve.':'Não foi possível carregar o placar de acertos agora.'}</div>`;return;}
- if(!A.total){box.innerHTML=`<div class="empty"><b>Placar zerado, contagem começando.</b><br>${A.pendentes?`${pl(A.pendentes,'análise(s)')} já ${A.pendentes===1?'está registrada':'estão registradas'} e ${A.pendentes===1?'será conferida':'serão conferidas'} depois do apito final.`:'Abra a análise de um jogo que ainda não começou: ela entra no placar e é conferida depois do jogo.'}</div>${ACC_NOTE}`;return;}
- const R=A.resultado,side=k=>k==='h'?'casa':k==='a'?'fora':'empate';
- const tile=(v,l,s,hl)=>`<div${hl?' class="hl"':''}><b class="num">${v}</b><span>${l}</span>${s?`<small>${s}</small>`:''}</div>`;
- const fx=A.faixas.filter(f=>f.n).map(f=>{const d=f.pct-f.esperado;return `<div class="acc-fx"><div class="acc-fx-h"><b>${esc(f.nome)}</b><span>${f.de===0?`até ${f.ate-1}%`:f.ate>=100?`${f.de}% ou mais`:`${f.de}–${f.ate-1}%`} · ${pl(f.n,'jogo(s)')}</span></div>
-  <div class="acc-bar"><i style="width:${f.pct}%"></i><em style="left:${f.esperado}%" title="Previsto"></em></div>
-  <div class="acc-fx-f"><span>Acertou <b>${f.pct}%</b></span><span>Previsto ${f.esperado}%${Math.abs(d)>=8&&f.n>=10?(d>0?' · acima do esperado':' · abaixo do esperado'):''}</span></div></div>`;}).join('');
- const lg=A.ligas.map(l=>`<tr><td class="l acc-lg">${esc(l.nome)}${l.pais?`<small>${esc(l.pais)}</small>`:''}</td><td class="num">${l.n}</td><td class="num">${l.acertos}</td><td class="num"><b>${l.pct}%</b></td></tr>`).join('');
- const ult=A.ultimos.map(u=>{const k=u.palpite,pp=k==='h'?u.p[0]:k==='a'?u.p[2]:u.p[1];const who=k==='h'?u.mandante:k==='a'?u.visitante:'Empate';
-  return `<li class="${u.acertou?'ok':'no'}"><span class="acc-ic" aria-label="${u.acertou?'Acertou':'Errou'}">${u.acertou?'✓':'✕'}</span><div class="acc-m"><div class="acc-t"><span>${esc(u.mandante||'')}</span><b class="num">${u.gols[0]} x ${u.gols[1]}</b><span>${esc(u.visitante||'')}</span></div>
-  <div class="acc-s">${accDate(u.inicio)} · ${esc(u.liga||'')} · Análise: <b>${esc(who||'')}&nbsp;${pp}%</b>${u.placar_prev?` · <span class="acc-nw">placar ${u.placar_prev.replace('-',' x ')}${u.placar_exato?' <span class="acc-ex">exato</span>':''}</span>`:''}</div></div></li>`;}).join('');
- box.innerHTML=`<div class="stage acc-hero">${ARCS}<div class="acc-hero-in"><span class="eyebrow">Resultado do jogo · ${R.n} ${R.n===1?'jogo conferido':'jogos conferidos'}</span><div class="acc-hero-n"><b class="num">${R.pct}%</b><span>de acerto: a análise TEL.SCORE apontou o resultado certo em <b>${R.acertos}</b> de ${pl(R.n,'jogo(s)')}.</span></div>
-  <div class="acc-hero-t">${tile(accPct(A.semana),'últimos 7 dias',A.semana&&A.semana.n?accOf(A.semana,'jogo(s)'):'')}${tile(A.sequencia,'acertos seguidos','resultado do jogo')}${tile(accPct(A.gols),'mais ou menos de 2,5 gols',accOf(A.gols,'jogo(s)'))}${tile(accPct(A.btts),'os dois marcam',accOf(A.btts,'jogo(s)'))}${tile(accPct(A.placar),'placar exato',accOf(A.placar,'jogo(s)'))}</div>
-  ${A.pendentes?`<p class="acc-pend">${pl(A.pendentes,'análise(s)')} aguardando o apito final.</p>`:''}</div></div>
- <div class="acc-grid">
-  <div class="card"><div class="card-h"><div><h3>Quando aponta favorito</h3><div class="sub">Quanto a análise previa e quanto acertou, por faixa de confiança</div></div></div>${fx||'<p class="acc-wait">Sem jogos suficientes ainda.</p>'}<div class="legend acc-leg"><span><i style="background:var(--red)"></i>Acertou</span><span><i class="acc-mk"></i>Previsto pela análise</span></div></div>
-  <div class="card"><div class="card-h"><div><h3>Por liga</h3><div class="sub">Resultado do jogo</div></div></div><div class="tbl-wrap"><table class="tbl acc-tbl"><thead><tr><th class="l">Liga</th><th class="num">Jogos</th><th class="num">Acertos</th><th class="num">%</th></tr></thead><tbody>${lg}</tbody></table></div></div>
- </div>
- <div class="card acc-last"><div class="card-h"><div><h3>Últimos jogos conferidos</h3><div class="sub">O que a análise apontou antes do jogo e como terminou</div></div><button class="btn sm" id="acc-reload">Atualizar</button></div><ul class="acc-list">${ult}</ul></div>
- ${ACC_NOTE}`;
-}
-const ACC_NOTE='<p class="chart-note acc-note">Contam só análises registradas antes do início do jogo, e a primeira análise de cada jogo é a que vale: nada é apagado ou trocado depois. Vale o placar dos 90 minutos. Jogos adiados ou cancelados não entram. Gols e “os dois marcam” só contam quando a análise apontou uma tendência. Probabilidade é estimativa, não certeza.</p>';
 // Leitura: quem é favorito, por quê e qual o ponto de atenção
 function deepRead(X,hn,an){
  const P=X.final,[th,ta]=X.T;const fk=favOf(P);const nm=k=>k==='h'?hn:an;const out={verdict:'',reasons:[],alert:'',tone:'ok'};
@@ -5177,7 +5107,7 @@ function deepCard0(X,h,a){
  <div class="dp-read ${RD.tone}"><b>${icon}</b><div><strong>${esc(RD.verdict)}</strong>${RD.reasons.length?`<ul>${RD.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:''}${RD.alert?`<p class="dp-alert">${esc(RD.alert)}</p>`:''}</div></div>
  <div class="tf"><div class="tf-h"><span>O que pesa no jogo</span></div><div class="tf-row tf-axis"><span></span><div class="tf-ax"><span>← ${esc(h.name)}</span><span>${esc(a.name)} →</span></div><span></span></div>${fac}</div>
  ${rows.length?`<div class="dp-cmp-h"><span><i style="background:var(--red)"></i>${esc(h.name)}</span><b>Números lado a lado</b><span>${esc(a.name)}<i style="background:var(--away)"></i></span></div><div class="dp-cmp">${cmpRows(rows)}</div>`:''}
- <p class="chart-note">${[xsrcTxt(th,h.name),xsrcTxt(ta,a.name)].filter(Boolean).map(x=>x+' ').join('')}${th.sx||ta.sx?'O xG da temporada vem da base de jogos da TEL.SCORE. ':''}A força do elenco usa o nível estimado da liga e a posição na tabela. Probabilidade é uma estimativa, não uma certeza. <button class="acc-lnk" data-go="acertos">Veja o placar de acertos da TEL.SCORE →</button></p></div>`;
+ <p class="chart-note">${[xsrcTxt(th,h.name),xsrcTxt(ta,a.name)].filter(Boolean).map(x=>x+' ').join('')}${th.sx||ta.sx?'O xG da temporada vem da base de jogos da TEL.SCORE. ':''}A força do elenco usa o nível estimado da liga e a posição na tabela. Probabilidade é uma estimativa, não uma certeza: no futebol, tudo pode acontecer.</p></div>`;
 }
 async function preReal(f,tab){
  const D=await preData(f);
@@ -6018,7 +5948,6 @@ function tmRead(C){
   const relIdx=g.findIndex(x=>{const zz=zoneInfo(x.description);return zz&&zz.k==='rel';});
   if(relIdx>0){const relRow=g[relIdx];if(r.rank<relRow.rank)t+=`. Está ${pl(r.points-relRow.points,'ponto(s)')} acima do rebaixamento`;else{const safe=g[relIdx-1];t+=`. Precisa de ${pl(Math.max(1,safe.points-r.points+1),'ponto(s)')} para sair do rebaixamento`;}}
   out.push(t+'.');}
- if(B&&B.acertos&&B.acertos.n)out.push(`<b>Placar de acertos:</b> a análise TEL.SCORE acertou o resultado em ${B.acertos.acertos} de ${pl(B.acertos.n,'jogo(s)')} deste time.`);
  return out.length?out:['Ainda há poucos jogos para uma leitura confiável deste time.'];
 }
 function tmMini(C){
@@ -6243,7 +6172,7 @@ async function doRefresh(){
  try{
   if(await siteUpdated()){toast('Nova versão da TEL.SCORE. Recarregando…');setTimeout(()=>location.reload(),500);return;}
   if(REAL.on){for(const k of Object.keys(REAL.cache)){if(!/endpoint=(teams|players%2Fsquads|status)(&|$)/.test(k))delete REAL.cache[k];}}
-  try{BANCO.cache={};}catch(e){}try{ACC.data=null;ACC.t=0;}catch(e){}try{TM.ctx=null;}catch(e){}try{LGP.ctx=null;}catch(e){}
+  try{BANCO.cache={};}catch(e){}try{TM.ctx=null;}catch(e){}try{LGP.ctx=null;}catch(e){}
   const y=window.scrollY;
   if(REAL.on)await renderTickerReal().catch(()=>{});
   show(view,false);window.scrollTo(0,y);
@@ -6281,11 +6210,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#more').hidden)
 })();
 
 /* ================= navegação ================= */
-let view='partidas';const VIEWS=['partidas','centro','ligas','lab','estudio','acertos','time','liga'];
+let view='partidas';const VIEWS=['partidas','centro','ligas','lab','estudio','time','liga'];
 function show(v,push=true){
- view=v;$$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));$$('.bn').forEach(b=>{if(b.dataset.go===v||b.id==='bn-more'&&['lab','acertos'].includes(v))b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});document.body.dataset.view=v;$$('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
+ view=v;$$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));$$('.bn').forEach(b=>{if(b.dataset.go===v||b.id==='bn-more'&&v==='lab')b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});document.body.dataset.view=v;$$('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
  if(v!=='centro')stopReplay();
- if(v==='partidas')(REAL.on?renderPartidasReal:renderPartidas)();if(v==='centro')(REAL.on?renderCentroReal:renderCentro)();if(v==='ligas')(REAL.on?renderLigasReal:renderLeagues)();if(v==='lab')renderLabAny();if(v==='acertos')renderAcertos();if(v==='time')renderTime();if(v==='liga')renderLiga();if(v==='estudio'){nvBar();nvLoad();if(rsOn()){const n=$('#v-estudio .real-note');if(n)n.hidden=true;renderStudioReal();}else{renderStudioControls();generate();}}
+ if(v==='partidas')(REAL.on?renderPartidasReal:renderPartidas)();if(v==='centro')(REAL.on?renderCentroReal:renderCentro)();if(v==='ligas')(REAL.on?renderLigasReal:renderLeagues)();if(v==='lab')renderLabAny();if(v==='time')renderTime();if(v==='liga')renderLiga();if(v==='estudio'){nvBar();nvLoad();if(rsOn()){const n=$('#v-estudio .real-note');if(n)n.hidden=true;renderStudioReal();}else{renderStudioControls();generate();}}
  if(v!=='time'&&v!=='liga'){try{localStorage.setItem('telscore:view',v);}catch(e){}}
  if(push){try{history.replaceState(null,'','#'+(v==='time'?'time-'+TM.id:v==='liga'?'liga-'+LGP.id:v));}catch(e){}}
  window.scrollTo(0,0);
@@ -6306,7 +6235,6 @@ document.addEventListener('click',e=>{
  if(t.id==='lg-page')return openLeague(REAL.lgTab);
  if(t.dataset.tmlg){REAL.lgTab=+t.dataset.tmlg;return show('ligas');}
  if(t.id==='tm-back')return show(TM.prev&&TM.prev!=='time'?TM.prev:'partidas');
- if(t.id==='acc-reload')return renderAcertos(true);
  if(t.id==='nv-open'){NV.form=true;nvBar();const i=$('#nv-pass');if(i)i.focus();return;}
  if(t.id==='nv-off')return nvOff();
  if(t.id==='nv-sync')return nvLoad(true);

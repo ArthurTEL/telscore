@@ -132,14 +132,14 @@ O site é pensado primeiro para o celular (é por onde chega quem vem do Instagr
 - Tabelas largas (jogadores, análise tática) rolam para o lado com a coluna do jogador fixa.
 - No Estúdio, ao escolher um formato a tela desce até a prévia do post.
 - **Atualizar:** botão ⟳ no canto de cima (no celular e no computador) e **puxar para baixo** no topo de qualquer tela. Atualiza jogos, placares, tabelas e páginas sem recarregar o site. Se houver versão nova da TEL.SCORE publicada, o botão recarrega o site sozinho, e ao voltar para o app aparece o aviso "Nova versão disponível" (não precisa mais de Ctrl+F5).
-- **Barra de baixo:** Jogos, Ligas, Central, Estúdio e **Mais**. O "Mais" abre um painel com Análise tática, Placar de acertos, Tabelas, Estúdio, atalhos para a página de cada liga (com escudo), o tema dia/noite e o botão de atualizar.
+- **Barra de baixo:** Jogos, Ligas, Central, Estúdio e **Mais**. O "Mais" abre um painel com Análise tática, Central do jogo, Tabelas, Estúdio, atalhos para a página de cada liga (com escudo), o tema dia/noite e o botão de atualizar.
 - **Topo fixo e limpo no celular:** logo e botão de atualizar sempre à vista; o tema foi para o "Mais" e a faixa de placares do topo some no celular (os jogos já estão na página Jogos). As abas da Central, do time e da liga ficam fixas logo abaixo do topo.
 - **Modo compacto (telas até 720 px), no estilo dos apps de placar:**
-  - Na página de Partidas a lista de jogos vem primeiro; o jogo em destaque, o Radar do dia e o placar de acertos vão para baixo.
+  - Na página de Partidas a lista de jogos vem primeiro; o jogo em destaque e o Radar do dia vão para baixo.
   - Linhas de jogo baixas, com escudos pequenos e sem estádio e árbitro (eles aparecem na central).
   - Títulos menores, sem o texto de apresentação, e blocos com menos espaço em volta.
   - Abas da Central do jogo e da página do time ficam fixas no topo ao rolar.
-  - Placar, lance a lance, análise, tabelas, elenco e placar de acertos com fontes e espaçamentos reduzidos.
+  - Placar, lance a lance, análise, tabelas, elenco com fontes e espaçamentos reduzidos.
 - **Dias da página Jogos:** a fileira mostra duas semanas para trás e duas para a frente, com o nome do mês na virada. O botão **Data** (calendário) abre qualquer dia, passado ou futuro (por exemplo, 10 de julho). Em datas distantes aparece o botão **Voltar · hoje**. "Hoje", "Ontem" e "Amanhã" cabem na bolinha mesmo em telas pequenas.
 - **Classificação no celular:** a tabela mostra todas as colunas do computador (J, V, E, D, GP, GC, SG, Pts, xG, xGC, ±xPts e últimos 5) e é só **arrastar para o lado**. A posição e o clube ficam fixos. Um aviso "Arraste a tabela para o lado" aparece até a primeira vez que a pessoa arrastar.
 - **Jogadores na Central:** o nome tem espaço próprio e nunca passa por cima da posição; nomes compridos terminam em "…", e quem entrou durante o jogo aparece com "entrou no jogo" embaixo do nome. A coluna do jogador fica fixa ao arrastar a tabela.
@@ -161,15 +161,11 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
    - Opcional: `COLETA_MAX` (padrão `15`) = máximo de requisições da API por coleta; `COLETA_RESERVA` (padrão `35`) = requisições do dia que ficam guardadas para o site.
 2. Faça um novo deploy (**Deployments → ⋯ → Redeploy**). Variáveis novas só valem depois de um deploy.
 
-## Placar de acertos (banco de dados)
+## Placar de acertos (retirado do site)
 
-- Banco no **Supabase** (Postgres). A tabela é criada com `supabase/01_placar_de_acertos.sql` (SQL Editor → Run).
-- Quando a análise TEL.SCORE de um jogo que ainda não começou é calculada no site (prévia na Central do jogo ou Estúdio), ela é registrada em `api/acertos.js`. Só a primeira análise de cada jogo vale e nada é trocado depois.
-- A conferência roda sozinha duas vezes por dia (cron da Vercel em `vercel.json`, 00h30 e 08h de Brasília): busca o resultado dos jogos encerrados na API-Football, em lotes de 20 jogos por requisição.
-- Vale o placar dos 90 minutos. Jogo adiado, cancelado ou com análise registrada depois do início é anulado e não conta.
-- Contam: resultado do jogo, mais ou menos de 2,5 gols (quando a análise aponta tendência: 58% ou mais, ou 42% ou menos), os dois marcam (55% ou mais, ou 40% ou menos) e placar exato.
-- Página **Placar de acertos** (`/#acertos`): percentual geral, últimos 7 dias, sequência, faixas de confiança (previsto contra real), por liga e últimos jogos. Resumo no card lateral da página de Partidas.
-- Segurança: a tabela tem RLS ligado e sem regras, então ninguém acessa de fora. Só a função do site, com a chave secreta guardada na Vercel.
+O placar de acertos saiu da tela em 25/10/2026: o card da página de Partidas, a página `/#acertos`, o atalho no menu Mais, o link na prévia e a linha na página do time. O site também parou de registrar as análises novas. Quem abrir um link antigo com `#acertos` cai na página de Partidas.
+
+O que já estava guardado continua no Supabase (tabela `previsoes`), e `api/acertos.js` segue no projeto, sem uso pela tela. Os dois crons de conferência em `vercel.json` só conferem o que ainda estava pendente e depois não fazem mais nada; se quiser, dá para apagá-los.
 
 ## Banco de jogos (partes 2 e 3)
 
@@ -224,7 +220,7 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
 ## Página do time
 
 - Toque no nome ou no escudo de um time na **tabela das ligas** (e das copas), no **topo da central do jogo** ou no título das **escalações**. Endereço próprio: `/#time-127` (o número é o id do time na API-Football), dá para compartilhar.
-- **Resumo:** cabeçalho com estádio, fundação, posição e forma; próximo jogo com contagem regressiva e atalho para a prévia; Leitura TEL.SCORE (forma, gols, casa e fora, xG da temporada, situação na tabela e placar de acertos do time); trecho da tabela; desempenho pelo xG; desfalques do próximo jogo; últimos 5 jogos.
+- **Resumo:** cabeçalho com estádio, fundação, posição e forma; próximo jogo com contagem regressiva e atalho para a prévia; Leitura TEL.SCORE (forma, gols, casa e fora, xG da temporada e situação na tabela); trecho da tabela; desempenho pelo xG; desfalques do próximo jogo; últimos 5 jogos.
 - **Elenco:** elenco inteiro por posição, com idade, número, jogos, minutos, gols, assistências, cartões e nota; destaques (artilheiro, garçom, melhor nota, mais minutos) e quem está fora do próximo jogo.
 - **Jogos:** últimos 10 e próximos 5 (toque abre a central), com o xG de cada jogo guardado e gráfico "xG jogo a jogo".
 - **Números:** campanha, casa x fora (com xG), gols por faixa de minutos, sequências e recordes, formações, pênaltis, cartões e médias por jogo da base TEL.SCORE.
