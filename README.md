@@ -265,6 +265,17 @@ Em **Estúdio → Tabelas**, ao escolher uma copa (Libertadores, Sul-Americana, 
 
 Funciona em todos os formatos de saída (carrossel, post único, story, vídeo animado, WhatsApp, X etc.). Os confrontos saem da lista de jogos da competição, atualizada a cada 30 minutos.
 
+## Estúdio: Times (o momento de um time)
+
+Em **Estúdio → Times**, escolha a liga e o time (os seus times favoritos aparecem primeiro). Na página de qualquer time, o botão **✎ Post** abre o Estúdio direto nele. O site junta, para o time:
+
+- **A tabela da liga nacional:** posição, pontos, aproveitamento, distância para o líder, para a zona de cima (Libertadores, Champions, acesso etc.) e para o rebaixamento, com a conta de quantos jogos faltam. Quando a matemática já decide, o post diz: campeão, rebaixado, livre do rebaixamento ou vaga garantida.
+- **Todas as competições da temporada:** continental, copa nacional e estadual. Para cada uma: vivo (com a fase e o próximo jogo), eliminado (em que fase e por quem, com o agregado), campeão ou vice. Amistosos ficam de fora.
+- **A fase recente:** pontos nos últimos 5 jogos, sequências (vitórias seguidas, invencibilidade, jejum), gols marcados e sofridos, casa e fora.
+- **A agenda** e **os destaques do elenco** (artilheiro, garçom, melhor nota e quem mais joga).
+
+Formatos: **Momento do time** (raio-x completo), **Todas as frentes**, **Situação na tabela**, **Fase recente**, **Próximos jogos**, **Destaques do elenco** e **Enquete do time**. Funcionam em todas as saídas (carrossel, post único, story, vídeo animado, WhatsApp, X, LinkedIn e newsletter). Cada time gasta de 6 a 10 requisições na primeira vez; depois fica no cache.
+
 ## Revisão dos posts
 
 - O carrossel agora tem até 10 slides (antes 5): nenhuma informação do post fica de fora; o que sobra entra no slide anterior.
@@ -300,7 +311,7 @@ O plano grátis da API-Football permite 100 requisições por dia; o Pro, 7.500 
 | Jogos de hoje sem partida ao vivo | 5 min |
 | Jogos de dias anteriores | 6 h |
 | Partida encerrada (central) | 24 h |
-| Classificação | 1 h |
+| Classificação | 10 min |
 | Histórico do árbitro (jogos da temporada) | 12 h |
 | Contexto do jogo: odds e tabela (Estúdio e Leitura TEL.SCORE) | 1 h |
 | Nível da liga dos clubes em copas e competições continentais | 30 min |
