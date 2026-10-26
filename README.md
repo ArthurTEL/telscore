@@ -272,6 +272,14 @@ Em **Estúdio → Times**, escolha a liga e o time (os seus times favoritos apar
 
 Formatos: **Momento do time** (raio-x completo), **Todas as frentes**, **Situação na tabela**, **Fase recente**, **Próximos jogos**, **Destaques do elenco** e **Enquete do time**. Funcionam em todas as saídas (carrossel, post único, story, vídeo animado, WhatsApp, X, LinkedIn e newsletter). Cada time gasta de 6 a 10 requisições na primeira vez; depois fica no cache.
 
+## Estúdio: jogador em foco
+
+Em **Estúdio → Jogos**, escolha a partida e, em **Foco**, um jogador. A lista de formatos troca para os formatos do jogador, e a foto dele aparece na capa de todos (carrossel, post único, story e vídeo). Com o foco em "Automático" ou num time, os formatos do jogo continuam os mesmos de sempre (Craque do jogo, Herói invisível, Quem ficou devendo, Relatório de scout etc.).
+
+- **Veredito TEL.SCORE:** a nota do jogador no jogo é comparada com a média dele na temporada (todas as competições) ou, quando não há temporada, com a média do time no jogo. O resultado é DECIDIU O JOGO (gol ou assistência com nota alta), BRILHOU (nota 8 ou mais), ENTREGOU, NA MÉDIA, FICOU DEVENDO ou POUCO TEMPO (menos de 25 minutos, sem gol nem assistência).
+- **Formatos:** Atuação completa, Entregou ou ficou devendo?, Números do jogo, Raio-x no jogo (percentis contra os jogadores da partida), Duelo direto (contra o melhor rival da mesma função), No ranking do jogo, Jogo x temporada e Enquete do jogador.
+- A temporada do jogador vem da lista de jogadores do time na API-Football (até 3 requisições, guardadas por 12 horas). Enquanto carrega, o formato "Jogo x temporada" aparece como "Carregando a temporada do jogador…".
+
 ## Revisão dos posts
 
 - O carrossel agora tem até 10 slides (antes 5): nenhuma informação do post fica de fora; o que sobra entra no slide anterior.

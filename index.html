@@ -2676,18 +2676,18 @@ const tCode=T=>T.short||(T.team&&T.team.short)||teamCode(T.name);
 const crestHTML=T=>{const u=prox(T.logo);return `<span class="mxc">${u?`<img src="${esc(u)}" alt="" crossorigin="anonymous">`:`<i>${esc(tCode(T))}</i>`}<b>${esc(tCode(T))}</b></span>`;};
 const mxHTML=c=>c.teamMode&&c.T?`<div class="mx solo">${crestHTML(c.T)}</div>`:c.H&&c.A?`<div class="mx">${crestHTML(c.H)}${c.pre?`<span class="mxs num pre">${esc(c.kick||'')}</span>`:`<span class="mxs num">${c.H.goals}<em>×</em>${c.A.goals}</span>`}${crestHTML(c.A)}</div>`:'';
 const FEAT={destaque:'P','raio-x':'P',scout:'P',heatmap:'P',devendo:'flop','heroi-oculto':'hero',duelo:'P'};
-const featPhoto=(c,f)=>{const p=FEAT[f.id]&&c[FEAT[f.id]];return p&&p.photo?prox(p.photo):'';};
+const featPhoto=(c,f)=>{const p=f.pl?c.P:FEAT[f.id]&&c[FEAT[f.id]];return p&&p.photo?prox(p.photo):'';};
 function compose(c,f,tone,plat,r){
  const out=addDuel(c,f,f.run(c,r));const did=tone.id==='didatico';
  const blocks=out.blocks.map(b=>b.t+(did&&b.why?` (${b.why}.)`:''));const bviz=out.blocks.map(b=>b.viz||null);
  const em=()=>tone.emoji?' '+pick(r,tone.em):'';
  const open=pick(r,tone.open)(c),close=pick(r,tone.close)(c);
- const tags=(f.ko?[`#${c.lg.tag}`,'#MataMata','#Chaveamento','#FutebolAnalitico','#TELSCORE']:c.tags).slice(0,plat==='x'?2:plat==='li'?3:6).join(' ');
+ const tags=(f.ko?[`#${c.lg.tag}`,'#MataMata','#Chaveamento','#FutebolAnalitico','#TELSCORE']:f.pl&&c.P?[`#${tagify(c.P.name)}`,...c.tags.filter(t=>t!=='#xG'||c.has.xg)]:c.tags).slice(0,plat==='x'?2:plat==='li'?3:6).join(' ');
  const dt=c.m.off===0?'hoje':shortDate(c.m.date);const liveNote=c.live?` (parcial, ${c.minute})`:'';
  let html='',text='';
  if(plat==='ig'){
   const its=vizItems(c,blocks,f.name,f.id==='pre-completo'||f.ko||(c.tab&&c.multi)?13:11,f.id,bviz);const sl=its.map(x=>x.src+(x.note?' '+x.note:''));const N=its.length+2;
-  const ph=featPhoto(c,f),cvi=coverImage(c),aseed=f.id+(c.id||c.score);const st0=String(out.stat[0]||''),showSt=/\d/.test(st0)&&st0.length<=14;const phase=c.teamMode?'Momento do time':c.tab?'Tabela':c.pre?'Pré-jogo':c.live?'Ao vivo':'Pós-jogo';html=`<div class="slides"><div class="slide cover">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}${SBRAND(`${esc(c.lg.short)} · ${dt}`)}${mxHTML(c)}<div class="cvb"><span class="ckick">${esc(phase)}</span><h5>${esc(out.head)}</h5><div class="bsrow"><div style="min-width:0">${showSt?`<div class="bs num">${esc(st0)}</div>`:''}<div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div>${ph?`<img class="pp" src="${esc(ph)}" alt="" crossorigin="anonymous">`:''}</div></div><div class="foot"><span>@tel.score</span><span>arraste →</span></div></div>
+  const ph=featPhoto(c,f),cvi=coverImage(c),aseed=f.id+(c.id||c.score);const st0=String(out.stat[0]||''),showSt=/\d/.test(st0)&&st0.length<=14;const phase=c.teamMode?'Momento do time':f.pl?(c.live?'Em foco · ao vivo':'Jogador em foco'):c.tab?'Tabela':c.pre?'Pré-jogo':c.live?'Ao vivo':'Pós-jogo';html=`<div class="slides"><div class="slide cover">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}${SBRAND(`${esc(c.lg.short)} · ${dt}`)}${mxHTML(c)}<div class="cvb"><span class="ckick">${esc(phase)}</span><h5>${esc(out.head)}</h5><div class="bsrow"><div style="min-width:0">${showSt?`<div class="bs num">${esc(st0)}</div>`:''}<div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div>${ph?`<img class="pp" src="${esc(ph)}" alt="" crossorigin="anonymous">`:''}</div></div><div class="foot"><span>@tel.score</span><span>arraste →</span></div></div>
    ${its.map((x,i)=>`<div class="slide${x.v?' vz':''}">${artDiv(x.v&&/^(tbl|games)$/.test(x.v.k)?'lights':artKindFor(aseed,i),false)}${SBRAND(`${i+2}/${N}`)}${x.v?vizBlockHTML(x):`${x.kick?`<div class="kick">${esc(x.kick)}</div>`:''}${mediaFor(c,x.src)}${factsHTML(factsOf((x.t||x.src)+(x.note?' '+x.note:''),4),true)}`}<div class="foot"><span>@tel.score</span><span>${esc(c.score)}</span></div></div>`).join('')}
    <div class="slide cta">${artDiv('ball',true)}<div class="sn"><span>TEL.SCORE</span><span>${N}/${N}</span></div>${mxHTML(c)}<h5>${tone.emoji?'Curtiu? Salva e manda pro grupo':'Salve para consultar depois'}</h5><p style="margin:0 0 auto;font-size:13.5px">${esc(close)}</p><div class="foot"><span>@tel.score</span><span>placar · análise</span></div></div></div>`;
   const cap=[open,out.head+em(),blocks[0],tone.emoji?'Arraste para ver tudo ➡️':'Arraste para ver a análise completa.',close,'',tags].filter((x,i)=>x||i===5).join('\n');
@@ -2697,8 +2697,8 @@ function compose(c,f,tone,plat,r){
   // post único: capa + os 3 pontos principais numa imagem só
   const its=vizItems(c,blocks,f.name,5,f.id,bviz);const pts=(its.length>3&&c.pre?its.slice(1):its).map(x=>String(x.t||x.src||'').trim()).filter(Boolean);
   const F=factsOf(pts.slice(0,3).join(' '),3);
-  const cvi=coverImage(c);const st0=String(out.stat[0]||''),showSt=/\d/.test(st0)&&st0.length<=14;const phase=c.teamMode?'Momento do time':c.tab?'Tabela':c.pre?'Pré-jogo':c.live?'Ao vivo':'Pós-jogo';
-  html=`<div class="slides"><div class="slide cover solo">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}${SBRAND(`${esc(c.lg.short)} · ${dt}`)}${mxHTML(c)}<div class="cvb"><span class="ckick">${esc(phase)}</span><h5>${esc(out.head)}</h5>${showSt?`<div class="bsrow"><div style="min-width:0"><div class="bs num">${esc(st0)}</div><div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div></div>`:''}${factsHTML(F,false)}</div><div class="foot"><span>@tel.score</span><span>telscore.com.br</span></div></div></div>`;
+  const cvi=coverImage(c);const st0=String(out.stat[0]||''),showSt=/\d/.test(st0)&&st0.length<=14;const phase=c.teamMode?'Momento do time':f.pl?(c.live?'Em foco · ao vivo':'Jogador em foco'):c.tab?'Tabela':c.pre?'Pré-jogo':c.live?'Ao vivo':'Pós-jogo';
+  html=`<div class="slides"><div class="slide cover solo">${coverBgDiv(cvi)}${artDiv(cvi?'lights':'pitch',false)}${SBRAND(`${esc(c.lg.short)} · ${dt}`)}${mxHTML(c)}<div class="cvb"><span class="ckick">${esc(phase)}</span><h5>${esc(out.head)}</h5>${showSt||featPhoto(c,f)?`<div class="bsrow"><div style="min-width:0">${showSt?`<div class="bs num">${esc(st0)}</div>`:''}<div class="bl">${esc(out.stat[1])}${esc(liveNote)}</div></div>${featPhoto(c,f)?`<img class="pp" src="${esc(featPhoto(c,f))}" alt="" crossorigin="anonymous">`:''}</div>`:''}${factsHTML(F,false)}</div><div class="foot"><span>@tel.score</span><span>telscore.com.br</span></div></div></div>`;
   const cap=[open,out.head+em(),'',...pts.slice(0,3).map(x=>(tone.emoji?'▪️ ':'• ')+x),'',close,'',tags].filter((x,i,a)=>x!==''||a[i-1]!=='').join('\n');
   html+=`<div class="caption"><div class="who">${AV}tel.score</div>${esc(cap)}</div>`;
   text=`[POST ÚNICO · 1080×1350]\n\n${out.head} | ${out.stat[0]} (${out.stat[1]})\n${F.map(x=>'• '+(x.l?x.l+': ':'')+x.v).join('\n')}\n\nLEGENDA:\n${cap}`;
@@ -3488,7 +3488,7 @@ async function renderLabLive(){
 }
 function lvPlayers(f){
  const out=[];(f.players||[]).forEach(t=>{const s=sideOf(f,t.team.id);(t.players||[]).forEach(p=>{const x=p.statistics&&p.statistics[0];if(!x||!x.games||!x.games.minutes)return;const n=v=>v==null?0:+v||0;
-  out.push({id:p.player.id,name:p.player.name,side:s,pos:x.games.position||'M',sub:!!x.games.substitute,mins:x.games.minutes,rating:parseFloat(x.games.rating)||0,goals:n(x.goals&&x.goals.total),assists:n(x.goals&&x.goals.assists),shots:n(x.shots&&x.shots.total),sot:n(x.shots&&x.shots.on),key:n(x.passes&&x.passes.key),passes:n(x.passes&&x.passes.total),acc:(()=>{const a=n(String(x.passes&&x.passes.accuracy||'').replace('%','')),t=n(x.passes&&x.passes.total);return t&&a<=t?Math.round(a/t*100):Math.min(a,100);})(),tkl:n(x.tackles&&x.tackles.total),intc:n(x.tackles&&x.tackles.interceptions),blk:n(x.tackles&&x.tackles.blocks),duels:n(x.duels&&x.duels.total),duelsW:n(x.duels&&x.duels.won),drib:n(x.dribbles&&x.dribbles.success),fouls:n(x.fouls&&x.fouls.committed),yc:n(x.cards&&x.cards.yellow),rc:n(x.cards&&x.cards.red)});});});
+  out.push({id:p.player.id,name:p.player.name,side:s,pos:x.games.position||'M',sub:!!x.games.substitute,mins:x.games.minutes,rating:parseFloat(x.games.rating)||0,goals:n(x.goals&&x.goals.total),assists:n(x.goals&&x.goals.assists),shots:n(x.shots&&x.shots.total),sot:n(x.shots&&x.shots.on),key:n(x.passes&&x.passes.key),passes:n(x.passes&&x.passes.total),acc:(()=>{const a=n(String(x.passes&&x.passes.accuracy||'').replace('%','')),t=n(x.passes&&x.passes.total);return t&&a<=t?Math.round(a/t*100):Math.min(a,100);})(),tkl:n(x.tackles&&x.tackles.total),intc:n(x.tackles&&x.tackles.interceptions),blk:n(x.tackles&&x.tackles.blocks),duels:n(x.duels&&x.duels.total),duelsW:n(x.duels&&x.duels.won),drib:n(x.dribbles&&x.dribbles.success),fouls:n(x.fouls&&x.fouls.committed),yc:n(x.cards&&x.cards.yellow),rc:n(x.cards&&x.cards.red),saves:x.goals&&x.goals.saves!=null?n(x.goals.saves):null,conc:x.goals&&x.goals.conceded!=null?n(x.goals.conceded):null,drAtt:n(x.dribbles&&x.dribbles.attempts),fdr:n(x.fouls&&x.fouls.drawn),off:n(x.offsides)});});});
  out.forEach(p=>{p.def=p.tkl+p.intc+p.blk;});return out;
 }
 function timelineSVG(f){
@@ -3560,7 +3560,7 @@ function ctxFromApi(f){
  const sm=statMap(f),st=rStatus(f),lu=f.lineups||[],ev=f.events||[],NMc=nameMap(f);
  const g=(k,s)=>sm[k]&&sm[k][s]!=null?sv(sm[k][s]):null;
  const PH={};(f.players||[]).forEach(t=>(t.players||[]).forEach(x=>{PH[x.player.id]=x.player.photo;}));
- const P=lvPlayers(f).map(p=>({photo:PH[p.id]||null,id:p.id,name:p.name,side:p.side,pos:POS_PT[p.pos]||p.pos,posName:RPOS[p.pos]||'jogador',gk:p.pos==='G',mins:p.mins,rating:p.rating||0,goals:p.goals,assists:p.assists,shots:p.shots,sot:p.sot,key:p.key,passes:p.passes,acc:p.acc||null,drib:p.drib,tkl:p.tkl,intc:p.intc,def:p.def,duelsW:p.duelsW,duels:p.duels,yc:p.yc,rc:p.rc,sub:p.sub,xg:null,xa:null,prog:null,press:null,heat:null}));
+ const P=lvPlayers(f).map(p=>({photo:PH[p.id]||null,id:p.id,name:p.name,side:p.side,pos:POS_PT[p.pos]||p.pos,posName:RPOS[p.pos]||'jogador',gk:p.pos==='G',mins:p.mins,rating:p.rating||0,goals:p.goals,assists:p.assists,shots:p.shots,sot:p.sot,key:p.key,passes:p.passes,acc:p.acc||null,drib:p.drib,tkl:p.tkl,intc:p.intc,blk:p.blk,def:p.def,duelsW:p.duelsW,duels:p.duels,yc:p.yc,rc:p.rc,sub:p.sub,fouls:p.fouls,saves:p.saves,conc:p.conc,drAtt:p.drAtt,fdr:p.fdr,off:p.off,xg:null,xa:null,prog:null,press:null,heat:null}));
  const team=s=>{const t=s==='h'?f.teams.home:f.teams.away,L=lu.find(x=>x.team.id===t.id)||{};
   return {side:s,id:t.id,name:t.name,short:teamCode(t.name),logo:t.logo||null,goals:(s==='h'?f.goals.home:f.goals.away)||0,xg:g('expected_goals',s),xg1:null,xg2:null,shots:g('Total Shots',s),sot:g('Shots on Goal',s),big:null,poss:g('Ball Possession',s),passes:g('Total passes',s),acc:g('Passes %',s),corners:g('Corner Kicks',s),fouls:g('Fouls',s),yellow:g('Yellow Cards',s)||0,red:g('Red Cards',s)||0,saves:g('Goalkeeper Saves',s),inBox:g('Shots insidebox',s),ppda:null,tilt:null,recHigh:null,press:null,spXg:null,formation:L.formation||'',coach:L.coach&&L.coach.name||''};};
  const goals=ev.filter(e=>e.type==='Goal'&&e.detail!=='Missed Penalty').map(e=>({m:e.time.elapsed+(e.time.extra||0)/10,label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:evFull(NMc,e.player),assist:e.assist&&e.assist.name?evFull(NMc,e.assist):null,type:e.detail==='Penalty'?'pênalti':e.detail==='Own Goal'?'gol contra':'jogada',xg:null,dist:null,body:null}));
@@ -3569,7 +3569,7 @@ function ctxFromApi(f){
  const missedPens=ev.filter(e=>e.type==='Goal'&&e.detail==='Missed Penalty').map(e=>({label:evMin(e),side:sideOf(f,e.team&&e.team.id),player:evFull(NMc,e.player)}));
  const vars=ev.filter(e=>e.type==='Var').map(e=>({label:evMin(e),detail:VAR_PT[e.detail]||e.detail||'revisão'}));
  const d=new Date(f.fixture.date);const isToday=ymd(d)===ymd(NOW());
- return baseCtx({src:'api',id:String(f.fixture.id),lg:{name:lgName(f),short:lgShort(f),tag:tagify(lgShort(f))},m:{off:isToday?0:1,date:d},dateLabel:isToday?'hoje':shortDate(d),live:st.k==='live',minute:st.label,stage:roundTxt(f.league.round),
+ return baseCtx({src:'api',season:f.league&&f.league.season,id:String(f.fixture.id),lg:{name:lgName(f),short:lgShort(f),tag:tagify(lgShort(f))},m:{off:isToday?0:1,date:d},dateLabel:isToday?'hoje':shortDate(d),live:st.k==='live',minute:st.label,stage:roundTxt(f.league.round),
   H:team('h'),A:team('a'),players:P,goals,cards,subs,missedPens,vars,shotsXg:[],net:null,ref:f.fixture.referee?{name:refName(f.fixture.referee),nat:f.fixture.referee.includes(',')?ctPt(f.fixture.referee.split(',').slice(1).join(',').trim()):''}:null,stadium:(f.fixture.venue||{}).name||'',venueImg:(f.fixture.venue&&f.fixture.venue.id)?`https://media.api-sports.io/football/venues/${f.fixture.venue.id}.png`:null,shootout:f.score&&f.score.penalty&&f.score.penalty.home!=null?{h:f.score.penalty.home,a:f.score.penalty.away}:null,source:'API-Football'});
 }
 /* ---------- contexto a partir da StatsBomb ---------- */
@@ -3609,6 +3609,7 @@ function baseCtx(c){
  return c;
 }
 function focusCtx(c,focus){
+ c.pmode=false;
  if(c.teamMode){c.T=c.T||c.me;return c;}
  if(c.tab){const id=focus&&focus.startsWith('t:')?+focus.slice(2):null;c.Tid=id;c.T=(id&&c.all.find(x=>x.id===id))||c.rows[0];return c;}
  if(c.pre){const fs=focus==='h'||focus==='a'?focus:c.favSide;c.T=fs==='h'?c.H:c.A;c.O=fs==='h'?c.A:c.H;c.P=null;c.P2=null;c.pid='';return c;}
@@ -3619,7 +3620,7 @@ function focusCtx(c,focus){
  const mine=c.players.filter(p=>p.side===fs&&p.rating>0);
  c.P=P||(mine.length?maxBy(mine,p=>p.rating):c.star);
  if(c.P){const opp=c.players.filter(p=>p.side!==c.P.side&&!p.gk&&p.rating>0);c.P2=opp.length?maxBy(opp,p=>p.rating-(p.posName===c.P.posName?0:.3)):null;}
- c.pid=String(c.P&&c.P.id||'');
+ c.pid=String(c.P&&c.P.id||'');c.pmode=!!P;
  return c;
 }
 function pctVals(c,p){
@@ -4664,6 +4665,119 @@ const TMFORMATS=[
  return {head:q[0],stat:c.me?[`${c.me.rank}º`,`${c.me.pts} pontos`]:[`${c.fp}/${c.nf*3}`,'pontos nos últimos jogos'],poll:q,blocks:[{t:q[0]},{t:'Opções: '+q[1].map((x,i)=>`${'ABCD'[i]}) ${x}`).join('  ')},{t:`Para ajudar: ${tmLead(c)}`}]};}}
 ];
 RFORMATS.push(...TMFORMATS);
+/* ================= ESTÚDIO: JOGADOR EM FOCO =================
+   Quando o "Foco" é um jogador, o Estúdio troca a lista de formatos pela do jogador:
+   atuação completa, veredito (entregou ou ficou devendo), números, raio-x, duelo, ranking do jogo,
+   jogo x temporada e enquete. Os formatos do jogo (sem foco em jogador) continuam iguais. */
+const avgOf=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:null;
+// temporada do jogador (todas as competições), buscada uma vez por time e temporada
+function plSeason(c){
+ if(!c||c.src!=='api'||!c.P||!c.season)return;c.pseason=c.pseason||{};const p=c.P;if(p.id in c.pseason)return;
+ const T=p.side==='h'?c.H:c.A;if(!T||!T.id){c.pseason[p.id]=null;return;}
+ c.pseason[p.id]=undefined;
+ teamPlayerStats(T.id,c.season).then(S=>{c.pseason[p.id]=(S&&S.get(p.id))||null;}).catch(()=>{c.pseason[p.id]=null;}).then(()=>{
+  if(RS.data===c&&c.P&&c.P.id===p.id&&view==='estudio'){renderFormatsReal();generateReal();}});
+}
+const PLV={decisivo:{l:'DECIDIU O JOGO',s:'decidiu o jogo'},brilhou:{l:'BRILHOU',s:'brilhou'},entregou:{l:'ENTREGOU',s:'entregou'},media:{l:'NA MÉDIA',s:'ficou na média'},devendo:{l:'FICOU DEVENDO',s:'ficou devendo'},pouco:{l:'POUCO TEMPO',s:'jogou pouco para um veredito'}};
+function plVerdict(c,p){
+ const S=c.pseason&&c.pseason[p.id]||null;
+ const rated=c.players.filter(x=>x.rating>0&&(x.mins>=20||x.id===p.id)).sort((a,b)=>b.rating-a.rating);
+ const rank=rated.findIndex(x=>x.id===p.id)+1,N=rated.length;
+ const mates=c.players.filter(x=>x.side===p.side&&x.rating>0&&x.mins>=20&&x.id!==p.id);
+ const tAvg=mates.length?avgOf(mates.map(x=>x.rating)):null;
+ const sAvg=S&&S.nota&&S.j>=3?S.nota:null;
+ const r=p.rating||0,ga=(p.goals||0)+(p.assists||0);const ref=sAvg!=null?sAvg:6.9;const diff=r-ref;
+ let k;
+ if(p.mins<25&&!ga)k='pouco';
+ else if(ga>=2||(ga>=1&&r>=7.6))k='decisivo';
+ else if(r>=8)k='brilhou';
+ else if(diff>=.35||r>=7.4)k='entregou';
+ else if(diff>-.35&&r>=6.6)k='media';
+ else k='devendo';
+ const won=c.res===p.side,lost=c.res!=='d'&&!won;
+ const why=k==='pouco'?`Entrou e jogou só ${p.mins} minutos.`
+  :sAvg!=null?`Nota ${f1(r)} contra ${f1(sAvg)} de média na temporada (${diff>=0?'+':''}${f1(diff)}).`
+  :`Nota ${f1(r)}${tAvg!=null?`, contra ${f1(tAvg)} de média do ${p.tn} no jogo`:''}.`;
+ return {k,lab:PLV[k].l,txt:PLV[k].s,r,rank,N,tAvg,sAvg,S,diff,ga,won,lost,why};
+}
+const plRes=(c,p)=>{const won=c.res===p.side,lost=c.res!=='d'&&!won;return c.live?(won?`com o ${p.tn} vencendo por enquanto`:lost?`com o ${p.tn} perdendo por enquanto`:'com o jogo empatado até aqui'):(won?`na vitória do ${p.tn}`:lost?`na derrota do ${p.tn}`:'no empate');};
+const plOpp=(c,p)=>p.side==='h'?c.A.name:c.H.name;
+const plChipsAtk=p=>p.gk?[{v:p.saves!=null?p.saves:0,l:'defesas'},{v:p.conc!=null?p.conc:0,l:'gols sofridos'},{v:p.passes||0,l:'passes'}]
+ :[{v:`${p.goals||0}G ${p.assists||0}A`,l:'gols e assist.'},{v:`${p.sot||0}/${p.shots||0}`,l:'chutes no alvo'},{v:p.key||0,l:'passes-chave'}];
+const plTop=(c,n)=>c.players.filter(x=>x.rating>0&&x.mins>=20).sort((a,b)=>b.rating-a.rating).slice(0,n);
+const plRankV=(c,p)=>{let L=plTop(c,5);if(!L.some(x=>x.id===p.id)&&p.rating>0)L=[...L.slice(0,4),p];return {k:'bars3',max:10,rows:L.map(x=>({e:vzPl(c,x),lab:`${x.name}${x.id===p.id?' ★':''}`,v:x.rating,txt:f1(x.rating)}))};};
+const plNeed=c=>!c.pre&&!c.tab&&!!c.pmode&&!!c.P&&c.has.players;
+const PLFORMATS=[
+{id:'pl-atuacao',pl:true,cat:'Jogador em foco',name:'Atuação completa',desc:'Nota, veredito, ataque, passe, defesa e ranking do jogo',visual:'Foto do jogador, card de números e ranking',need:c=>plNeed(c),run(c,r){const p=c.P,V=plVerdict(c,p),b=[];
+ b.push({t:`${p.name} (${p.tn}): nota ${f1(p.rating)} em ${p.mins} minutos como ${p.posName}, ${plRes(c,p)} contra o ${plOpp(c,p)}.`,viz:{kick:'Em campo',v:vzPlayerCard(c,p),t:`${V.rank&&V.N?`${V.rank}º melhor nota entre ${V.N} jogadores. `:''}${V.why}`}});
+ b.push({t:`Veredito TEL.SCORE: ${V.txt}. ${V.why}`,viz:{kick:`Veredito: ${V.lab.toLowerCase()}`,v:{k:'big',txt:V.lab,lab:V.why,e:vzPl(c,p)},t:V.why}});
+ if(!p.gk){if(p.goals||p.assists||p.shots>=2||p.key>=2||!/defensor/i.test(p.posName||''))b.push({t:`Ataque: ${pl(p.goals||0,'gol(s)')}, ${pl(p.assists||0,'assistência(s)')}, ${p.shots||0} finalizações (${p.sot||0} no alvo) e ${p.key||0} passes-chave.`,viz:{kick:'No ataque',v:{k:'player',...vzPl(c,p),team:`${p.tn} · ${p.posName}`,rating:0,chips:plChipsAtk(p)},t:p.goals?`Marcou ${pl(p.goals,'vez(es)')}.`:p.shots?`${p.sot||0} de ${p.shots} finalizações no alvo.`:'Não finalizou no jogo.'}});}
+ else b.push({t:`No gol: ${p.saves!=null?pl(p.saves,'defesa(s)'):'defesas sem registro'}, ${p.conc!=null?pl(p.conc,'gol(s) sofrido(s)'):''}.`.replace(', .','.'),viz:{kick:'No gol',v:{k:'player',...vzPl(c,p),team:`${p.tn} · goleiro`,rating:0,chips:plChipsAtk(p)},t:`${p.passes||0} passes${p.acc?` com ${p.acc}% de acerto`:''}.`}});
+ b.push({t:`Com a bola: ${p.passes||0} passes${p.acc?` (${p.acc}% certos)`:''}, ${pl(p.drib||0,'drible(s) certo(s)')}${p.drAtt?` em ${pl(p.drAtt,'tentativa(s)')}`:''}${p.fdr?` e ${pl(p.fdr,'falta(s) sofrida(s)')}`:''}.`,viz:{kick:'Com a bola',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:p.passes||0,l:'passes'},{v:p.acc?p.acc+'%':'–',l:'acerto'},{v:p.drAtt?`${p.drib||0}/${p.drAtt}`:(p.drib||0),l:'dribles'}]},t:`${p.key||0} passes-chave.`}});
+ b.push({t:`Sem a bola: ${p.tkl||0} desarmes, ${p.intc||0} interceptações${p.duels?` e ${p.duelsW} de ${p.duels} duelos vencidos`:''}.`,viz:{kick:'Sem a bola',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:p.tkl||0,l:'desarmes'},{v:p.intc||0,l:'interceptações'},{v:p.duels?`${p.duelsW}/${p.duels}`:(p.def||0),l:p.duels?'duelos':'ações def.'}]},t:p.duels?`Venceu ${Math.round(p.duelsW/p.duels*100)}% dos duelos.`:`${p.def||0} ações defensivas.`}});
+ if(V.N>=4&&p.rating>0)b.push({t:`No ranking de notas do jogo: ${V.rank}º de ${V.N}.`,viz:{kick:'Notas do jogo',v:plRankV(c,p),t:V.rank===1?'A maior nota da partida.':`A maior nota foi de ${plTop(c,1)[0].name} (${f1(plTop(c,1)[0].rating)}).`}});
+ if(V.S&&V.S.j)b.push({t:`Na temporada: ${pl(V.S.g,'gol(s)')} e ${pl(V.S.as,'assistência(s)')} em ${V.S.j} jogos${V.S.nota?`, nota média ${f1(V.S.nota)}`:''}.`});
+ return {head:pick(r,[`${p.name}: a atuação em números`,`O jogo de ${p.name} contra o ${plOpp(c,p)}`,`${p.name} ${V.txt}?`.replace(' jogou pouco para um veredito?',' em campo')]),stat:[f1(p.rating),`nota · ${V.lab.toLowerCase()}`],blocks:b};}},
+{id:'pl-veredito',pl:true,cat:'Jogador em foco',name:'Entregou ou ficou devendo?',desc:'O veredito TEL.SCORE com a nota, a temporada e o time',visual:'Veredito grande e barras de comparação',need:c=>plNeed(c)&&c.P.rating>0,run(c,r){const p=c.P,V=plVerdict(c,p),b=[];
+ b.push({t:`${p.name} ${V.txt} ${plRes(c,p)} contra o ${plOpp(c,p)}.`,viz:{kick:'Veredito TEL.SCORE',v:{k:'big',txt:V.lab,lab:`nota ${f1(p.rating)} em ${p.mins} minutos`,e:vzPl(c,p)},t:V.why}});
+ const rows=[{e:vzPl(c,p),lab:'Neste jogo',v:p.rating,txt:f1(p.rating)}];
+ if(V.sAvg!=null)rows.push({lab:'Média na temporada',v:V.sAvg,txt:f1(V.sAvg),sym:'Ø'});
+ if(V.tAvg!=null)rows.push({lab:`Média do ${p.tn} no jogo`,v:V.tAvg,txt:f1(V.tAvg),sym:'T'});
+ if(rows.length>1)b.push({t:V.why,viz:{kick:'A nota em contexto',v:{k:'bars3',max:10,rows},t:V.sAvg!=null?(V.diff>=0?`Acima da média dele na temporada.`:`Abaixo da média dele na temporada.`):(V.tAvg!=null&&p.rating>=V.tAvg?`Acima da média do time no jogo.`:`Abaixo da média do time no jogo.`)}});
+ let pv=[];try{pv=pctVals(c,p).sort((x,y)=>y.v-x.v);}catch(e){pv=[];}
+ if(pv.length>=4){b.push({t:`O que ele fez bem: ${pv.slice(0,2).map(x=>`${x.k.toLowerCase()} (${x.raw})`).join(' e ')}.`,why:RWHY.pct,viz:{kick:'O que entregou',v:{k:'bars3',max:100,rows:pv.slice(0,3).map(x=>({lab:x.k,v:x.v,txt:'p'+x.v,sym:x.k[0]}))},t:`Melhor fundamento: ${pv[0].k.toLowerCase()}, acima de ${pv[0].v}% dos jogadores da partida.`}});
+  const lo=pv.slice(-3).reverse();b.push({t:`Onde faltou: ${lo.slice(0,2).map(x=>`${x.k.toLowerCase()} (${x.raw})`).join(' e ')}.`,viz:{kick:'Onde faltou',v:{k:'bars3',max:100,rows:lo.map(x=>({lab:x.k,v:x.v,txt:'p'+x.v,sym:x.k[0]}))},t:`Ponto mais fraco: ${lo[0].k.toLowerCase()} (${lo[0].raw}).`}});}
+ b.push({t:V.k==='devendo'?'Um jogo abaixo não define ninguém: vale ver se é fase ou exceção.':V.k==='decisivo'?'Jogo para guardar: foi decisivo no resultado.':V.k==='brilhou'?'Uma das melhores atuações em campo, mesmo sem participar de gol.':V.k==='entregou'?'Cumpriu o que se espera dele, e um pouco mais.':V.k==='media'?'Nem brilhou, nem comprometeu: atuação dentro do padrão.':'Pouco tempo em campo para cravar um veredito.'});
+ return {head:pick(r,[`${p.name} entregou ou ficou devendo?`,`O veredito de ${p.name}: ${V.txt}`,`${p.name} contra o ${plOpp(c,p)}: ${V.txt}`]),stat:[V.lab,`nota ${f1(p.rating)}`],poll:[`${p.name} entregou ou ficou devendo?`,['Entregou','Ficou devendo']],blocks:b};}},
+{id:'pl-numeros',pl:true,cat:'Jogador em foco',name:'Números do jogo',desc:'Todas as estatísticas dele na partida',visual:'Cards com os números por fundamento',need:c=>plNeed(c),run(c,r){const p=c.P,b=[];
+ b.push({t:`Ficha: ${p.name}, ${p.posName} do ${p.tn}, ${p.mins} minutos${p.sub?' (entrou no jogo)':''}, nota ${f1(p.rating)}.`,viz:{kick:'Ficha',v:vzPlayerCard(c,p),t:`${p.mins} minutos${p.sub?', saindo do banco':''}.`}});
+ if(p.gk)b.push({t:`Gol: ${p.saves||0} defesas e ${p.conc||0} gols sofridos.`,viz:{kick:'No gol',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:plChipsAtk(p)},t:`${p.passes||0} passes${p.acc?`, ${p.acc}% certos`:''}.`}});
+ else b.push({t:`Finalização: ${p.goals||0} gols, ${p.shots||0} chutes, ${p.sot||0} no alvo${p.off?`, ${pl(p.off,'impedimento(s)')}`:''}.`,viz:{kick:'Finalização',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:p.goals||0,l:'gols'},{v:p.shots||0,l:'finalizações'},{v:p.sot||0,l:'no alvo'}]},t:p.shots?`${Math.round((p.sot||0)/p.shots*100)}% dos chutes no alvo.`:'Sem finalizações.'}});
+ b.push({t:`Criação: ${p.assists||0} assistências, ${p.key||0} passes-chave, ${p.passes||0} passes${p.acc?` (${p.acc}% certos)`:''}.`,viz:{kick:'Criação',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:p.assists||0,l:'assistências'},{v:p.key||0,l:'passes-chave'},{v:p.acc?p.acc+'%':(p.passes||0),l:p.acc?'acerto de passe':'passes'}]},t:`${p.passes||0} passes no total.`}});
+ b.push({t:`Drible e duelo: ${pl(p.drib||0,'drible(s) certo(s)')}${p.drAtt?` de ${p.drAtt}`:''}, ${p.duelsW||0} de ${p.duels||0} duelos${p.fdr?`, ${pl(p.fdr,'falta(s) sofrida(s)')}`:''}.`,viz:{kick:'Drible e duelo',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:p.drAtt?`${p.drib||0}/${p.drAtt}`:(p.drib||0),l:'dribles'},{v:`${p.duelsW||0}/${p.duels||0}`,l:'duelos'},{v:p.fdr||0,l:'faltas sofridas'}]},t:p.duels?`${Math.round((p.duelsW||0)/p.duels*100)}% dos duelos vencidos.`:'Poucos duelos no jogo.'}});
+ b.push({t:`Defesa: ${p.tkl||0} desarmes, ${p.intc||0} interceptações, ${p.blk||0} bloqueios.`,viz:{kick:'Defesa',v:{k:'player',...vzPl(c,p),team:p.tn,rating:0,chips:[{v:p.tkl||0,l:'desarmes'},{v:p.intc||0,l:'interceptações'},{v:p.blk||0,l:'bloqueios'}]},t:`${p.def||0} ações defensivas no total.`}});
+ if(p.fouls||p.yc||p.rc)b.push({t:`Disciplina: ${pl(p.fouls||0,'falta(s) cometida(s)')}${p.yc?`, ${pl(p.yc,'cartão(ões) amarelo(s)')}`:''}${p.rc?', expulso':''}.`});
+ return {head:pick(r,[`Os números de ${p.name} no jogo`,`${p.name}: a ficha completa`,`Raio-x de ${p.name} contra o ${plOpp(c,p)}`]),stat:[f1(p.rating),'nota no jogo'],blocks:b};}},
+{id:'pl-percentis',pl:true,cat:'Jogador em foco',name:'Raio-x no jogo',desc:'Percentis contra todos os jogadores da partida',visual:'Barras de percentil por fundamento',need:c=>plNeed(c)&&!c.P.gk,run(c,r){const p=c.P;const v=pctVals(c,p).sort((a,b)=>b.v-a.v);const b=[];
+ b.push({t:`Comparado aos jogadores de linha desta partida, o melhor fundamento de ${p.name} foi ${v[0].k.toLowerCase()} (percentil ${v[0].v}).`,why:RWHY.pct,viz:{kick:'Os pontos fortes',v:{k:'bars3',max:100,rows:v.slice(0,3).map(x=>({lab:x.k,v:x.v,txt:'p'+x.v,sym:x.k[0]}))},t:v.slice(0,3).map(x=>`${x.k}: ${x.raw}`).join(' · ')}});
+ b.push({t:`Os fundamentos com menos destaque: ${v.slice(-3).map(x=>x.k.toLowerCase()).join(', ')}.`,viz:{kick:'Os pontos a melhorar',v:{k:'bars3',max:100,rows:v.slice(-3).map(x=>({lab:x.k,v:x.v,txt:'p'+x.v,sym:x.k[0]}))},t:v.slice(-3).map(x=>`${x.k}: ${x.raw}`).join(' · ')}});
+ b.push({t:`Percentil 80 quer dizer que ele foi melhor do que 80% dos jogadores em campo nesse fundamento.`});
+ return {head:pick(r,[`Raio-x: ${p.name} no jogo`,`${p.name} em seis fundamentos`,`Onde ${p.name} se destacou`]),stat:[`p${v[0].v}`,v[0].k.toLowerCase()],blocks:b};}},
+{id:'pl-duelo',pl:true,cat:'Jogador em foco',name:'Duelo direto',desc:'Ele contra o melhor rival da mesma função',visual:'Comparativos lado a lado com fotos',need:c=>plNeed(c)&&!!c.P2,run(c,r){const a=c.P,o=c.P2,b=[];
+ const cv=(lab,va,vb,fm,low)=>({k:'cmp',h:{...vzPl(c,a),v:+va||0,txt:fm?fm(va):String(va||0),lab:a.name},a:{...vzPl(c,o),v:+vb||0,txt:fm?fm(vb):String(vb||0),lab:o.name},sub:lab,low});
+ b.push({t:`${a.name} (${a.tn}) x ${o.name} (${o.tn}): notas ${f1(a.rating)} x ${f1(o.rating)}.`,viz:{kick:'Nota no jogo',v:cv('nota',a.rating,o.rating,f1),t:a.rating>=o.rating?`Vantagem para ${a.name}.`:`Vantagem para ${o.name}.`}});
+ b.push({t:`Participação em gols: ${a.goals+a.assists} x ${o.goals+o.assists}. Passes-chave: ${a.key} x ${o.key}.`,viz:{kick:'Gols e assistências',v:cv('gols + assistências',a.goals+a.assists,o.goals+o.assists),t:`Passes-chave: ${a.key} x ${o.key}.`}});
+ b.push({t:`Dribles: ${a.drib} x ${o.drib}. Duelos vencidos: ${a.duelsW||0} x ${o.duelsW||0}.`,viz:{kick:'Dribles',v:cv('dribles certos',a.drib,o.drib),t:`Duelos vencidos: ${a.duelsW||0} x ${o.duelsW||0}.`}});
+ b.push({t:`Ações defensivas: ${a.def} x ${o.def}.`,viz:{kick:'Sem a bola',v:cv('ações defensivas',a.def,o.def),t:`Passes: ${a.passes} x ${o.passes}.`}});
+ const sc=[a.rating>o.rating,a.goals+a.assists>o.goals+o.assists,a.drib>o.drib,a.def>o.def].filter(Boolean).length;
+ b.push({t:sc>=3?`${a.name} venceu o duelo.`:sc<=1?`${o.name} levou a melhor no duelo.`:'Duelo equilibrado.'});
+ return {head:pick(r,[`${a.name} x ${o.name}: quem venceu?`,`O duelo de ${a.name} no jogo`,`Mano a mano: ${a.name} e ${o.name}`]),stat:[`${f1(a.rating)} × ${f1(o.rating)}`,'notas'],blocks:b};}},
+{id:'pl-ranking',pl:true,cat:'Jogador em foco',name:'No ranking do jogo',desc:'A posição dele entre as notas da partida',visual:'Ranking de notas com fotos',need:c=>plNeed(c)&&c.P.rating>0,run(c,r){const p=c.P,V=plVerdict(c,p),b=[];
+ const mates=c.players.filter(x=>x.side===p.side&&x.rating>0&&x.mins>=20).sort((x,y)=>y.rating-x.rating);const tr=mates.findIndex(x=>x.id===p.id)+1;
+ b.push({t:`${p.name} teve a ${V.rank}ª melhor nota entre ${V.N} jogadores.`,viz:{kick:'Ranking do jogo',v:plRankV(c,p),t:V.rank===1?'Melhor em campo pelas notas.':`Maior nota: ${plTop(c,1)[0].name}, ${f1(plTop(c,1)[0].rating)}.`}});
+ if(mates.length>=3)b.push({t:`No ${p.tn}: ${tr}º entre ${mates.length} jogadores.`,viz:{kick:`No ${p.tn}`,v:{k:'bars3',max:10,rows:mates.slice(0,3).concat(tr>3?[p]:[]).map(x=>({e:vzPl(c,x),lab:`${x.name}${x.id===p.id?' ★':''}`,v:x.rating,txt:f1(x.rating)}))},t:tr===1?`Melhor nota do ${p.tn}.`:`O melhor do ${p.tn} foi ${mates[0].name} (${f1(mates[0].rating)}).`}});
+ b.push({t:`Veredito: ${V.txt}. ${V.why}`});
+ return {head:pick(r,[`${p.name}: ${V.rank}º melhor em campo`,`Onde ${p.name} ficou no ranking do jogo`,`As notas do jogo e ${p.name}`]),stat:[`${V.rank}º`,`de ${V.N} em campo`],blocks:b};}},
+{id:'pl-temporada',pl:true,cat:'Jogador em foco',name:'Jogo x temporada',desc:'A atuação comparada com a média dele no ano',visual:'Comparativos com a média da temporada',need:c=>plNeed(c)&&!!(c.pseason&&c.pseason[c.P.id]&&c.pseason[c.P.id].j>=3),run(c,r){const p=c.P,S=c.pseason[p.id],b=[];const p90=(v,m)=>m?v/m*90:0;
+ const cv=(lab,va,vb,fm)=>({k:'cmp',h:{...vzPl(c,p),v:+va||0,txt:fm(va),lab:'neste jogo'},a:{img:'',code:'Ø',name:'temporada',v:+vb||0,txt:fm(vb),lab:'média na temporada'},sub:lab});
+ b.push({t:`Na temporada: ${S.j} jogos, ${S.min} minutos, ${pl(S.g,'gol(s)')} e ${pl(S.as,'assistência(s)')}.`,viz:{kick:'A temporada',v:{k:'player',...vzPl(c,p),team:`${p.tn} · temporada`,rating:S.nota?Math.round(S.nota*10)/10:0,chips:[{v:S.j,l:'jogos'},{v:S.g,l:'gols'},{v:S.as,l:'assistências'}]},t:`Todas as competições da temporada.`}});
+ if(S.nota)b.push({t:`Nota: ${f1(p.rating)} neste jogo contra ${f1(S.nota)} de média.`,viz:{kick:'A nota',v:cv('nota',p.rating,S.nota,f1),t:p.rating>=S.nota?'Acima da média dele.':'Abaixo da média dele.'}});
+ const gj=p90((p.goals||0)+(p.assists||0),p.mins),gs=p90(S.g+S.as,S.min);
+ b.push({t:`Gols + assistências por 90 minutos: ${f2(gj)} neste jogo e ${f2(gs)} na temporada.`,viz:{kick:'Gols + assistências por 90',v:cv('por 90 minutos',gj,gs,f2),t:gj>=gs?'Produziu acima do ritmo da temporada.':'Abaixo do ritmo da temporada.'}});
+ return {head:pick(r,[`${p.name}: o jogo contra a temporada`,`${p.name} acima ou abaixo do normal?`,`O que esse jogo diz sobre ${p.name}`]),stat:[f1(p.rating),S.nota?`nota · média ${f1(S.nota)}`:'nota no jogo'],blocks:b};}},
+{id:'pl-enquete',pl:true,cat:'Jogador em foco',name:'Enquete do jogador',desc:'A torcida dá a nota e o veredito',visual:'Foto do jogador com enquete',need:c=>plNeed(c),run(c,r){const p=c.P,V=plVerdict(c,p);
+ const q=pick(r,[[`Que nota você dá para ${p.name}?`,['8 ou mais','7','6','5 ou menos']],[`${p.name} entregou ou ficou devendo?`,['Entregou','Ficou devendo','Na média']],[`${p.name} foi o melhor do ${p.tn}?`,['Sim','Não']]]);
+ return {head:q[0],stat:[f1(p.rating),'nota TEL.SCORE'],poll:q,blocks:[{t:q[0],viz:{kick:'Sua vez',v:vzPlayerCard(c,p),t:`Nota TEL.SCORE: ${f1(p.rating)}. Veredito: ${V.txt}.`}},{t:'Opções: '+q[1].map((x,i)=>`${'ABCD'[i]}) ${x}`).join('  ')},{t:`Para ajudar: ${V.why}`}]};}}
+];
+RFORMATS.push(...PLFORMATS);
+const PL_TONE={
+ analitico:{open:[c=>'',c=>`Leitura da atuação de ${c.P.name}:`,c=>`${c.P.name} em números.`],close:[c=>`Dados: ${c.source}.`,c=>'Salve para comparar no próximo jogo.',c=>'A nota conta uma parte; os números contam o resto.']},
+ torcedor:{open:[c=>`Bora falar de ${c.P.name}? 🔥`,c=>`E aí, torcida do ${c.P.tn}: ${c.P.name} jogou o quê? 👀`,c=>`${c.P.name} em campo ⚽`],close:[c=>`Comenta aí: que nota você dá pro ${c.P.name}? 👇`,c=>'Marca aquele amigo que viu o jogo ⚽',c=>'Concorda ou discorda? Responde aqui 👇']},
+ humor:{open:[c=>`Relatório oficial de ${c.P.name} (sem passar pano) 🍿`,c=>'Hora da verdade: os números não mentem 😅',c=>`${c.P.name} na mesa de análise 🧐`]},
+ jornalistico:{open:[c=>`${c.P.name} (${c.P.tn}) em ${c.score}.`,c=>`Atuação | ${c.P.name}`,c=>`${c.lg.name}: a atuação de ${c.P.name}.`]},
+ didatico:{open:[c=>`Como avaliar a atuação de ${c.P.name}, além do placar:`,c=>'Vamos entender a nota pelos números.',c=>'A nota explicada fundamento por fundamento:'],close:[c=>'Nota de 0 a 10 calculada a partir das ações do jogador no jogo.',c=>'Ficou dúvida? Pergunte nos comentários.',c=>'Percentil 80 = melhor que 80% dos jogadores da partida.']}
+};
+const plTone=t=>PL_TONE[t.id]?{...t,open:PL_TONE[t.id].open||t.open,close:PL_TONE[t.id].close||t.close}:t;
 const TM_TONE={
  analitico:{open:[c=>'',c=>'Leitura do momento:',c=>`O ${c.T.name} em números.`],close:[c=>'Dados oficiais das competições.',c=>'Salve para comparar na próxima rodada.',c=>'O momento muda a cada jogo. Os números mostram para onde.']},
  torcedor:{open:[c=>`Bora falar do ${c.T.name}? 🔥`,c=>`Como está o ${c.T.name}? 👀`,c=>'Calculadora e coração na mão, torcida ⚽'],close:[c=>`Comenta aí: até onde o ${c.T.name} vai? 👇`,c=>'Marca aquele amigo que torce junto ⚽',c=>`Vamo, ${c.T.name}! 💪`,c=>'Concorda ou discorda? Responde aqui 👇']},
@@ -4672,11 +4786,11 @@ const TM_TONE={
  didatico:{open:[c=>'Como ler o momento de um time, além do placar:',c=>'Vamos entender a fase pelos números.',c=>'Tabela, sequência e agenda: o quadro completo.'],close:[c=>'Aproveitamento = pontos conquistados ÷ pontos disputados.',c=>'Ficou dúvida? Pergunte nos comentários.',c=>'Salve e compare na próxima rodada.']}
 };
 const tmTone=t=>TM_TONE[t.id]?{...t,...TM_TONE[t.id]}:t;
-const stFor=c=>c&&c.teamMode?'para este time':c&&c.tab?'para esta tabela':'para este jogo';
+const stFor=c=>c&&c.teamMode?'para este time':c&&c.pmode?'para este jogador':c&&c.tab?'para esta tabela':'para este jogo';
 // copas no Estúdio: dois modos, fase de grupos (ou de liga) e mata-mata (chaveamento)
 const cupKO=c=>!!(c&&c.tab&&c.koI&&c.koI.R&&c.koI.R.length);
 const cupPhases=c=>cupKO(c)&&c.rows&&c.rows.length;
-const fmtMode=c=>c&&c.teamMode?RFORMATS.filter(f=>f.tm):RFORMATS.filter(f=>!f.tm&&!!f.tab===!!(c&&c.tab)).filter(f=>!(c&&c.tab)?true:!cupKO(c)?!f.ko:(RS.phase==='mata'||!(c.rows&&c.rows.length)?!!f.ko:!f.ko));
+const fmtMode=c=>c&&c.teamMode?RFORMATS.filter(f=>f.tm):c&&c.pmode&&!c.tab&&!c.pre?RFORMATS.filter(f=>f.pl):RFORMATS.filter(f=>!f.tm&&!f.pl&&!!f.tab===!!(c&&c.tab)).filter(f=>!(c&&c.tab)?true:!cupKO(c)?!f.ko:(RS.phase==='mata'||!(c.rows&&c.rows.length)?!!f.ko:!f.ko));
 function renderPhaseSeg(c){const el=$('#st-phase');if(!el)return;const on=!!cupPhases(c);el.hidden=!on;if(!on){el.innerHTML='';return;}
  const lab=(CUP_INFO[c.lgId]||{}).phase||'Fase de grupos';el.innerHTML=[['grupos',lab],['mata','Mata-mata · chaveamento']].map(([k,l])=>`<button aria-pressed="${RS.phase===k}" data-stphase="${k}">${esc(l)}</button>`).join('');}
 const RFCAT=[...new Set(RFORMATS.map(f=>f.cat))];
@@ -4783,6 +4897,7 @@ async function loadStudioMatch(){
  else $('#st-focus').innerHTML=`<option value="auto">${c.pre?'Automático (favorito do modelo)':'Automático (time que se destacou)'}</option><option value="h">Time: ${esc(c.H.name)}</option><option value="a">Time: ${esc(c.A.name)}</option>`+(c.has.players?['h','a'].map(s=>`<optgroup label="Jogadores · ${esc(s==='h'?c.H.name:c.A.name)}">${c.players.filter(p=>p.side===s&&p.rating>0).sort((a,b)=>b.rating-a.rating).map(p=>`<option value="p:${p.id}">${esc(p.name)} · ${esc(p.pos)} · ${f1(p.rating)}</option>`).join('')}</optgroup>`).join(''):'');
  if(![...$('#st-focus').options].some(o=>o.value===RS.focus))RS.focus='auto';$('#st-focus').value=RS.focus;
  {const M=fmtMode(c);if(!M.find(f=>f.id===RS.fmt&&f.need(c)))RS.fmt=(M.find(f=>f.need(c))||RFORMATS.find(f=>f.need(c))||RFORMATS[0]).id;}
+ if(c.pmode)plSeason(c);
  renderFormatsReal();
 
  $('#st-plats').innerHTML=PLATS.map(p=>`<button class="chip" aria-pressed="${ST.plat===p.id}" data-plat="${p.id}">${p.name}</button>`).join('');
@@ -4793,7 +4908,7 @@ function renderFormatsReal(){
  const c=RS.data;if(!c)return;const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');const q=norm(ST.q.trim());
  const BASE=fmtMode(c);const ok=BASE.filter(f=>f.need(c)).length;
  $('#fmt-count').textContent=`${ok} de ${BASE.length} ${stFor(c)}`;
- const EVT=['heatmap','pressao','rede-passes'];const lockTxt=f=>c.src==='api'&&EVT.includes(f.id)?'Só no arquivo histórico (dados de evento)':'Sem esses dados neste jogo';
+ const EVT=['heatmap','pressao','rede-passes'];const lockTxt=f=>f.id==='pl-temporada'?(c.src!=='api'?'Só com jogos da API-Football':c.P&&c.pseason&&c.pseason[c.P.id]===undefined?'Carregando a temporada do jogador…':'Sem números da temporada deste jogador'):c.src==='api'&&EVT.includes(f.id)?'Só no arquivo histórico (dados de evento)':'Sem esses dados neste jogo';
  const match=f=>!q||norm(f.name+' '+f.desc+' '+f.cat).includes(q);const btn=(f,av)=>`<button class="fmt" aria-pressed="${RS.fmt===f.id}" ${av?`data-rfmt="${f.id}"`:'disabled style="opacity:.45;cursor:not-allowed"'}><b>${f.name}</b><small>${av?f.desc:lockTxt(f)}</small></button>`;
  const off=BASE.filter(f=>match(f)&&!f.need(c));
  const html=[...new Set(BASE.map(f=>f.cat))].map(cat=>{const fs=BASE.filter(f=>f.cat===cat&&match(f)&&f.need(c));if(!fs.length)return '';return `<div class="fmt-cat"><h4>${cat}</h4>${fs.map(f=>btn(f,true)).join('')}</div>`;}).join('')+(off.length?`<details class="fmt-cat fmt-off"><summary style="cursor:pointer;font-size:12px;color:var(--muted);padding:6px 2px">Indisponíveis ${stFor(c)} (${off.length})</summary>${off.map(f=>btn(f,false)).join('')}</details>`:'');
@@ -4803,12 +4918,12 @@ function generateReal(){
  try{bgHint(RS.data);}catch(e){}
  const c0=RS.data;if(!c0)return;
 
- const f=RFORMATS.find(x=>x.id===RS.fmt);const tone0=RTONES.find(x=>x.id===ST.tone)||RTONES[0];const tone=c0.teamMode?tmTone(tone0):c0.tab?(f&&f.ko?koTone(tone0):tabTone(tone0)):c0.pre?preTone(tone0):tone0;
+ const f=RFORMATS.find(x=>x.id===RS.fmt);const tone0=RTONES.find(x=>x.id===ST.tone)||RTONES[0];const tone=c0.teamMode?tmTone(tone0):f&&f.pl?plTone(tone0):c0.tab?(f&&f.ko?koTone(tone0):tabTone(tone0)):c0.pre?preTone(tone0):tone0;
  const r=RNG(hash([c0.src,c0.id,RS.focus,RS.fmt,ST.plat,ST.tone].join('|'))+RS.ver*7919);
  let out;try{const c=focusCtx(c0,RS.focus);out=compose(c,f,tone,ST.plat,r);}catch(e){console.error(e);out={html:'<p>Não foi possível gerar este formato para esta partida. Escolha outro formato.</p>',text:''};}
  $('#st-preview').innerHTML=out.html;$('#st-raw').value=out.text;$('#st-title').textContent=f.name;
  const NP=PLATS.length;
- $('#st-sub').textContent=`${PLATS.find(p=>p.id===ST.plat).name} · tom ${tone.name.toLowerCase()} · ${c0.teamMode?`${c0.team.name} · temporada ${c0.season}`:c0.tab?`${c0.lg.name} ${c0.season}`:`${c0.H.name} × ${c0.A.name}`} · versão ${RS.ver}`;
+ $('#st-sub').textContent=`${PLATS.find(p=>p.id===ST.plat).name} · tom ${tone.name.toLowerCase()} · ${c0.teamMode?`${c0.team.name} · temporada ${c0.season}`:c0.tab?`${c0.lg.name} ${c0.season}`:`${c0.H.name} × ${c0.A.name}${c0.pmode&&c0.P?` · foco: ${c0.P.name}`:''}`} · versão ${RS.ver}`;
  const ok=fmtMode(c0).filter(x=>x.need(c0)).length;
  $('#st-combo').innerHTML=`<span><b>${ok}</b> formatos ${stFor(c0)}</span><span><b>${NP}</b> plataformas</span><span><b>${RTONES.length}</b> tons</span><span><b>${ok*NP*RTONES.length}</b> combinações</span><span>Dados: <b>${esc(c0.source)}</b></span>`;
  if(c0.src==='sb'){const cap=$('#st-preview .caption');const note='\n\nDados: StatsBomb';if(cap)cap.insertAdjacentText('beforeend',note);else $('#st-preview').insertAdjacentHTML('beforeend','<p class="chart-note" style="margin:12px 0 0">Dados: StatsBomb · cite a fonte e use a logo da StatsBomb ao publicar.</p>');$('#st-raw').value+=note;}
@@ -5514,8 +5629,8 @@ function videoScenes(c,f,out,blocks,tone,close,bviz){
  const P=(FEAT[f.id]&&c[FEAT[f.id]])||c.P||c.star;let pl=null;
  if(P&&P.rating>0){let pv=[];try{if(c.players&&c.players.length)pv=pctVals(c,P).slice().sort((a,b)=>b.v-a.v).slice(0,4);}catch(e){pv=[];}
   pl={k:'player',name:'Jogador',dur:pv.length?5.6:4,p:{name:P.name,tn:P.tn||'',pos:P.posName||'',rating:+P.rating||0,photo:prox(P.photo)||'',goals:P.goals||0,assists:P.assists||0},pv};}
- const pf=['destaque','raio-x','scout','heroi-oculto','devendo','duelo','notas','heatmap'].includes(f.id),tf=['momento-chave','linha-do-tempo'].includes(f.id);
- (c.pre?[probs,bars]:pf?[pl,bars,tl]:tf?[tl,bars,pl]:[bars,tl,pl]).filter(Boolean).slice(0,['resumo','pre-completo','placar-mentiu','dominio'].includes(f.id)?3:2).forEach(x=>S.push(x));
+ const pf=f.pl||['destaque','raio-x','scout','heroi-oculto','devendo','duelo','notas','heatmap'].includes(f.id),tf=['momento-chave','linha-do-tempo'].includes(f.id);
+ (c.pre?[probs,bars]:f.pl?[pl]:pf?[pl,bars,tl]:tf?[tl,bars,pl]:[bars,tl,pl]).filter(Boolean).slice(0,['resumo','pre-completo','placar-mentiu','dominio'].includes(f.id)?3:2).forEach(x=>S.push(x));
  const aseed=f.id+(c.id||c.score);
  // análise: cada bloco vira um visual (gráfico, card, tabela) com no máximo 3 fichas curtas, em vez de texto corrido
  let its=[];try{its=vizItems(c,blocks,f.name,f.id==='pre-completo'?10:8,f.id,bviz);}catch(e){its=[];}
@@ -6302,7 +6417,7 @@ $('#cm-match').addEventListener('change',e=>{if(REAL.on){REAL.key=e.target.value
 $('#lab-match').addEventListener('change',e=>{if(REAL.on||SB.on){if(labSrc()==='live'){LV.key=e.target.value;LV.cur=null;renderLabLive();}else{SB.match=e.target.value;SB.player=null;renderLabSB();}return;}labKey=e.target.value;labPlayer=null;renderLab();});
 $('#lab-comp').addEventListener('change',e=>{SB.comp=e.target.value;SB.match='';SB.player=null;renderLabSB();});
 $('#st-match').addEventListener('change',e=>{if(rsOn()){RS.key=e.target.value;RS.focus='auto';RS.ver=1;loadStudioMatch();return;}ST.match=e.target.value;ST.focus='auto';ST.ver=1;renderStudioControls();generate();});
-$('#st-focus').addEventListener('change',e=>{if(rsOn()){RS.focus=e.target.value;RS.ver=1;focusCtx(RS.data,RS.focus);if(!RFORMATS.find(f=>f.id===RS.fmt).need(RS.data))RS.fmt=(RFORMATS.find(f=>f.need(RS.data))||RFORMATS[0]).id;renderFormatsReal();generateReal();return;}ST.focus=e.target.value;ST.ver=1;generate();});
+$('#st-focus').addEventListener('change',e=>{if(rsOn()){RS.focus=e.target.value;RS.ver=1;focusCtx(RS.data,RS.focus);{const M=fmtMode(RS.data);if(!M.find(f=>f.id===RS.fmt&&f.need(RS.data)))RS.fmt=(M.find(f=>f.need(RS.data))||RFORMATS.find(f=>f.need(RS.data))||RFORMATS[0]).id;}if(RS.data.pmode)plSeason(RS.data);renderFormatsReal();generateReal();return;}ST.focus=e.target.value;ST.ver=1;generate();});
 $('#st-bgfile').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);ST.bg=cv.toDataURL('image/jpeg',.84);$('#st-bgthumb').src=ST.bg;$('#st-bgthumb').hidden=false;$('#st-bgclear').hidden=false;toast('Foto de capa aplicada');rsOn()?generateReal():generate();};im.onerror=()=>toast('Não foi possível abrir essa imagem.');im.src=rd.result;};rd.readAsDataURL(file);});
 $('#st-search').addEventListener('input',e=>{ST.q=e.target.value;rsOn()?renderFormatsReal():renderFormats();});
 $('#st-comp').addEventListener('change',e=>{RS.comp=e.target.value;RS.key=null;RS.data=null;renderStudioReal();});
