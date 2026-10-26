@@ -2486,8 +2486,12 @@ function vzPaint(P,v,W){
   const by=2*r+76,tot=hv+av,sw=tot?hv/tot:.5;if(v.nobar){let y=by-10;if(v.sub){P.text(v.sub,W/2,y+40,{f:'mono',size:30,a:.8,align:'center'});y+=58;}return y+6;}P.rect(0,by,W,30,15,VZC.track);P.rect(0,by,Math.max(0,W*sw-5),30,15,best==='h'?VZC.red:'#fff');P.rect(W*sw+5,by,Math.max(0,W*(1-sw)-5),30,15,best==='a'?VZC.red:'#fff');
   let y=by+30;if(v.sub){P.text(v.sub,W/2,y+52,{f:'mono',size:30,a:.8,align:'center'});y+=70;}return y+6;}
  if(v.k==='big'){let x=0;const hasE=v.e&&(v.e.img||v.e.photo||v.e.code||v.e.name);if(hasE){vzEnt(P,v.e,86,110,86);x=210;}
-  const st={f:'display',w:900,size:210};const s=vzFit(v.txt,st,W-x,90);P.text(v.txt,x,110+s*.36,{...st,size:s,fill:VZC.red});
-  let y=Math.max(hasE?206:0,110+s*.36)+20;if(v.lab){const ls={f:'mono',size:34};const L=vzWrap(v.lab,ls,W-x).slice(0,2);L.forEach((l,i)=>P.text(l,x,y+34+i*44,{...ls,a:.82}));y+=34+L.length*44;}return y+8;}
+  const st={f:'display',w:900,size:210};let s=vzFit(v.txt,st,W-x,90);let yb=110+s*.36;
+  // texto longo ("FICOU DEVENDO"): quebra em duas linhas em vez de cortar
+  if(vzMeasure(v.txt,{...st,size:s})>W-x&&/\s/.test(String(v.txt))){const ws=String(v.txt).split(/\s+/);let best=null;for(let i=1;i<ws.length;i++){const L2=[ws.slice(0,i).join(' '),ws.slice(i).join(' ')];const sz=Math.min(...L2.map(l=>vzFit(l,{...st,size:150},W-x,40)));if(!best||sz>best.sz)best={L2,sz};}
+   s=best.sz;const lh=s*.98,y0=110-lh/2+s*.36;best.L2.forEach((l,i)=>P.text(l,x,y0+i*lh,{...st,size:s,fill:VZC.red}));yb=y0+lh;}
+  else P.text(v.txt,x,yb,{...st,size:s,fill:VZC.red});
+  let y=Math.max(hasE?206:0,yb)+20;if(v.lab){const ls={f:'mono',size:34};const L=vzWrap(v.lab,ls,W-x).slice(0,2);L.forEach((l,i)=>P.text(l,x,y+34+i*44,{...ls,a:.82}));y+=34+L.length*44;}return y+8;}
  if(v.k==='player'){const r=104;vzFace(P,v,r,r+6,r,v.ring);const x=2*r+44,rw=v.rating?170:0;
   const ns={f:'body',w:700,size:58};const nsz=vzFit(v.name,ns,W-x-rw-10,38);P.text(vzEll(v.name,{...ns,size:nsz},W-x-rw-10),x,96,{...ns,size:nsz});
   P.text(vzEll(v.team||'',{f:'mono',size:32},W-x-rw-10),x,146,{f:'mono',size:32,a:.75});
@@ -4696,7 +4700,7 @@ function plVerdict(c,p){
  else k='devendo';
  const won=c.res===p.side,lost=c.res!=='d'&&!won;
  const why=k==='pouco'?`Entrou e jogou só ${p.mins} minutos.`
-  :sAvg!=null?`Nota ${f1(r)} contra ${f1(sAvg)} de média na temporada (${diff>=0?'+':''}${f1(diff)}).`
+  :sAvg!=null?`Nota ${f1(r)} contra ${f1(sAvg)} de média em ${S.j} jogos na temporada (${diff>=0?'+':''}${f1(diff)}).`
   :`Nota ${f1(r)}${tAvg!=null?`, contra ${f1(tAvg)} de média do ${p.tn} no jogo`:''}.`;
  return {k,lab:PLV[k].l,txt:PLV[k].s,r,rank,N,tAvg,sAvg,S,diff,ga,won,lost,why};
 }
@@ -4724,7 +4728,8 @@ const PLFORMATS=[
  if(V.sAvg!=null)rows.push({lab:'Média na temporada',v:V.sAvg,txt:f1(V.sAvg),sym:'Ø'});
  if(V.tAvg!=null)rows.push({lab:`Média do ${p.tn} no jogo`,v:V.tAvg,txt:f1(V.tAvg),sym:'T'});
  if(rows.length>1)b.push({t:V.why,viz:{kick:'A nota em contexto',v:{k:'bars3',max:10,rows},t:V.sAvg!=null?(V.diff>=0?`Acima da média dele na temporada.`:`Abaixo da média dele na temporada.`):(V.tAvg!=null&&p.rating>=V.tAvg?`Acima da média do time no jogo.`:`Abaixo da média do time no jogo.`)}});
- let pv=[];try{pv=pctVals(c,p).sort((x,y)=>y.v-x.v);}catch(e){pv=[];}
+ let pv=[];try{if(!p.gk)pv=pctVals(c,p).sort((x,y)=>y.v-x.v);}catch(e){pv=[];}
+ if(p.gk)b.push({t:`No gol: ${pl(p.saves||0,'defesa(s)')} e ${pl(p.conc||0,'gol(s) sofrido(s)')}.`,viz:{kick:'No gol',v:{k:'player',...vzPl(c,p),team:`${p.tn} · goleiro`,rating:0,chips:plChipsAtk(p)},t:`${p.passes||0} passes${p.acc?`, ${p.acc}% certos`:''}.`}});
  if(pv.length>=4){b.push({t:`O que ele fez bem: ${pv.slice(0,2).map(x=>`${x.k.toLowerCase()} (${x.raw})`).join(' e ')}.`,why:RWHY.pct,viz:{kick:'O que entregou',v:{k:'bars3',max:100,rows:pv.slice(0,3).map(x=>({lab:x.k,v:x.v,txt:'p'+x.v,sym:x.k[0]}))},t:`Melhor fundamento: ${pv[0].k.toLowerCase()}, acima de ${pv[0].v}% dos jogadores da partida.`}});
   const lo=pv.slice(-3).reverse();b.push({t:`Onde faltou: ${lo.slice(0,2).map(x=>`${x.k.toLowerCase()} (${x.raw})`).join(' e ')}.`,viz:{kick:'Onde faltou',v:{k:'bars3',max:100,rows:lo.map(x=>({lab:x.k,v:x.v,txt:'p'+x.v,sym:x.k[0]}))},t:`Ponto mais fraco: ${lo[0].k.toLowerCase()} (${lo[0].raw}).`}});}
  b.push({t:V.k==='devendo'?'Um jogo abaixo não define ninguém: vale ver se é fase ou exceção.':V.k==='decisivo'?'Jogo para guardar: foi decisivo no resultado.':V.k==='brilhou'?'Uma das melhores atuações em campo, mesmo sem participar de gol.':V.k==='entregou'?'Cumpriu o que se espera dele, e um pouco mais.':V.k==='media'?'Nem brilhou, nem comprometeu: atuação dentro do padrão.':'Pouco tempo em campo para cravar um veredito.'});
