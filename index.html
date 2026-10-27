@@ -3328,6 +3328,40 @@ function applyLive(rows,live,fix){
  R.forEach((r,i)=>{r.rank=i+1;r.description=desc[r.rank];r._mv=r._old-r.rank;});
  return {rows:R,on:true};
 }
+/* classificação "fresca" para o Estúdio: a API demora para somar os jogos que acabaram de terminar.
+   Usa os resultados encerrados da temporada para completar a tabela (pontos, jogos, gols, mando, forma),
+   igual à tabela da aba Ligas, mas só com jogos ENCERRADOS (nada de placar em andamento num post). */
+async function stFresh(id,season,ttl=120000,fxP){
+ id=+id;season=season||seasonFor(id);
+ const [st,sf]=await Promise.all([apiGet('standings',{league:id,season},ttl),(fxP||apiGet('fixtures',{league:id,season,timezone:TZ},90000)).catch(()=>null)]);
+ try{
+  const G=stAll(st);if(G.length!==1||!Array.isArray(sf)||!sf.length)return st;
+  const fin=sf.filter(f=>f.league&&/regular season/i.test(f.league.round||'')&&FT_S.includes(f.fixture.status.short)).sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date));
+  if(!fin.length)return st;
+  const desc={};G[0].forEach(r=>{desc[r.rank]=r.description;});
+  const cp=s=>({...(s||{}),goals:{...((s&&s.goals)||{})}});
+  let any=false;
+  const R=G[0].map(r=>{
+   const x={...r,all:cp(r.all),home:cp(r.home),away:cp(r.away),_old:r.rank};
+   const tid=r.team&&r.team.id;const mine=fin.filter(f=>f.teams.home.id===tid||f.teams.away.id===tid);
+   const miss=mine.length-((r.all&&r.all.played)||0);
+   if(miss<=0||miss>2)return x; // mais de 2 de diferença: é outro motivo (jogo anulado etc.), melhor não mexer
+   const res=f=>{const h=f.teams.home.id===tid;const my=(h?f.goals.home:f.goals.away)||0,op=(h?f.goals.away:f.goals.home)||0;return {h,my,op,c:my>op?'W':my<op?'L':'D'};};
+   const seq=mine.map(f=>res(f).c);
+   mine.slice(-miss).forEach(f=>{const g=res(f);
+    [x.all,g.h?x.home:x.away].forEach(s=>{s.played=(s.played||0)+1;s.goals.for=(s.goals.for||0)+g.my;s.goals.against=(s.goals.against||0)+g.op;if(g.c==='W')s.win=(s.win||0)+1;else if(g.c==='D')s.draw=(s.draw||0)+1;else s.lose=(s.lose||0)+1;});
+    x.goalsDiff=(x.goalsDiff||0)+g.my-g.op;x.points=(x.points||0)+(g.c==='W'?3:g.c==='D'?1:0);any=true;});
+   // forma: descobre a ordem que a API usa comparando com os jogos já somados e escreve na mesma ordem
+   const api=String(r.form||''),prev=seq.slice(0,seq.length-miss),n=api.length,m=Math.min(seq.length,Math.max(n,5));
+   if(api&&api===prev.slice(-n).join(''))x.form=seq.slice(-m).join('');
+   else if(api&&api===prev.slice(-n).reverse().join(''))x.form=seq.slice(-m).reverse().join('');
+   return x;});
+  if(!any)return st;
+  R.sort((a,b)=>b.points-a.points||b.goalsDiff-a.goalsDiff||((b.all.goals.for||0)-(a.all.goals.for||0))||a._old-b._old);
+  R.forEach((r,i)=>{r.rank=i+1;r.description=desc[r.rank];});
+  return [{...st[0],league:{...st[0].league,standings:[R]}}];
+ }catch(e){return st;}
+}
 const liveCell=r=>`${r._mv?`<em class="mv ${r._mv>0?'up':'dn'}">${r._mv>0?'▲':'▼'}${Math.abs(r._mv)}</em>`:''}${r._live?`<span class="lvchip ${r._live.res}" title="${r._live.fin?'Encerrado':'Ao vivo'} contra ${esc(r._live.opp)}">${r._live.my}–${r._live.op} · ${esc(r._live.min)}</span>`:''}`;
 const LIVE_NOTE='<div class="lvnote"><span class="dot pulse"></span><span><b>Tabela ao vivo:</b> considera os placares dos jogos em andamento e os resultados de hoje que a tabela oficial ainda não somou. As setas mostram quem sobe e quem desce.</span></div>';
 // seletor da aba Ligas: primeiro o grupo (Brasil, Copas, Europa...), depois a liga
@@ -3940,7 +3974,7 @@ async function preExtra(c,fx){
  const [RB,HB,st,lh,la,ph,pa]=await Promise.all([
   c.ref?bancoGet({acao:'arbitro',nome:c.ref.name},21600000):null,
   bancoGet({acao:'h2h',a:h.id,b:a.id},21600000),
-  L.id?apiGet('standings',{league:L.id,season:L.season},3600000).catch(()=>null):null,
+  L.id?stFresh(L.id,L.season).catch(()=>null):null,
   apiGet('fixtures',{team:h.id,last:10,timezone:TZ},1800000).catch(()=>[]),
   apiGet('fixtures',{team:a.id,last:10,timezone:TZ},1800000).catch(()=>[]),
   L.season?teamPlayerStats(h.id,L.season).catch(()=>null):null,
@@ -4185,7 +4219,7 @@ const FORM_PT=s=>String(s||'').split('').slice(-5).map(c=>({W:'V',D:'E',L:'D'}[c
 const fPts=f=>[...String(f||'')].reduce((t,x)=>t+(x==='V'?3:x==='E'?1:0),0);
 async function ctxTab(id){
  id=+id;const season=seasonFor(id),L=RLmap[id]||{name:'Liga',short:'Liga'};
- const [st,fx]=await Promise.all([apiGet('standings',{league:id,season},300000).catch(()=>null),apiGet('fixtures',{league:id,season,timezone:TZ,v:Math.floor(Date.now()/1800000)},1800000).catch(()=>[])]);
+ const fxP=apiGet('fixtures',{league:id,season,timezone:TZ},90000).catch(()=>[]);const [st,fx]=await Promise.all([stFresh(id,season,120000,fxP).catch(()=>null),fxP]);
  const G=stCur(st);
  // copas: confrontos do mata-mata (ida, volta, agregado, pênaltis)
  const koI=(CUPS.has(id)||id===73)?koInfo(koBuild(fx||[])):null;
@@ -4548,7 +4582,7 @@ async function ctxTeam(id){
  const season=L?L.season:(any&&any.league&&any.league.season)||new Date(NOW()).getFullYear();
  const [sfx,st,bank,S]=await Promise.all([
   apiGet('fixtures',{team:id,season,timezone:TZ},1800000).catch(()=>[]),
-  L?apiGet('standings',{league:L.id,season:L.season},300000).catch(()=>null):null,
+  L?stFresh(L.id,L.season).catch(()=>null):null,
   bancoGet({acao:'time',id}),
   teamPlayerStats(id,season).catch(()=>null)]);
  const sd=s=>({pl:s&&s.played||0,w:s&&s.win||0,d:s&&s.draw||0,l:s&&s.lose||0,gf:s&&s.goals&&s.goals.for||0,ga:s&&s.goals&&s.goals.against||0});
@@ -4864,7 +4898,7 @@ async function renderStudioReal(){
    const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id));const tl=$('#st-tlg');
    if(!RS.tlg||!LS.includes(+RS.tlg)){const fl=[...FAV.ligas].find(id=>LS.includes(id));RS.tlg=String(LS.includes(REAL.lgTab)?REAL.lgTab:fl||LS[0]);}
    tl.innerHTML=LG_GROUPS.map(g=>{const ids=LS.filter(id=>lgGroupOf(id)===g.k);return ids.length?`<optgroup label="${esc(g.l)}">${ids.map(id=>`<option value="${id}">${esc(RLmap[id].name)}</option>`).join('')}</optgroup>`:'';}).join('');tl.value=RS.tlg;
-   const st=await apiGet('standings',{league:+RS.tlg,season:seasonFor(+RS.tlg)},300000).catch(()=>null);
+   const st=await stFresh(+RS.tlg,seasonFor(+RS.tlg)).catch(()=>null);
    const seen=new Set(),tms=[];const G=stGroups(st);G.forEach(g=>g.forEach(r=>{if(r.team&&!seen.has(r.team.id)){seen.add(r.team.id);tms.push({id:r.team.id,name:r.team.name,rank:r.rank,grp:G.length>1?grpName([r]):''});}}));
    const fav=[...FAV.times.values()];
    if(!RS.key)RS.key=String(((RS.lgPick?tms[0]:fav[0]||tms[0])||{}).id||'');RS.lgPick=false;
@@ -4916,7 +4950,8 @@ function bgHint(c){const el=$('#st-bghint');if(!el)return;
  el.style.color=c&&c.venueMiss&&!ST.bg?'var(--mid)':'var(--muted)';}
 async function loadStudioMatch(){
  const src=rsSrc(),my=RS.key;
- if(!RS.data||RS.data.id!==my||RS.data.src!==src){
+ // os dados do post valem por 2 minutos: tabela e jogos que acabaram de terminar entram sem precisar recarregar
+ if(!RS.data||RS.data.id!==my||RS.data.src!==src||Date.now()-(RS.dataT||0)>120000){RS.dataT=Date.now();
   $('#st-preview').innerHTML=`<p style="color:var(--muted);margin:0">${src==='time'?'Carregando o time: tabela, competições, jogos e elenco…':src==='tab'?'Carregando a tabela…':'Carregando a partida…'}</p>`;
   try{
    if(src==='time'){RS.data=await ctxTeam(my);}
@@ -5147,7 +5182,7 @@ function cxStakes(c){
 // parte assíncrona (dados reais): tabela, mercado e nível das ligas
 async function enrichCtx(c,f){
  c.cx=c.cx||{};const K=compInfo(f.league,f.league.round);c.cx.comp=K;const hid=f.teams.home.id,aid=f.teams.away.id;
- const [odds,st]=await Promise.all([apiGet('odds',{fixture:f.fixture.id,bet:1},3600000).then(oddsProb).catch(()=>null),K.kind==='liga'||K.kind==='copa'&&!K.ko?apiGet('standings',{league:f.league.id,season:f.league.season},3600000).catch(()=>null):Promise.resolve(null)]);
+ const [odds,st]=await Promise.all([apiGet('odds',{fixture:f.fixture.id,bet:1},3600000).then(oddsProb).catch(()=>null),K.kind==='liga'||K.kind==='copa'&&!K.ko?stFresh(f.league.id,f.league.season).catch(()=>null):Promise.resolve(null)]);
  if(st){const groups=stGroups(st);const g=groups.find(gr=>gr.some(x=>x.team&&x.team.id===hid)&&gr.some(x=>x.team&&x.team.id===aid));
   if(g){const row=id=>{const x=g.find(y=>y.team.id===id);return x?{rank:x.rank,pts:x.points,pl:x.all&&x.all.played||0,zone:zoneInfo(x.description),n:g.length}:null;};c.cx.tbl={h:row(hid),a:row(aid)};}}
  let p=null,src='';
@@ -5186,7 +5221,7 @@ async function preDeep(f,D){
   return {id:tid,n,pts,ppg:n?pts/n:null,gf,ga,form:form.slice().reverse().join(''),xgF:nx?xf/nx:gproxy?gf/n:null,xgA:nx?xa/nx:gproxy?ga/n:null,nx,proxy:proxy||gproxy,gproxy,xsrc,dom,tier,starters:starters.size,nLu,out:out.map(x=>x.player.name),doubt:doubt.map(x=>x.player.name),rank:null,teams:null,season};};
  const T=[team(ids[0],0),team(ids[1],1)];
  if(compInfo(f.league,f.league.round).kind==='liga'){const lg={id:f.league.id,name:f.league.name,country:f.league.country,season:f.league.season};T.forEach(t=>{t.dom=lg;t.tier=tierOfLg(lg);});}
- await Promise.all(T.map(async t=>{if(!t.dom||!t.dom.season)return;try{const r=await apiGet('standings',{league:t.dom.id,season:t.dom.season},3600000);const rows=stGroups(r).flat();const me=rows.find(x=>x.team&&x.team.id===t.id);if(me){t.rank=me.rank;t.teams=rows.length;}}catch(e){}}));
+ await Promise.all(T.map(async t=>{if(!t.dom||!t.dom.season)return;try{const r=await stFresh(t.dom.id,t.dom.season);const rows=stGroups(r).flat();const me=rows.find(x=>x.team&&x.team.id===t.id);if(me){t.rank=me.rank;t.teams=rows.length;}}catch(e){}}));
  // xG da temporada inteira (base TEL.SCORE), quando a liga do time já tem jogos guardados
  await Promise.all(T.map(async t=>{if(!t.dom||!t.dom.id||!RLmap[t.dom.id])return;try{const B=await bancoGet({acao:'liga',id:t.dom.id,season:t.dom.season||seasonFor(t.dom.id)});const me=B&&B.times&&B.times.find(x=>x.id===t.id);if(me&&me.jx>=4&&me.xgf_j!=null)t.sx={n:me.jx,xgf:me.xgf_j,xga:me.xga_j,oficial:me.oficial,dif:me.dif,casa:me.casa,fora:me.fora};}catch(e){}}));
  const sameLg=!!(T[0].dom&&T[1].dom&&T[0].dom.id===T[1].dom.id);
@@ -6330,7 +6365,7 @@ async function doRefresh(){
  try{
   if(await siteUpdated()){toast('Nova versão da TEL.SCORE. Recarregando…');setTimeout(()=>location.reload(),500);return;}
   if(REAL.on){for(const k of Object.keys(REAL.cache)){if(!/endpoint=(teams|players%2Fsquads|status)(&|$)/.test(k))delete REAL.cache[k];}}
-  try{BANCO.cache={};}catch(e){}try{TM.ctx=null;}catch(e){}try{LGP.ctx=null;}catch(e){}
+  try{BANCO.cache={};}catch(e){}try{TM.ctx=null;}catch(e){}try{LGP.ctx=null;}catch(e){}try{RS.data=null;}catch(e){}
   const y=window.scrollY;
   if(REAL.on)await renderTickerReal().catch(()=>{});
   show(view,false);window.scrollTo(0,y);
