@@ -6738,7 +6738,7 @@ async function webMessaging(){
  if(!window.firebase||!firebase.messaging){await loadScript(FB_JS+'firebase-app-compat.js');await loadScript(FB_JS+'firebase-messaging-compat.js');}
  if(!firebase.apps.length)firebase.initializeApp(C.web);
  const m=firebase.messaging();
- if(!PUSH.init){PUSH.init=true;try{m.onMessage(p=>{const n=p.notification||{},d=p.data||{};toast(`${n.title||'TEL.SCORE'}${n.body?' · '+n.body:''}`);if(view==='centro'&&d.fixture&&String(REAL.key)===String(d.fixture))try{realTick();}catch(e){}});}catch(e){}}
+ if(!PUSH.init){PUSH.init=true;try{m.onMessage(p=>{const n=p.notification||{},d=p.data||{};toast(`${n.title||'TEL.SCORE'}${n.body?' · '+n.body:''}`);try{if(REAL.on)realTick();}catch(e){}});}catch(e){}}
  return m;
 }
 // pede a permissão e devolve o token deste aparelho
@@ -6802,7 +6802,7 @@ async function pushBoot(){
  if(isNative()){const FM=fmPlugin();if(FM){
    try{if(Capacitor.getPlatform()==='android')await FM.createChannel({id:'jogos',name:'Jogos',description:'Gols, cartões e resultados dos seus times',importance:5,visibility:1,vibration:true});}catch(e){}
    try{FM.addListener('notificationActionPerformed',ev=>{const d=(ev&&ev.notification&&ev.notification.data)||{};if(d.fixture)openJogo(d.fixture);else if(d.url)abrirLink(d.url);});}catch(e){}
-   try{FM.addListener('notificationReceived',ev=>{if(isIOS())return;const n=(ev&&ev.notification)||{};toast(`${n.title||'TEL.SCORE'}${n.body?' · '+n.body:''}`);});}catch(e){}
+   try{FM.addListener('notificationReceived',ev=>{try{if(REAL.on)realTick();}catch(e){}if(isIOS())return;const n=(ev&&ev.notification)||{};toast(`${n.title||'TEL.SCORE'}${n.body?' · '+n.body:''}`);});}catch(e){}
    try{const C=window.Capacitor,cp=n=>(C.Plugins&&C.Plugins[n])||(typeof C.registerPlugin==='function'?C.registerPlugin(n):null),AppP=cp('App'),Spl=cp('SplashScreen');if(Spl)setTimeout(()=>Spl.hide().catch(()=>{}),300);
     if(AppP)AppP.addListener('backButton',()=>{const on=id=>{const e=$(id);return !!(e&&!e.hidden&&e.classList.contains('on'));};if(on('#gate')){if(!(CONTA.mand&&!CONTA.s))gateClose();return;}if(on('#more')){moreClose();return;}if(on('#busca')){buscaClose();return;}if(view!=='partidas'){show('partidas');return;}AppP.exitApp();});}catch(e){}
    try{FM.addListener('tokenReceived',ev=>{if(ev&&ev.token&&CONTA.s&&CONTA.p.avisos&&CONTA.p.avisos.on&&ev.token!==PUSH.tok){PUSH.tok=null;pushEnable(false);}});}catch(e){}}}
