@@ -30,7 +30,7 @@ self.addEventListener('push', e => {
   const link = (d.fcmOptions && d.fcmOptions.link) || (n.click_action) || data.url || '/';
   e.waitUntil(self.registration.showNotification(n.title || data.title || 'TEL.SCORE', {
     body: n.body || data.body || '',
-    icon: n.icon || '/icons/icon-192.png',
+    icon: n.icon || data.img || '/icons/icon-192.png',
     badge: '/icons/badge-96.png',
     tag: n.tag || data.tag || undefined,
     renotify: !!(n.tag || data.tag),
