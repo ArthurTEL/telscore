@@ -158,6 +158,8 @@ No topo do site há três botões: dia, noite e automático (segue o tema do cel
    - `CRON_SECRET` = uma senha longa inventada por você. A Vercel manda essa senha quando roda a conferência agendada.
    - `POSTS_SENHA` = a senha que você digita no Estúdio para ligar os posts na nuvem (use uma senha longa, só sua).
    - `LOGIN_ATIVO` = `sim` para exigir a entrada por código antes do site (só depois de configurar o envio de e-mails; veja "Contas, favoritos e busca").
+   - `FCM_WEB_CONFIG`, `FCM_VAPID_KEY` e `FCM_SA` = notificações (veja "Notificações, app instalável e privacidade").
+   - `REVISAO_EMAIL` e `REVISAO_CODIGO` = conta para os revisores da Apple e do Google entrarem no app (só esse e-mail entra com esse código fixo de 6 dígitos, sem e-mail de verdade). Deixe sempre ligadas: cada versão nova do app passa por revisão de novo.
    - Opcional: `COLETA_MAX` (padrão `15`) = máximo de requisições da API por coleta; `COLETA_RESERVA` (padrão `35`) = requisições do dia que ficam guardadas para o site.
 2. Faça um novo deploy (**Deployments → ⋯ → Redeploy**). Variáveis novas só valem depois de um deploy.
 
@@ -207,6 +209,28 @@ O que já estava guardado continua no Supabase (tabela `previsoes`), e `api/acer
 5. **Supabase → Authentication → Rate Limits:** suba "emails sent per hour" para 60 ou mais (o padrão com SMTP próprio é 30).
 6. **Teste:** depois do deploy, abra o site → Mais → **Entrar** → seu e-mail → digite o código → escolha os favoritos.
 7. **Travar o site:** com o teste funcionando, Vercel → Settings → Environment Variables → `LOGIN_ATIVO` = `sim` → Redeploy. A partir daí, quem não entrou vê a tela de entrada antes do site.
+
+## Notificações, app instalável e privacidade (parte 6)
+
+- **Avisos dos jogos:** gol (com o nome do jogador, minuto e placar), VAR (gol anulado e o motivo, gol confirmado, pênalti confirmado ou cancelado, cartão revisado), cartão vermelho, pênalti perdido, escalação confirmada, 30 minutos antes, início, intervalo, fim (com pênaltis quando houver), e, para quem quiser, cartão amarelo e substituições.
+- **Cada pessoa escolhe:** depois dos times favoritos, o primeiro acesso tem um 5º passo, **Avisos**, com um botão para cada tipo e a opção "Também os jogos das minhas ligas". Para mudar depois: **Mais → Notificações**.
+- **Onde chegam:** no app de Android e de iPhone, no navegador do computador e no Android pelo Chrome. No iPhone pelo navegador só chegam com o site adicionado à Tela de Início (regra da Apple); o app resolve isso.
+- **Como funciona:** a cada minuto o Supabase chama `/api/avisos?acao=vigiar`. Se ninguém ligou os avisos, ele não gasta nenhuma requisição da API-Football. Com gente seguindo jogos, gasta a lista do dia a cada 30 minutos e 1 requisição por minuto para cada 20 jogos em andamento dos times seguidos. O gol espera até 2 minutos para chegar já com o nome de quem marcou.
+- **App instalável (PWA):** `manifest.webmanifest`, ícones em `icons/` e `sw.js` (tela de "sem internet" e notificações). No menu Mais aparece **Instalar o app** quando dá para instalar.
+- **Privacidade e exclusão de conta:** página `/privacidade` (link no rodapé e no menu Mais) e **Mais → Excluir minha conta**, que apaga e-mail, favoritos, escolhas e aparelhos na hora. A Apple e o Google exigem as duas coisas para aprovar o app.
+- Arquivos: `api/avisos.js` (vigia), `api/_fcm.js` (envio pelo Firebase), `api/conta.js` (aparelhos, teste e exclusão), `supabase/05_notificacoes.sql`, `supabase/06_vigia_cron.sql`, `sw.js`, `manifest.webmanifest`, `icons/`, `privacidade.html`.
+
+### Como ligar as notificações (passo a passo)
+
+1. **Firebase (grátis):** console.firebase.google.com → **Criar projeto** → nome `telscore` (o Google Analytics pode ficar desligado).
+2. **Configuração do site:** na página do projeto, clique no ícone **</>** (Web) → apelido `site` → **Registrar app**. Aparece um trecho `const firebaseConfig = { ... }`. Copie esse trecho inteiro e crie na Vercel a variável `FCM_WEB_CONFIG` com ele. Esses dados são públicos (o navegador precisa deles), não são senha.
+3. **Chave do navegador:** ⚙ **Configurações do projeto → Cloud Messaging → Certificados push da Web → Gerar par de chaves**. Copie a chave e crie na Vercel `FCM_VAPID_KEY`.
+4. **Chave do servidor (secreta):** ⚙ **Configurações do projeto → Contas de serviço → Gerar nova chave privada**. Baixa um arquivo `.json`. Abra no Bloco de Notas, copie tudo e crie na Vercel `FCM_SA` com esse conteúdo. Esse arquivo é uma senha: nunca no chat nem no GitHub. Depois de colar, pode apagar o arquivo.
+5. Na mesma tela de Cloud Messaging, confira se **API Firebase Cloud Messaging (V1)** está **Ativada** (em projeto novo já vem).
+6. **Redeploy** na Vercel.
+7. **Tabelas:** Supabase → SQL Editor → cole `supabase/05_notificacoes.sql` → Run.
+8. **Vigia de 1 em 1 minuto:** abra `supabase/06_vigia_cron.sql`, cole no SQL Editor, troque `COLE_AQUI_O_CRON_SECRET` pelo valor do seu `CRON_SECRET` (digitando ali mesmo, no Supabase) → Run.
+9. **Teste:** no site, **Mais → Notificações → Ativar avisos**. Em segundos chega "🔔 Avisos ligados". No dia de jogo de um time seu, os avisos chegam sozinhos.
 
 ## Página da liga
 
