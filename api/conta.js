@@ -67,14 +67,13 @@ function limpaPerfil(row) {
 const TOKEN = /^[A-Za-z0-9_:\-.]{20,4096}$/;
 // configuração pública do Firebase para o navegador (não é segredo; fica na variável FCM_WEB_CONFIG)
 function pushCfg() {
-  let web = null;
-  // aceita o JSON ou o trecho copiado direto do Firebase (const firebaseConfig = { apiKey: "...", ... };)
+  // aceita o JSON, só o objeto ou o trecho inteiro copiado do Firebase (com import, comentários, <script>...)
   const raw = String(process.env.FCM_WEB_CONFIG || '').trim();
-  try { web = JSON.parse(raw || 'null'); } catch (e) {
-    try {
-      const m = raw.match(/\{[\s\S]*\}/);
-      web = m ? JSON.parse(m[0].replace(/\/\/[^\n]*/g, '').replace(/'/g, '"').replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":').replace(/,\s*}/g, '}')) : null;
-    } catch (e2) { web = null; }
+  let web = null;
+  try { web = JSON.parse(raw || 'null'); } catch (e) { web = null; }
+  if (!web || typeof web !== 'object') {
+    const campo = k => { const m = raw.match(new RegExp('["\']?' + k + '["\']?\\s*:\\s*["\']([^"\']+)["\']')); return m ? m[1].trim() : ''; };
+    web = { apiKey: campo('apiKey'), authDomain: campo('authDomain'), projectId: campo('projectId'), messagingSenderId: campo('messagingSenderId'), appId: campo('appId') };
   }
   const vapid = String(process.env.FCM_VAPID_KEY || '').trim();
   return web && web.apiKey && web.projectId && web.messagingSenderId && web.appId && vapid ? { web: { apiKey: web.apiKey, authDomain: web.authDomain, projectId: web.projectId, messagingSenderId: web.messagingSenderId, appId: web.appId }, vapid } : null;
