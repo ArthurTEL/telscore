@@ -13,6 +13,8 @@ const { cfg, sb, sbAll, apiFootball, send, cronOk, contar } = require('./_db');
 const { limpaAvisos, enviaVarios } = require('./_fcm');
 
 const MIN = 60000, HOUR = 60 * MIN;
+// quantas rodadas do vigia (20 s cada) o gol espera pelo nome de quem marcou: 9 = até 3 minutos
+const ESPERA_GOL = 9;
 const TZ = 'America/Sao_Paulo';
 const LIVE = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE', 'INT', 'SUSP']);
 const FIM = new Set(['FT', 'AET', 'PEN']);
@@ -76,56 +78,55 @@ function processa(row, f, agora) {
     if (!boot && LIVE.has(st) && el <= 20) add('inicio', titulo, `▶️ Começou! ${pl(gh, ga)}\n${liga}`);
     upd.inicio_ok = true;
   }
-  // gols: pelo placar (a API às vezes corrige o minuto do gol; o placar não engana)
+  // gols: pelo placar. Para saber QUEM fez e EM QUE MINUTO, os gols de cada lado são postos em ordem
+  // e o gol novo é o de número "placar anterior + 1" daquele lado. Assim, quando a API corrige o minuto
+  // ou o jogador de um gol antigo, o gol antigo não é confundido com o novo.
   const ph = row.gols_casa, pa = row.gols_fora;
-  const golEv = (f.events || []).filter(e => e.type === 'Goal' && e.detail !== 'Missed Penalty');
-  const golKey = e => `G|${e.team && e.team.id}|${(e.player && (e.player.id || e.player.name)) || ''}|${e.time && e.time.elapsed}|${(e.time && e.time.extra) || 0}`;
-  if (boot || ph == null) { golEv.forEach(e => vistos.add(golKey(e))); upd.gols_casa = gh; upd.gols_fora = ga; upd.espera = 0; }
+  const golEv = (f.events || []).filter(e => e.type === 'Goal' && e.detail !== 'Missed Penalty' && e.time && e.time.elapsed != null);
+  const lado = e => { const tid = e.team && e.team.id; const s = tid === H.id ? 'h' : tid === A.id ? 'a' : null; return s && e.detail === 'Own Goal' ? (s === 'h' ? 'a' : 'h') : s; };
+  const ordem = (x, y) => (x.time.elapsed - y.time.elapsed) || ((x.time.extra || 0) - (y.time.extra || 0));
+  const evH = golEv.filter(e => lado(e) === 'h').sort(ordem), evA = golEv.filter(e => lado(e) === 'a').sort(ordem);
+  if (boot || ph == null) { upd.gols_casa = gh; upd.gols_fora = ga; upd.espera = 0; }
   else {
     const dh = Math.max(0, gh - ph), da = Math.max(0, ga - pa);
     if (dh + da > 0) {
-      const novos = golEv.filter(e => !vistos.has(golKey(e))).sort((x, y) => (x.time.elapsed - y.time.elapsed) || ((x.time.extra || 0) - (y.time.extra || 0)));
-      // distribui os gols novos entre os lados que marcaram (gol contra vale para o rival)
-      const need = { h: dh, a: da }, eh = [], ea = [];
-      for (const e of novos) {
-        const tid = e.team && e.team.id;
-        let s = null;
-        if (e.detail === 'Own Goal') { const s1 = tid === H.id ? 'a' : 'h', s2 = s1 === 'h' ? 'a' : 'h'; s = need[s1] > 0 ? s1 : need[s2] > 0 ? s2 : null; }
-        else { const s0 = tid === H.id ? 'h' : tid === A.id ? 'a' : null; s = s0 && need[s0] > 0 ? s0 : null; }
-        if (!s) continue;
-        need[s]--; (s === 'h' ? eh : ea).push(e);
-      }
-      const falta = (dh - eh.length) + (da - ea.length);
-      if (falta > 0 && (row.espera || 0) < 2) {
-        // placar mudou antes de a API registrar quem marcou: espera até 2 rodadas do vigia (uns 40 segundos) pelo nome
+      const novos = [];
+      for (let k = ph; k < ph + dh; k++) novos.push({ e: evH[k], lado: 'h' });
+      for (let k = pa; k < pa + da; k++) novos.push({ e: evA[k], lado: 'a' });
+      const pronto = novos.every(x => x.e && nm(x.e.player));
+      if (!pronto && (row.espera || 0) < ESPERA_GOL) {
+        // o placar mudou, mas a API ainda não registrou quem marcou: espera (cada rodada do vigia = 20 s)
         upd.espera = (row.espera || 0) + 1;
       } else {
-        // placar corrido: com 2 gols no mesmo minuto, cada aviso mostra o placar daquele gol
-        const todos = [...Array(dh).keys()].map(i => ({ e: eh[i], lado: 'h' })).concat([...Array(da).keys()].map(i => ({ e: ea[i], lado: 'a' })))
-          .sort((x, y) => (x.e && y.e) ? ((x.e.time.elapsed - y.e.time.elapsed) || ((x.e.time.extra || 0) - (y.e.time.extra || 0))) : 0);
+        // em ordem de minuto, com o placar daquele gol (dois gols seguidos saem cada um com o seu placar)
+        novos.sort((x, y) => (x.e && y.e) ? ordem(x.e, y.e) : 0);
         let ch = ph, ca = pa;
-        for (const { e, lado } of todos) {
-          if (e) vistos.add(golKey(e));
-          if (lado === 'h') ch++; else ca++;
-          const team = lado === 'h' ? H : A;
+        for (const { e, lado: ld } of novos) {
+          if (ld === 'h') ch++; else ca++;
+          const team = ld === 'h' ? H : A;
           const quem = e ? nm(e.player) : '';
           const extra = e && e.detail === 'Penalty' ? ' (pênalti)' : e && e.detail === 'Own Goal' ? ' (contra)' : '';
-          add('gol', titulo, `${e ? minuto(e) + ' ' : ''}⚽ Gol do ${team.name}! ${pl(ch, ca, lado)}\n${quem ? quem + extra : 'Autor do gol a confirmar'}`, `${id}-gol-${ch}-${ca}`, team.logo);
+          const min = e ? minuto(e) : (el ? `${el}'` : '');
+          add('gol', titulo, `${min ? min + ' ' : ''}⚽ Gol do ${team.name}! ${pl(ch, ca, ld)}${quem ? '\n' + quem + extra : ''}`, `${id}-gol-${ch}-${ca}`, team.logo);
         }
         upd.gols_casa = gh; upd.gols_fora = ga; upd.espera = 0;
       }
     } else if (gh !== ph || ga !== pa) { upd.gols_casa = gh; upd.gols_fora = ga; upd.espera = 0; }
   }
   // VAR, vermelho, pênalti perdido, amarelo, substituição
+  const conta = {};
   for (const e of f.events || []) {
     const tn = (e.team && (e.team.name || (e.team.id === H.id ? H.name : e.team.id === A.id ? A.name : ''))) || '', quem = nm(e.player), t = e.time && e.time.elapsed;
     let k = null, tipo = null, title = '', body = '';
     const pq = [quem || 'Jogador', tn].filter(Boolean).join(' · '), agoraPl = pl(gh, ga);
     if (e.type === 'Card' && /red|second/i.test(e.detail || '')) { k = `C|${(e.player && e.player.id) || quem}`; tipo = 'vermelho'; body = `${minuto(e)} 🟥 Expulso! ${/second/i.test(e.detail) ? '(2º amarelo) ' : ''}${agoraPl}\n${pq}`; }
-    else if (e.type === 'Card' && /yellow/i.test(e.detail || '')) { k = `Y|${(e.player && e.player.id) || quem}|${t}`; tipo = 'amarelo'; body = `${minuto(e)} 🟨 Cartão amarelo ${agoraPl}\n${pq}`; }
-    else if (e.type === 'Var') { k = `V|${e.detail}|${e.team && e.team.id}|${t}`; tipo = 'var'; const d = VAR_PT(e.detail || ''); body = `${minuto(e)} 📺 VAR: ${d} ${agoraPl}\n${quem ? pq : tn}`; }
-    else if (e.type === 'Goal' && e.detail === 'Missed Penalty') { k = `P|${(e.player && e.player.id) || quem}|${t}`; tipo = 'penalti'; body = `${minuto(e)} ❌ Pênalti perdido! ${agoraPl}\n${pq}`; }
+    else if (e.type === 'Card' && /yellow/i.test(e.detail || '')) { k = `Y|${(e.player && e.player.id) || quem}|${conta['Y' + ((e.player && e.player.id) || quem)] = (conta['Y' + ((e.player && e.player.id) || quem)] || 0) + 1}`; tipo = 'amarelo'; body = `${minuto(e)} 🟨 Cartão amarelo ${agoraPl}\n${pq}`; }
+    else if (e.type === 'Var') { k = `V|${e.detail}|${e.team && e.team.id}|${conta['V' + e.detail + (e.team && e.team.id)] = (conta['V' + e.detail + (e.team && e.team.id)] || 0) + 1}`; tipo = 'var'; const d = VAR_PT(e.detail || ''); body = `${minuto(e)} 📺 VAR: ${d} ${agoraPl}\n${quem ? pq : tn}`; }
+    else if (e.type === 'Goal' && e.detail === 'Missed Penalty') { k = `P|${(e.player && e.player.id) || quem}|${conta['P' + ((e.player && e.player.id) || quem)] = (conta['P' + ((e.player && e.player.id) || quem)] || 0) + 1}`; tipo = 'penalti'; body = `${minuto(e)} ❌ Pênalti perdido! ${agoraPl}\n${pq}`; }
     else if (e.type === 'subst') { k = `S|${(e.player && e.player.id) || quem}|${(e.assist && e.assist.id) || ''}`; tipo = 'substituicao'; const ent = nm(e.assist); body = `${minuto(e)} 🔁 Substituição · ${tn}\n${ent ? `Entra ${ent}` : ''}${ent && quem ? ', sai ' : (!ent && quem ? 'Sai ' : '')}${quem || ''}`; }
+    // chaves antigas (com o minuto) de jogos que já estavam sendo acompanhados antes desta versão
+    const velha = tipo === 'amarelo' ? `Y|${(e.player && e.player.id) || quem}|${t}` : tipo === 'var' ? `V|${e.detail}|${e.team && e.team.id}|${t}` : tipo === 'penalti' ? `P|${(e.player && e.player.id) || quem}|${t}` : null;
+    if (k && velha && vistos.has(velha)) vistos.add(k);
     if (!k || vistos.has(k)) continue;
     vistos.add(k);
     if (!boot) add(tipo, titulo, body, `${id}-${k}`, esc(e.team));
