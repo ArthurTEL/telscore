@@ -9,7 +9,7 @@
 // Gasta requisições da API-Football só quando alguém tem avisos ligados e há jogo dos times seguidos
 // perto do horário: 1 lista do dia a cada 30 minutos + 1 consulta por minuto para cada 20 jogos em andamento.
 
-const { cfg, sb, sbAll, apiFootball, send, cronOk } = require('./_db');
+const { cfg, sb, sbAll, apiFootball, send, cronOk, contar } = require('./_db');
 const { limpaAvisos, enviaVarios } = require('./_fcm');
 
 const MIN = 60000, HOUR = 60 * MIN;
@@ -46,6 +46,11 @@ function processa(row, f, agora) {
   const gh = f.goals.home == null ? 0 : f.goals.home, ga = f.goals.away == null ? 0 : f.goals.away;
   const nm = nomes(f);
   const placar = `${H.name} ${gh}×${ga} ${A.name}`;
+  // jeito Sofascore: título com os times, corpo com minuto + lance e, embaixo, quem fez; escudo de quem fez o lance
+  const titulo = `${H.name} x ${A.name}`;
+  const pl = (h, a, lado) => lado === 'h' ? `[${h}] - ${a}` : lado === 'a' ? `${h} - [${a}]` : `${h} - ${a}`;
+  const esc = t => (t && t.id === H.id ? H.logo : t && t.id === A.id ? A.logo : null) || (f.league && f.league.logo) || null;
+  const escLiga = (f.league && f.league.logo) || H.logo || null;
   const liga = (f.league && f.league.name) || '';
   const id = f.fixture.id;
   const inicio = Date.parse(f.fixture.date);
@@ -53,22 +58,22 @@ function processa(row, f, agora) {
   // começamos a olhar com o jogo já andando: só registra o que já aconteceu, sem avisar coisa velha
   const boot = primeira && (FIM.has(st) || (LIVE.has(st) && el > 10));
   const vistos = new Set(Array.isArray(row.vistos) ? row.vistos : []);
-  const add = (tipo, title, body, tag) => out.push({ tipo, title, body, fixture: id, tag: tag || `${id}-${tipo}` });
+  const add = (tipo, title, body, tag, img) => out.push({ tipo, title, body, fixture: id, tag: tag || `${id}-${tipo}`, img: img || escLiga });
 
   // lembrete 30 minutos antes
   if (PRE.has(st) && !row.lembrete && agora >= inicio - 30 * MIN && agora < inicio) {
-    add('lembrete', `⏰ Daqui a pouco: ${H.name} × ${A.name}`, `Às ${horaSP(new Date(inicio))} · ${liga}`);
+    add('lembrete', titulo, `⏰ Começa às ${horaSP(new Date(inicio))}\n${liga}`);
     upd.lembrete = true;
   }
   // escalações
   const lu = f.lineups || [];
   if (!row.escalacao && lu.length >= 2 && (lu[0].startXI || []).length && (lu[1].startXI || []).length) {
-    if (!boot && !FIM.has(st)) add('escalacao', `📋 Saíram as escalações: ${H.name} × ${A.name}`, `${H.name} no ${lu[0].formation || '?'} · ${A.name} no ${lu[1].formation || '?'}`);
+    if (!boot && !FIM.has(st)) add('escalacao', titulo, `📋 Escalações confirmadas\n${H.name} ${lu[0].formation || ''} · ${A.name} ${lu[1].formation || ''}`.replace(/ +·/g, ' ·').trim());
     upd.escalacao = true;
   }
   // começou
   if (!row.inicio_ok && (LIVE.has(st) || FIM.has(st))) {
-    if (!boot && LIVE.has(st) && el <= 20) add('inicio', `🟢 Começou! ${H.name} × ${A.name}`, liga);
+    if (!boot && LIVE.has(st) && el <= 20) add('inicio', titulo, `▶️ Começou! ${pl(gh, ga)}\n${liga}`);
     upd.inicio_ok = true;
   }
   // gols: pelo placar (a API às vezes corrige o minuto do gol; o placar não engana)
@@ -95,39 +100,44 @@ function processa(row, f, agora) {
         // placar mudou antes de a API registrar quem marcou: espera até 2 minutos pelo nome
         upd.espera = (row.espera || 0) + 1;
       } else {
-        const manda = (e, team) => {
+        // placar corrido: com 2 gols no mesmo minuto, cada aviso mostra o placar daquele gol
+        const todos = [...Array(dh).keys()].map(i => ({ e: eh[i], lado: 'h' })).concat([...Array(da).keys()].map(i => ({ e: ea[i], lado: 'a' })))
+          .sort((x, y) => (x.e && y.e) ? ((x.e.time.elapsed - y.e.time.elapsed) || ((x.e.time.extra || 0) - (y.e.time.extra || 0))) : 0);
+        let ch = ph, ca = pa;
+        for (const { e, lado } of todos) {
           if (e) vistos.add(golKey(e));
+          if (lado === 'h') ch++; else ca++;
+          const team = lado === 'h' ? H : A;
           const quem = e ? nm(e.player) : '';
           const extra = e && e.detail === 'Penalty' ? ' (pênalti)' : e && e.detail === 'Own Goal' ? ' (contra)' : '';
-          add('gol', `⚽ GOL DO ${team.name.toUpperCase()}!`, `${quem ? `${quem} ${minuto(e)}${extra} · ` : ''}${placar}`, `${id}-gol-${gh}-${ga}`);
-        };
-        for (let i = 0; i < dh; i++) manda(eh[i], H);
-        for (let i = 0; i < da; i++) manda(ea[i], A);
+          add('gol', titulo, `${e ? minuto(e) + ' ' : ''}⚽ Gol do ${team.name}! ${pl(ch, ca, lado)}\n${quem ? quem + extra : 'Autor do gol a confirmar'}`, `${id}-gol-${ch}-${ca}`, team.logo);
+        }
         upd.gols_casa = gh; upd.gols_fora = ga; upd.espera = 0;
       }
     } else if (gh !== ph || ga !== pa) { upd.gols_casa = gh; upd.gols_fora = ga; upd.espera = 0; }
   }
   // VAR, vermelho, pênalti perdido, amarelo, substituição
   for (const e of f.events || []) {
-    const tn = (e.team && e.team.name) || '', quem = nm(e.player), t = e.time && e.time.elapsed;
+    const tn = (e.team && (e.team.name || (e.team.id === H.id ? H.name : e.team.id === A.id ? A.name : ''))) || '', quem = nm(e.player), t = e.time && e.time.elapsed;
     let k = null, tipo = null, title = '', body = '';
-    if (e.type === 'Card' && /red|second/i.test(e.detail || '')) { k = `C|${(e.player && e.player.id) || quem}`; tipo = 'vermelho'; title = `🟥 Expulso! ${quem || 'Jogador'} (${tn})`; body = `${/second/i.test(e.detail) ? 'Segundo amarelo' : 'Vermelho direto'} aos ${minuto(e)} · ${placar}`; }
-    else if (e.type === 'Card' && /yellow/i.test(e.detail || '')) { k = `Y|${(e.player && e.player.id) || quem}|${t}`; tipo = 'amarelo'; title = `🟨 Amarelo para ${quem || 'jogador'} (${tn})`; body = `${minuto(e)} · ${placar}`; }
-    else if (e.type === 'Var') { k = `V|${e.detail}|${e.team && e.team.id}|${t}`; tipo = 'var'; const d = VAR_PT(e.detail || ''); title = `📺 VAR: ${d}`; body = `${tn}${quem ? ` · ${quem}` : ''} · ${minuto(e)} · ${placar}`; }
-    else if (e.type === 'Goal' && e.detail === 'Missed Penalty') { k = `P|${(e.player && e.player.id) || quem}|${t}`; tipo = 'penalti'; title = `❌ Pênalti perdido! ${quem || 'Jogador'} (${tn})`; body = `${minuto(e)} · ${placar}`; }
-    else if (e.type === 'subst') { k = `S|${(e.player && e.player.id) || quem}|${(e.assist && e.assist.id) || ''}`; tipo = 'substituicao'; const ent = nm(e.assist); title = `🔁 Substituição no ${tn}`; body = `${quem ? `Sai ${quem}` : ''}${ent ? `${quem ? ', entra ' : 'Entra '}${ent}` : ''} · ${minuto(e)}`; }
+    const pq = [quem || 'Jogador', tn].filter(Boolean).join(' · '), agoraPl = pl(gh, ga);
+    if (e.type === 'Card' && /red|second/i.test(e.detail || '')) { k = `C|${(e.player && e.player.id) || quem}`; tipo = 'vermelho'; body = `${minuto(e)} 🟥 Expulso! ${/second/i.test(e.detail) ? '(2º amarelo) ' : ''}${agoraPl}\n${pq}`; }
+    else if (e.type === 'Card' && /yellow/i.test(e.detail || '')) { k = `Y|${(e.player && e.player.id) || quem}|${t}`; tipo = 'amarelo'; body = `${minuto(e)} 🟨 Cartão amarelo ${agoraPl}\n${pq}`; }
+    else if (e.type === 'Var') { k = `V|${e.detail}|${e.team && e.team.id}|${t}`; tipo = 'var'; const d = VAR_PT(e.detail || ''); body = `${minuto(e)} 📺 VAR: ${d} ${agoraPl}\n${quem ? pq : tn}`; }
+    else if (e.type === 'Goal' && e.detail === 'Missed Penalty') { k = `P|${(e.player && e.player.id) || quem}|${t}`; tipo = 'penalti'; body = `${minuto(e)} ❌ Pênalti perdido! ${agoraPl}\n${pq}`; }
+    else if (e.type === 'subst') { k = `S|${(e.player && e.player.id) || quem}|${(e.assist && e.assist.id) || ''}`; tipo = 'substituicao'; const ent = nm(e.assist); body = `${minuto(e)} 🔁 Substituição · ${tn}\n${ent ? `Entra ${ent}` : ''}${ent && quem ? ', sai ' : (!ent && quem ? 'Sai ' : '')}${quem || ''}`; }
     if (!k || vistos.has(k)) continue;
     vistos.add(k);
-    if (!boot) add(tipo, title, body, `${id}-${k}`);
+    if (!boot) add(tipo, titulo, body, `${id}-${k}`, esc(e.team));
   }
   // intervalo
   if (!row.intervalo && (st === 'HT' || ['2H', 'ET', 'BT', 'P'].includes(st) || FIM.has(st))) {
-    if (st === 'HT' && !boot) add('intervalo', `⏸️ Intervalo: ${placar}`, liga);
+    if (st === 'HT' && !boot) add('intervalo', titulo, `⏸️ Intervalo: ${pl(gh, ga)}\n${liga}`);
     upd.intervalo = true;
   }
   // fim
   if (!row.fim && FIM.has(st)) {
-    if (!(primeira && boot && agora - inicio > 4 * HOUR)) add('fim', `🏁 Fim de jogo: ${placar}`, st === 'PEN' && f.score && f.score.penalty ? `Nos pênaltis: ${f.score.penalty.home}×${f.score.penalty.away} · ${liga}` : liga);
+    if (!(primeira && boot && agora - inicio > 4 * HOUR)) add('fim', titulo, `🏁 Fim de jogo: ${pl(gh, ga)}\n${st === 'PEN' && f.score && f.score.penalty ? `Pênaltis: ${f.score.penalty.home} - ${f.score.penalty.away} · ${liga}` : liga}`);
     upd.fim = true;
   }
   if (VOID.has(st)) upd.fim = true;
@@ -167,11 +177,12 @@ async function vigiar(c, q) {
     const dias = [dataSP(hoje)];
     const horaLocal = +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }).format(hoje);
     if (horaLocal >= 21) dias.push(dataSP(new Date(agora + 6 * HOUR)));
-    const linhas = [];
+    const porId = new Map();
     for (const d of dias) {
       const lista = await apiFootball(`fixtures?date=${d}&timezone=${encodeURIComponent(TZ)}`); chamadas++;
-      lista.filter(quer).forEach(f => linhas.push({ fixture_id: f.fixture.id, inicio: f.fixture.date, liga_id: f.league.id, liga: f.league.name, mandante_id: f.teams.home.id, visitante_id: f.teams.away.id, mandante: f.teams.home.name, visitante: f.teams.away.name }));
+      lista.filter(quer).forEach(f => porId.set(f.fixture.id, { fixture_id: f.fixture.id, inicio: f.fixture.date, liga_id: f.league.id, liga: f.league.name, mandante_id: f.teams.home.id, visitante_id: f.teams.away.id, mandante: f.teams.home.name, visitante: f.teams.away.name }));
     }
+    const linhas = [...porId.values()]; // o mesmo jogo pode vir nas duas datas
     if (linhas.length) await sb(c, 'avisos_jogos', { method: 'POST', body: linhas, prefer: 'resolution=merge-duplicates,return=minimal' });
     await salvaEstado(c, 'lista', { assinatura, jogos: linhas.length });
     // limpeza: jogos de mais de 3 dias
@@ -182,7 +193,7 @@ async function vigiar(c, q) {
   const de = new Date(agora - 4 * HOUR).toISOString(), ate = new Date(agora + 35 * MIN).toISOString();
   const rows = (await sbAll(c, `avisos_jogos?select=*&inicio=gte.${de}&inicio=lte.${ate}&fim=eq.false`))
     .filter(r => T.has(r.mandante_id) || T.has(r.visitante_id) || Lg.has(r.liga_id));
-  if (!rows.length) return { ok: true, jogos: 0, chamadas };
+  if (!rows.length) { if (chamadas && q.seco !== '1') await contar(c, { requisicoes_avisos: chamadas }); return { ok: true, jogos: 0, chamadas }; }
 
   // 4) detalhes dos jogos (eventos, escalações), de 20 em 20
   const det = new Map();
@@ -195,6 +206,7 @@ async function vigiar(c, q) {
   // 5) o que mudou e para quem mandar
   const fila = [];
   let avisos = 0;
+  const porTipo = {};
   for (const row of rows) {
     const f = det.get(row.fixture_id);
     if (!f) continue;
@@ -203,7 +215,7 @@ async function vigiar(c, q) {
       const H = f.teams.home.id, A = f.teams.away.id, lg = f.league.id;
       const alvo = users.filter(u => u.times.has(H) || u.times.has(A) || (u.av.ligas && u.ligas.has(lg)));
       out.forEach(n => {
-        avisos++;
+        avisos++; porTipo['lances:' + n.tipo] = (porTipo['lances:' + n.tipo] || 0) + 1;
         const vistos = new Set();
         alvo.filter(u => u.av.tipos.includes(n.tipo)).forEach(u => toks.get(u.id).forEach(token => { if (!vistos.has(token)) { vistos.add(token); fila.push({ token, n }); } }));
       });
@@ -212,6 +224,7 @@ async function vigiar(c, q) {
     await sb(c, `avisos_jogos?fixture_id=eq.${row.fixture_id}`, { method: 'PATCH', body: upd, prefer: 'return=minimal' });
   }
   const r = q.seco === '1' ? { ok: true, enviados: 0, mortos: [], erros: [], seco: true } : await enviaVarios(fila);
+  if (q.seco !== '1') await contar(c, { avisos: r.enviados || 0, lances: avisos, ...porTipo, requisicoes_avisos: chamadas });
   if (r.mortos && r.mortos.length) {
     for (const t of r.mortos) await sb(c, `dispositivos?token=eq.${encodeURIComponent(t)}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});
   }

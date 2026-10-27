@@ -71,4 +71,16 @@ function cronOk(req) {
   return !!secret && auth === `Bearer ${secret}`;
 }
 
-module.exports = { API, cfg, sb, sbAll, apiFootball, norm, refName, send, readBody, cronOk };
+// dia de hoje no horário de Brasília (AAAA-MM-DD)
+const hojeBR = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+
+// soma uma contagem do dia (página /numeros). Nunca derruba quem chamou: se a tabela ainda não existe, ignora.
+async function contar(c, itens) {
+  const dia = hojeBR();
+  for (const [chave, n] of Object.entries(itens || {})) {
+    if (!n) continue;
+    try { await sb(c, 'rpc/incrementa', { method: 'POST', body: { p_dia: dia, p_chave: chave, p_n: n }, prefer: 'return=minimal' }); } catch (e) { /* sem a tabela contagens: segue */ }
+  }
+}
+
+module.exports = { API, cfg, sb, sbAll, apiFootball, norm, refName, send, readBody, cronOk, hojeBR, contar };

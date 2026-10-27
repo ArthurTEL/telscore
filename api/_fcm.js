@@ -50,18 +50,20 @@ async function tokenAcesso(S) {
   return TOK.t;
 }
 
-// n = { title, body, fixture, tipo, tag }
+// n = { title, body, fixture, tipo, tag, img }  (img = escudo do time do lance, https)
+const IMG = /^https:\/\/[^\s"'<>]{8,500}$/;
 function mensagem(token, n) {
   const url = n.fixture ? `/#jogo-${n.fixture}` : '/';
+  const img = n.img && IMG.test(n.img) ? n.img : null;
   return {
     token,
     notification: { title: n.title, body: n.body },
-    data: { fixture: String(n.fixture || ''), tipo: String(n.tipo || ''), url },
-    android: { priority: 'HIGH', notification: { channel_id: 'jogos', sound: 'default', color: '#E5283A', ...(n.tag ? { tag: n.tag } : {}) } },
-    apns: { headers: { 'apns-priority': '10' }, payload: { aps: { sound: 'default', 'thread-id': n.fixture ? `jogo-${n.fixture}` : 'telscore' } } },
+    data: { fixture: String(n.fixture || ''), tipo: String(n.tipo || ''), url, ...(img ? { img } : {}) },
+    android: { priority: 'HIGH', notification: { channel_id: 'jogos', sound: 'default', color: '#E5283A', ...(img ? { image: img } : {}), ...(n.tag ? { tag: n.tag } : {}) } },
+    apns: { headers: { 'apns-priority': '10' }, payload: { aps: { sound: 'default', 'mutable-content': 1, 'thread-id': n.fixture ? `jogo-${n.fixture}` : 'telscore' } }, ...(img ? { fcm_options: { image: img } } : {}) },
     webpush: {
       headers: { Urgency: 'high' },
-      notification: { icon: '/icons/icon-192.png', badge: '/icons/badge-96.png', ...(n.tag ? { tag: n.tag, renotify: true } : {}) },
+      notification: { icon: img || '/icons/icon-192.png', badge: '/icons/badge-96.png', ...(n.tag ? { tag: n.tag, renotify: true } : {}) },
       fcm_options: { link: SITE + url }
     }
   };
