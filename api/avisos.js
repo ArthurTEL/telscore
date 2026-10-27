@@ -1,13 +1,13 @@
 // TEL.SCORE · o "vigia" das notificações
 //
-//   GET /api/avisos?acao=vigiar   → roda a cada minuto (agendado no Supabase, veja supabase/06_vigia_cron.sql).
+//   GET /api/avisos?acao=vigiar   → roda a cada 20 segundos (agendado no Supabase, veja supabase/06_vigia_cron.sql).
 //                                   Olha os jogos dos times seguidos por quem ligou os avisos e manda:
 //                                   lembrete (30 min antes), escalações, início, gol, VAR, vermelho,
 //                                   pênalti perdido, intervalo, fim (e, se a pessoa quiser, amarelo e substituições).
 //
 // Precisa do cabeçalho Authorization: Bearer <CRON_SECRET>.
 // Gasta requisições da API-Football só quando alguém tem avisos ligados e há jogo dos times seguidos
-// perto do horário: 1 lista do dia a cada 30 minutos + 1 consulta por minuto para cada 20 jogos em andamento.
+// perto do horário: 1 lista do dia a cada 30 minutos + 1 consulta a cada 20 segundos para cada 20 jogos em andamento.
 
 const { cfg, sb, sbAll, apiFootball, send, cronOk, contar } = require('./_db');
 const { limpaAvisos, enviaVarios } = require('./_fcm');
@@ -97,7 +97,7 @@ function processa(row, f, agora) {
       }
       const falta = (dh - eh.length) + (da - ea.length);
       if (falta > 0 && (row.espera || 0) < 2) {
-        // placar mudou antes de a API registrar quem marcou: espera até 2 minutos pelo nome
+        // placar mudou antes de a API registrar quem marcou: espera até 2 rodadas do vigia (uns 40 segundos) pelo nome
         upd.espera = (row.espera || 0) + 1;
       } else {
         // placar corrido: com 2 gols no mesmo minuto, cada aviso mostra o placar daquele gol
@@ -154,7 +154,7 @@ async function salvaEstado(c, chave, valor) {
   await sb(c, 'avisos_estado', { method: 'POST', body: { chave, valor, atualizado_em: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' });
 }
 
-async function vigiar(c, q) {
+async function vigiarAgora(c, q) {
   const agora = Date.now();
   // 1) quem ligou os avisos e tem pelo menos um celular ou navegador cadastrado
   const perfis = await sbAll(c, 'perfis?select=user_id,times,ligas,avisos&avisos->>on=eq.true');
@@ -229,6 +229,16 @@ async function vigiar(c, q) {
     for (const t of r.mortos) await sb(c, `dispositivos?token=eq.${encodeURIComponent(t)}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});
   }
   return { ok: true, jogos: rows.length, chamadas, avisos, mensagens: fila.length, enviados: r.enviados, removidos: (r.mortos || []).length, erros: r.erros, motivo: r.motivo, ...(q.seco === '1' ? { fila: fila.map(x => x.n.title + ' | ' + x.n.body) } : {}) };
+}
+
+// trava: com o vigia rodando a cada 20 s, uma rodada nunca pode atropelar a anterior (evita aviso repetido)
+const LIVRE = '1970-01-01T00:00:00.000Z';
+async function vigiar(c, q) {
+  await sb(c, 'avisos_estado', { method: 'POST', body: { chave: 'trava', valor: {}, atualizado_em: LIVRE }, prefer: 'resolution=ignore-duplicates,return=minimal' }).catch(() => {});
+  const { data } = await sb(c, `avisos_estado?chave=eq.trava&atualizado_em=lt.${new Date(Date.now() - 55000).toISOString()}`, { method: 'PATCH', body: { atualizado_em: new Date().toISOString() }, prefer: 'return=representation' });
+  if (!data || !data.length) return { ok: true, motivo: 'A rodada anterior ainda está terminando.' };
+  try { return await vigiarAgora(c, q); }
+  finally { await sb(c, 'avisos_estado?chave=eq.trava', { method: 'PATCH', body: { atualizado_em: LIVRE }, prefer: 'return=minimal' }).catch(() => {}); }
 }
 
 module.exports = async (req, res) => {
