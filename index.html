@@ -1219,6 +1219,17 @@ body.noscroll{overflow:hidden}
 .lg-bar .lg-grp[hidden]{display:none}
 .chip.lgc{display:inline-flex;align-items:center;gap:6px}
 .chip.lgc img{width:20px;height:20px;max-width:20px;object-fit:contain;border-radius:5px;background:#fff;padding:2px;flex:none}
+.st-mode{align-self:flex-end;flex:none}
+.gal-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.gal-bar .t b{display:block;font-size:16px}.gal-bar .t small{color:var(--muted);font-size:12.5px}
+.gal-grps{margin-bottom:14px}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:16px;align-items:start}
+.gal-it{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column}
+.gal-img{padding:18px 18px 12px}.gal-img.dark{background:#111114;color:#fff}.gal-img.light{background:#fff;color:#141418;border-bottom:1px solid var(--line)}
+.gal-img svg{width:100%;height:auto;display:block}
+.gal-k{font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#FF2533;margin-bottom:2px}.gal-s{font-family:var(--f-mono);font-size:10px;opacity:.6;margin-bottom:12px}
+.gal-ft{margin-top:12px;padding-top:8px;border-top:1px solid rgba(128,128,140,.25);font-family:var(--f-mono);font-size:9.5px;opacity:.62;display:flex;justify-content:space-between;gap:8px}
+.gal-it figcaption{padding:12px 14px 14px;display:grid;gap:10px;margin-top:auto}.gal-it figcaption p{margin:0;font-size:13px;line-height:1.45;color:var(--muted)}
+.gal-acts{display:flex;gap:8px;flex-wrap:wrap}
 .ko-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:12px}
 .ko-sum{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin:0 0 10px}
 .lg-phase{margin:0 0 10px}
@@ -1549,7 +1560,7 @@ body.gated{overflow:hidden}
 
   <!-- ESTÚDIO -->
   <section class="view" id="v-estudio" role="tabpanel" aria-labelledby="tab-estudio" hidden><div class="real-note" hidden><span class="pill solid">Demonstração</span><span>Esta seção ainda usa dados de demonstração. A versão com dados reais chega na próxima etapa.</span></div>
-    <div class="sec-head"><div><h2 class="sec">Estúdio de posts</h2><p>Escolha o jogo, o formato e o tom. A gente monta o post, você revisa e publica. Não curtiu? Toque em "Outra versão".</p></div></div>
+    <div class="sec-head"><div><h2 class="sec" id="st-h2">Estúdio de posts</h2><p id="st-hp">Escolha o jogo, o formato e o tom. A gente monta o post, você revisa e publica. Não curtiu? Toque em "Outra versão".</p></div><div class="seg st-mode" id="st-mode" role="group" aria-label="O que criar" hidden><button aria-pressed="true" data-stmode="posts">Posts</button><button aria-pressed="false" data-stmode="graf">Gráficos para material</button></div></div>
     <div class="studio">
       <div class="st-controls card">
         <div class="field" id="st-src-field" hidden><span class="lbl">Fonte dos dados</span><div class="seg" id="st-src"></div></div>
@@ -1558,6 +1569,7 @@ body.gated{overflow:hidden}
         <div class="field" id="st-cmp-field" hidden></div>
         <div class="field" id="st-match-field"><label for="st-match">Partida</label><select id="st-match"></select></div>
         <div class="field" id="st-focus-field"><label for="st-focus">Foco</label><select id="st-focus"></select></div>
+        <div class="field" id="st-gopts" hidden><span class="lbl">Fundo dos gráficos</span><div class="seg" id="st-galbg"><button data-galbg="dark">Escuro</button><button data-galbg="light">Claro</button></div><span class="lbl" style="margin-top:12px">Título em cima do gráfico</span><div class="seg" id="st-galtit"><button data-galtit="1">Com título</button><button data-galtit="0">Só o gráfico</button></div><small class="cmp-note">Cada gráfico sai em PNG, em alta resolução, com o crédito dos dados no rodapé.</small></div>
         <div class="field"><label for="st-search">Formato <span id="fmt-count"></span></label><input type="search" id="st-search" placeholder="Buscar: xG, quiz, árbitro, scout..."><div class="seg st-phase" id="st-phase" role="group" aria-label="Fase da copa" hidden></div><div class="fmt-list" id="st-formats"></div></div>
         <div class="field"><span class="lbl">Plataforma</span><div class="chips" id="st-plats"></div></div>
         <div class="field"><span class="lbl">Tom</span><div class="chips" id="st-tones"></div></div>
@@ -1576,6 +1588,7 @@ body.gated{overflow:hidden}
         </div>
         <div class="combo" id="st-combo"></div>
         <div class="preview" id="st-preview"></div>
+        <div id="st-gal" hidden></div>
         <details class="raw" id="st-rawbox"><summary>Ver texto puro para colar</summary><textarea id="st-raw" readonly></textarea></details>
         <div class="card" id="st-saved-card"><div class="card-h"><div><h3>Meus posts salvos <span class="pill" id="st-saved-n"></span></h3><div class="sub" id="st-saved-sub">Ficam guardados neste navegador. Abra, copie ou baixe quando quiser postar.</div></div></div><div id="nv-bar"></div><div id="st-saved"></div></div>
       </div>
@@ -1597,6 +1610,7 @@ body.gated{overflow:hidden}
   <button data-go="centro" data-more-close><span class="si">📺</span>Central do jogo</button>
   <button data-go="ligas" data-more-close><span class="si">🏆</span>Tabelas</button>
   <button data-go="estudio" data-more-close><span class="si">🎨</span>Estúdio de posts</button>
+  <button data-go="estudio" data-galgo data-more-close><span class="si">🖼️</span>Gráficos para material</button>
  </div>
  <div class="sheet-sec">Ligas</div>
  <div class="sheet-lgs" id="more-lgs"></div>
@@ -2571,6 +2585,26 @@ function vzPaint(P,v,W){
   const bottom=cy+LR+100;
   if(v.note)P.text(vzEll(v.note,{f:'mono',size:20},W),cx,bottom+22,{f:'mono',size:20,a:.6,align:'center'});
   return bottom+34;}
+ // radar de um jogador só (galeria de gráficos)
+ if(v.k==='radar1'){const C=v.p.ring||VZC.red,n=v.axes.length,R=222,cx=W/2,cy=430,LR=R+52,fr=52;
+  vzFace(P,v.p,fr,fr+4,fr,C);const ns={f:'body',w:800,size:36},mw=W-fr*2-40;
+  P.text(vzEll(v.p.name||'',ns,mw),2*fr+22,fr-2,{...ns,fill:C});if(v.p.team)P.text(vzEll(v.p.team,{f:'mono',size:21},mw),2*fr+22,fr+30,{f:'mono',size:21,a:.72});
+  const ang=i=>-Math.PI/2+i*2*Math.PI/n,pt=(i,f)=>[cx+R*f*Math.cos(ang(i)),cy+R*f*Math.sin(ang(i))];
+  [.25,.5,.75,1].forEach(f=>P.poly(v.axes.map((_,i)=>pt(i,f)),f===1?'rgba(255,255,255,.04)':null,'rgba(255,255,255,.16)',2));
+  v.axes.forEach((_,i)=>{const [x,y]=pt(i,1);P.line(cx,cy,x,y,'rgba(255,255,255,.14)',2);});
+  const S=v.axes.map((ax,i)=>pt(i,Math.max(.02,(ax.v==null?0:ax.v)/99)));P.poly(S,C,C,4,.3);S.forEach(([x,y])=>P.circle(x,y,9,C,'#141418',4));
+  v.axes.forEach((ax,i)=>{const a=ang(i),x=cx+LR*Math.cos(a),y=cy+LR*Math.sin(a)+(Math.sin(a)>.5?24:Math.sin(a)<-.5?-30:-4);
+   const al=Math.cos(a)>.3?'left':Math.cos(a)<-.3?'right':'center';P.text(String(ax.lab).toUpperCase(),x,y,{f:'mono',w:700,size:22,a:.82,align:al});
+   P.text(ax.v==null?'–':String(ax.v),x,y+46,{f:'display',w:900,size:42,fill:C,align:al});});
+  const bottom=cy+LR+100;if(v.note)P.text(vzEll(v.note,{f:'mono',size:20},W),cx,bottom+22,{f:'mono',size:20,a:.6,align:'center'});return bottom+34;}
+ // números de um jogador na temporada: total e por 90 minutos
+ if(v.k==='pstats'){const C=v.p.ring||VZC.red,fr=52;vzFace(P,v.p,fr,fr+4,fr,C);const ns={f:'body',w:800,size:36},mw=W-fr*2-40;
+  P.text(vzEll(v.p.name||'',ns,mw),2*fr+22,fr-2,{...ns,fill:C});if(v.p.team)P.text(vzEll(v.p.team,{f:'mono',size:21},mw),2*fr+22,fr+30,{f:'mono',size:21,a:.72});
+  const c1=W-250,c2=W-24,rh=64;let y=2*fr+40;P.text('TEMPORADA',c1,y,{f:'mono',w:700,size:20,a:.6,align:'right'});P.text('POR 90 MIN',c2,y,{f:'mono',w:700,size:20,a:.6,align:'right'});y+=18;
+  v.rows.forEach((rw,i)=>{if(i%2===0)P.rect(-8,y,W+16,rh-6,14,'rgba(255,255,255,.05)');const cy=y+(rh-6)/2;
+   P.text(vzEll(rw.lab,{f:'body',w:700,size:30},c1-200),18,cy+11,{f:'body',w:700,size:30});
+   P.text(String(rw.t),c1,cy+13,{f:'display',w:900,size:36,align:'right'});P.text(rw.n==null?'–':String(rw.n),c2,cy+13,{f:'display',w:900,size:36,fill:rw.n==null?undefined:C,a:rw.n==null?.4:1,align:'right'});y+=rh;});
+  if(v.note){y+=30;P.text(vzEll(v.note,{f:'mono',size:20},W),W/2,y,{f:'mono',size:20,a:.6,align:'center'});y+=10;}return y+6;}
  if(v.k==='cmp'){const r=56;vzEnt(P,v.h,r,r+4,r);vzEnt(P,v.a,W-r,r+4,r);
   const hv=+v.h.v||0,av=+v.a.v||0,best=hv===av?'':v.low?(hv<av?'h':'a'):(hv>av?'h':'a');
   const st={f:'display',w:900,size:112};const sh=vzFit(v.h.txt,st,W/2-r*2-40,60),sa=vzFit(v.a.txt,st,W/2-r*2-40,60);
@@ -5246,6 +5280,7 @@ function renderFormatsReal(){
  $('#st-formats').innerHTML=html||'<p style="color:var(--muted);font-size:13px;margin:0">Nenhum formato com esse termo.</p>';
 }
 function generateReal(){
+ if(GAL.mode==='graf'&&rsOn())return galRender();
  try{bgHint(RS.data);}catch(e){}
  const c0=RS.data;if(!c0)return;
 
@@ -5264,6 +5299,100 @@ function goStudioReal(src,key,fmt,focus,comp){
  if(src==='time'&&key){const C=TM.ctx;if(C&&C.id===+key){RS.tname=C.team.name;if(C.L&&TABLE_LG.includes(C.L.id))RS.tlg=String(C.L.id);}}
  RS.src=src;RS.key=key?String(key):RS.key;if(comp)RS.comp=comp;if(fmt)RS.fmt=fmt;RS.focus=focus||'auto';RS.ver=1;RS.data=null;show('estudio');
 }
+
+/* ================= GALERIA DE GRÁFICOS =================
+   Os mesmos gráficos dos posts, mas um por um, limpos (sem capa, sem cara de post), em PNG,
+   para relatórios, apresentações, materiais de scout e portfólio. Fundo escuro ou claro. */
+const GAL={mode:'posts',bg:'dark',title:true,grp:'all',items:[],src:'API-Football',subj:''};
+try{const g=JSON.parse(localStorage.getItem('ts-gal')||'{}');if(g.mode==='graf')GAL.mode='graf';if(g.bg==='light')GAL.bg='light';if(g.title===false)GAL.title=false;}catch(e){}
+function galSave(){try{localStorage.setItem('ts-gal',JSON.stringify({mode:GAL.mode,bg:GAL.bg,title:GAL.title}));}catch(e){}}
+const VZK_PT={radar2:'Radar comparativo',radar1:'Radar do jogador',pstats:'Números do jogador',duel:'Lado a lado',cmp:'Comparação',big:'Destaque',player:'Jogador',goals:'Gols do jogo',pct:'Percentil',funnel:'Funil de ataque',bars3:'Barras',form:'Sequência de jogos',xi:'Escalação',factors:'Fatores do jogo',tbl:'Tabela',games:'Jogos',ties:'Confrontos',bracket:'Chaveamento'};
+// fundo claro: troca o branco do desenho por grafite (textos, linhas e trilhos), sem mexer nas cores dos times
+function vzTheme(P,light){if(!light)return P;
+ const m=c=>{if(c==null)return c;const s=String(c).replace(/\s/g,'').toLowerCase();if(s==='#fff'||s==='#ffffff'||s==='white')return '#16161b';const r=s.match(/^rgba\(255,255,255,([\d.]+)\)$/);if(r)return `rgba(22,22,27,${Math.min(1,+r[1]*1.2).toFixed(3)})`;if(s==='#141418'||s==='#111114')return '#ffffff';if(s==='#24242a'||s==='#1b1b20')return '#e6e6eb';return c;};
+ const W=s=>{const x=String(s||'').toLowerCase();return x==='#fff'||x==='#ffffff';};
+ // texto branco em cima de bolinha ou caixa colorida (V/E/D, placares) continua branco
+ const solid=f=>{const x=String(f||'').replace(/\s/g,'').toLowerCase();if(!x||W(x)||x==='none')return false;if(/^#([0-9a-f]{3}|[0-9a-f]{6})$/.test(x)){const h=x.length===4?x.slice(1).split('').map(c=>c+c).join(''):x.slice(1);const L=(.2126*parseInt(h.slice(0,2),16)+.7152*parseInt(h.slice(2,4),16)+.0722*parseInt(h.slice(4,6),16))/255;return L>.15&&L<.9;}const r=x.match(/^rgba\((\d+),(\d+),(\d+),([\d.]+)\)$/);return !!(r&&+r[4]>=.7&&!(+r[1]>200&&+r[2]>200&&+r[3]>200));};
+ const shapes=[];const onShape=(x,y)=>shapes.some(q=>q.c?Math.hypot(x-q.cx,y-q.cy)<=q.r:x>=q.x&&x<=q.x+q.w&&y>=q.y&&y<=q.y+q.h);
+ return {o:P.o,rect:(x,y,w,h,r,f,a)=>{if(solid(f)&&(a==null||a>=.7))shapes.push({x,y,w,h});P.rect(x,y,w,h,r,m(f),a);},
+  circle:(cx,cy,r,f,s,sw,a)=>{if(solid(f)&&(a==null||a>=.7))shapes.push({c:1,cx,cy,r});if(W(f)){P.circle(cx,cy,r,'#fff',null,0,a);P.circle(cx,cy,r,null,'rgba(22,22,27,.16)',2);if(s)P.circle(cx,cy,r,null,m(s),sw,a);return;}P.circle(cx,cy,r,m(f),m(s),sw,a);},
+  ring:(cx,cy,r,fr,s,sw)=>P.ring(cx,cy,r,fr,m(s),sw),line:(x0,y0,x1,y1,s,sw,a)=>P.line(x0,y0,x1,y1,m(s),sw,a),
+  text:(s,x,y,st)=>{const f=st.fill||'#fff',cx=st.align==='center'?x:st.align==='right'?x-vzMeasure(s,st)/2:x+vzMeasure(s,st)/2;P.text(s,x,y,{...st,fill:W(f)&&onShape(cx,y-st.size*.35)?'#fff':m(f)});},poly:(pts,f,s,sw,fa)=>P.poly(pts,m(f),m(s),sw,fa),image:(...a)=>P.image(...a)};}
+function galSVG(v,light){const S=svgPainter();const h=Math.ceil(vzPaint(vzTheme(S,light),v,VZW));return `<svg viewBox="-8 -6 ${VZW+16} ${h+12}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gráfico">${S.o.join('')}</svg>`;}
+// jogador sozinho (a partir da comparação): radar e números da temporada
+function radar1V(c,p,col){return {k:'radar1',p:{...cmpFace(p,col),team:p.team.name},axes:CMP_AX.map(([k,l])=>({lab:l,v:p.ax[k]})),note:`índice TEL.SCORE de 0 a 99 · por 90 min · temporada ${p.season}`};}
+function pstatsV(c,p,col){const n9=v=>p.min>=90?f1(v/p.min*90):null,n92=v=>p.min>=90?(Math.round(v/p.min*90*100)/100).toFixed(2).replace('.',','):null;
+ const rows=[{lab:'Jogos',t:p.j,n:null},{lab:'Minutos',t:p.min,n:null},{lab:'Gols',t:p.g,n:n92(p.g)},{lab:'Assistências',t:p.as,n:n92(p.as)}];
+ if(p.cov.sh){rows.push({lab:'Finalizações',t:p.sh,n:n9(p.sh)});rows.push({lab:'Finalizações no gol',t:p.son,n:n9(p.son)});}
+ if(p.cov.pas){rows.push({lab:'Passes decisivos',t:p.kp,n:n9(p.kp)});if(p.acc!=null)rows.push({lab:'Acerto de passe',t:Math.round(p.acc)+'%',n:null});}
+ if(p.cov.dri)rows.push({lab:'Dribles certos',t:p.ds,n:n9(p.ds)});
+ if(p.cov.def)rows.push({lab:'Desarmes + interceptações',t:p.tk+p.it,n:n9(p.tk+p.it)});
+ if(p.nota)rows.push({lab:'Nota média',t:f1(p.nota),n:null});
+ return {k:'pstats',p:{...cmpFace(p,col),team:p.team.name},rows,note:`temporada ${p.season} · pelo clube, em todas as competições`};}
+function radar1Txt(p){const ax=CMP_AX.map(([k,l])=>({l:l.toLowerCase(),v:p.ax[k]})).filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);if(!ax.length)return `${p.name} ainda tem poucos minutos para o índice.`;
+ return `${p.name}: o ponto mais forte no índice TEL.SCORE é ${ax[0].l} (${ax[0].v} de 99)${ax.length>1?`; o mais fraco, ${ax[ax.length-1].l} (${ax[ax.length-1].v})`:''}.${p.min<450?' Atenção: poucos minutos na temporada.':''}`;}
+function galSubj(c){return c.cmpMode?`${c.PA.name} x ${c.PB.name} · ${c.season}`:c.teamMode?`${c.team.name} · ${c.season}`:c.tab?`${c.lg.name} ${c.season||''}`.trim():c.H&&c.A?`${c.H.name} ${c.pre?'x':`${c.H.goals}×${c.A.goals}`} ${c.A.name}${c.pmode&&c.P?` · ${c.P.name}`:''}`:'TEL.SCORE';}
+function galItems(c0){
+ const c=focusCtx(c0,RS.focus);const out=[],seen=new Set();
+ const add=(x,grp)=>{if(!x||!x.v||!VZK_PT[x.v.k])return;let k;try{k=JSON.stringify(x.v);}catch(e){return;}if(seen.has(k))return;seen.add(k);out.push({v:x.v,kick:x.kick||VZK_PT[x.v.k],t:String(x.t||'').trim(),grp:grp||VZK_PT[x.v.k]});};
+ if(c.cmpMode){add({v:cmpRadarV(c),kick:`Comparação · temporada ${c.season}`,t:cmpLead(c)},'Comparação');
+  [['PA',CMP_BLUE],['PB',VZC.red]].forEach(([k,col])=>{const p=c[k];add({v:radar1V(c,p,col),kick:`Radar · ${p.name}`,t:radar1Txt(p)},p.name);add({v:pstatsV(c,p,col),kick:`Temporada · ${p.name}`,t:`${p.name} (${p.team.name}): ${p.g} ${p.g===1?'gol':'gols'} e ${p.as} ${p.as===1?'assistência':'assistências'} em ${p.j} jogos, ${p.min} minutos em campo na temporada ${p.season}.`},p.name);});}
+ // jogos de engajamento (quiz, meme, enquete...) não entram: a galeria é para análise
+ fmtMode(c0).filter(f=>!/^(Engajamento|Conceitos)$/.test(f.cat||'')).filter(f=>{try{return f.need(c0);}catch(e){return false;}}).forEach(f=>{try{const r=RNG(hash([c0.src,c0.id,RS.focus,f.id,'gal'].join('|')));const o=addDuel(c,f,f.run(c,r));
+   vizItems(c,o.blocks.map(b=>b.t),f.name,60,f.id,o.blocks.map(b=>b.viz||null)).forEach(x=>add(x,c.cmpMode?'Comparação':null));}catch(e){console.warn('galeria',f.id,e);}});
+ // ordem: comparações e radares primeiro, depois o resto
+ const ORD=['radar2','radar1','pstats','duel','cmp','tbl','bracket','ties','games','form','goals','player','xi','factors','funnel','bars3','pct','big'];
+ out.sort((a,b)=>ORD.indexOf(a.v.k)-ORD.indexOf(b.v.k));
+ return {c,items:out};
+}
+function galMode(){
+ const on=rsOn(),g=on&&GAL.mode==='graf';const seg=$('#st-mode');if(seg){seg.hidden=!on;seg.querySelectorAll('[data-stmode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stmode===(g?'graf':'posts'))));}
+ const h2=$('#st-h2'),hp=$('#st-hp');if(h2)h2.textContent=g?'Gráficos para material':'Estúdio de posts';
+ if(hp)hp.textContent=g?'Escolha a fonte (jogo, tabela, time ou jogadores) e baixe cada gráfico sozinho, em PNG, para relatórios, apresentações, scout e portfólio.':'Escolha o jogo, o formato e o tom. A gente monta o post, você revisa e publica. Não curtiu? Toque em "Outra versão".';
+ const fld=sel=>{const e=$(sel);return e&&e.closest('.field');};
+ [fld('#st-search'),fld('#st-plats'),fld('#st-tones'),fld('#st-bgfile')].forEach(e=>{if(e)e.hidden=g;});
+ const go=$('#st-gopts');if(go)go.hidden=!g;
+ ['.st-out .st-bar','#st-combo','#st-preview','#st-rawbox','#st-saved-card'].forEach(s=>{const e=$(s);if(e)e.hidden=g;});
+ const gal=$('#st-gal');if(gal)gal.hidden=!g;
+ document.querySelectorAll('#st-galbg [data-galbg]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.galbg===GAL.bg)));
+ document.querySelectorAll('#st-galtit [data-galtit]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.galtit==='1')===GAL.title)));
+}
+function galRender(){
+ galMode();const box=$('#st-gal'),c0=RS.data;if(!box||!c0)return;
+ let G;try{G=galItems(c0);}catch(e){console.error(e);box.innerHTML=`<div class="empty">Não foi possível montar os gráficos. ${esc(e.message)}</div>`;return;}
+ GAL.items=G.items;GAL.subj=galSubj(G.c);GAL.src=c0.source||'API-Football';
+ const grps=[...new Set(G.items.map(x=>x.grp))];if(GAL.grp!=='all'&&!grps.includes(GAL.grp))GAL.grp='all';
+ const list=G.items.map((x,i)=>({x,i})).filter(o=>GAL.grp==='all'||o.x.grp===GAL.grp);const light=GAL.bg==='light';
+ box.innerHTML=`<div class="gal-bar"><div class="t"><b>${esc(GAL.subj)}</b><small>${G.items.length} gráfico${G.items.length===1?'':'s'} · fundo ${light?'claro':'escuro'} · dados: ${esc(GAL.src)}</small></div>${G.items.length>1?`<button class="btn dark" data-galall>Baixar ${list.length===G.items.length?'todos':'estes '+list.length} (ZIP)</button>`:''}</div>
+ ${grps.length>1?`<div class="chips gal-grps">${['all',...grps].map(g=>`<button class="chip" aria-pressed="${GAL.grp===g}" data-galgrp="${esc(g)}">${g==='all'?'Todos':esc(g)}</button>`).join('')}</div>`:''}
+ ${list.length?`<div class="gal-grid">${list.map(({x,i})=>`<figure class="gal-it"><div class="gal-img ${light?'light':'dark'}">${GAL.title?`<div class="gal-k">${esc(x.kick)}</div><div class="gal-s">${esc(GAL.subj)}</div>`:''}${galSVG(x.v,light)}<div class="gal-ft"><span>Dados: ${esc(GAL.src)} · Análise: TEL.SCORE</span><span>telscore.com.br</span></div></div><figcaption>${x.t?`<p>${esc(x.t)}</p>`:''}<div class="gal-acts"><button class="btn sm primary" data-galdl="${i}">Baixar PNG</button>${x.t?`<button class="btn sm" data-galtxt="${i}">Copiar texto</button>`:''}</div></figcaption></figure>`).join('')}</div>`:'<div class="empty">Nenhum gráfico disponível para esta escolha. Tente outro jogo, time, tabela ou jogador.</div>'}
+ <p class="chart-note">Ao usar no seu material, mantenha o crédito do rodapé: <b>Dados: ${esc(GAL.src)} · Análise: TEL.SCORE</b>.${GAL.src==='StatsBomb'?' Com dados da StatsBomb, use também a logo deles.':''} Fotos e escudos são dos clubes e dos fotógrafos: em material pago ou anúncio, prefira a versão sem foto.</p>`;
+}
+async function galPNG(x){
+ await cvFonts();
+ const light=GAL.bg==='light',S=2,W=VZW,PAD=64,ink=light?'#16161b':'#ffffff';
+ const vh=Math.ceil(vizHeight(x.v,W)),kh=GAL.title?96:0,fh=64;
+ const CW=W+2*PAD,CH=PAD+kh+vh+36+fh+PAD-24;
+ const cv=document.createElement('canvas');cv.width=CW*S;cv.height=CH*S;const ctx=cv.getContext('2d');ctx.scale(S,S);
+ ctx.fillStyle=light?'#ffffff':'#111114';ctx.fillRect(0,0,CW,CH);
+ let y=PAD;
+ if(GAL.title){ctx.textAlign='left';ctx.fillStyle=CV.red;ctx.font=`700 26px ${CV.mono}`;ctx.fillText(vEll(ctx,String(x.kick).toUpperCase(),W),PAD,y+24);
+  ctx.fillStyle=ink;ctx.globalAlpha=.6;ctx.font=`400 21px ${CV.mono}`;ctx.fillText(vEll(ctx,GAL.subj,W),PAD,y+60);ctx.globalAlpha=1;y+=kh;}
+ const imgs={};await Promise.all(vizImgs(x.v).map(u=>loadImg(u).then(im=>{if(im)imgs[u]=im;})));
+ vzPaint(vzTheme(cvPainter(ctx,PAD,y,imgs),light),x.v,W);y+=vh+36;
+ ctx.strokeStyle=light?'rgba(22,22,27,.14)':'rgba(255,255,255,.14)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(PAD,y);ctx.lineTo(CW-PAD,y);ctx.stroke();
+ ctx.fillStyle=ink;ctx.globalAlpha=.62;ctx.font=`400 19px ${CV.mono}`;ctx.textAlign='left';ctx.fillText(`Dados: ${GAL.src} · Análise: TEL.SCORE`,PAD,y+36);ctx.textAlign='right';ctx.fillText('telscore.com.br',CW-PAD,y+36);ctx.globalAlpha=1;
+ return await new Promise(res=>cv.toBlob(b=>res(b),'image/png'));
+}
+const galName=(x,i)=>`telscore-${slug(GAL.subj)}-${i!=null?String(i+1).padStart(2,'0')+'-':''}${slug(x.kick)}${GAL.bg==='light'?'-claro':''}.png`;
+async function galDownload(i,btn){const x=GAL.items[i];if(!x)return;const old=btn.textContent;btn.disabled=true;btn.textContent='Gerando…';
+ try{const b=await galPNG(x);if(!b)throw new Error('sem imagem');downloadBlob(b,galName(x));}catch(e){console.error(e);toast('Não deu para gerar a imagem. Tente de novo.');}
+ btn.disabled=false;btn.textContent=old;}
+async function galDownloadAll(btn){const L=GAL.items.filter(x=>GAL.grp==='all'||x.grp===GAL.grp);if(!L.length)return;const old=btn.textContent;btn.disabled=true;
+ try{const files=[];for(let i=0;i<L.length;i++){btn.textContent=`Gerando ${i+1} de ${L.length}…`;const b=await galPNG(L[i]);if(b)files.push({name:galName(L[i],i),data:new Uint8Array(await b.arrayBuffer())});}
+  const txt=L.map((x,i)=>`${String(i+1).padStart(2,'0')}. ${x.kick}\n${x.t||''}`).join('\n\n')+`\n\nDados: ${GAL.src} · Análise: TEL.SCORE`;files.push({name:'textos-dos-graficos.txt',data:new TextEncoder().encode(txt)});
+  downloadBlob(makeZip(files),`telscore-graficos-${slug(GAL.subj)}.zip`);}catch(e){console.error(e);toast('Não deu para gerar o ZIP. Tente baixar um por um.');}
+ btn.disabled=false;btn.textContent=old;}
 
 /* ================= PRÉ-JOGO REAL (API-Football: predictions, injuries, última escalação) ================= */
 const pctN=v=>v==null?null:parseFloat(String(v).replace('%',''))||0;
@@ -6682,7 +6811,7 @@ let view='partidas';const VIEWS=['partidas','centro','ligas','lab','estudio','ti
 function show(v,push=true){
  view=v;$$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));$$('.bn').forEach(b=>{if(b.dataset.go===v||b.id==='bn-more'&&v==='lab')b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});document.body.dataset.view=v;$$('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
  if(v!=='centro')stopReplay();
- if(v==='partidas')(REAL.on?renderPartidasReal:renderPartidas)();if(v==='centro')(REAL.on?renderCentroReal:renderCentro)();if(v==='ligas')(REAL.on?renderLigasReal:renderLeagues)();if(v==='lab')renderLabAny();if(v==='time')renderTime();if(v==='liga')renderLiga();if(v==='estudio'){nvBar();nvLoad();if(rsOn()){const n=$('#v-estudio .real-note');if(n)n.hidden=true;renderStudioReal();}else{renderStudioControls();generate();}}
+ if(v==='partidas')(REAL.on?renderPartidasReal:renderPartidas)();if(v==='centro')(REAL.on?renderCentroReal:renderCentro)();if(v==='ligas')(REAL.on?renderLigasReal:renderLeagues)();if(v==='lab')renderLabAny();if(v==='time')renderTime();if(v==='liga')renderLiga();if(v==='estudio'){nvBar();nvLoad();galMode();if(rsOn()){const n=$('#v-estudio .real-note');if(n)n.hidden=true;renderStudioReal();}else{renderStudioControls();generate();}}
  if(v!=='time'&&v!=='liga'){try{localStorage.setItem('telscore:view',v);}catch(e){}}
  if(push){try{history.replaceState(null,'','#'+(v==='time'?'time-'+TM.id:v==='liga'?'liga-'+LGP.id:v));}catch(e){}}
  window.scrollTo(0,0);
@@ -6706,6 +6835,14 @@ document.addEventListener('click',e=>{
  if(t.id==='nv-open'){NV.form=true;nvBar();const i=$('#nv-pass');if(i)i.focus();return;}
  if(t.id==='nv-off')return nvOff();
  if(t.id==='nv-sync')return nvLoad(true);
+ if(t.dataset.galgo!=null){GAL.mode='graf';galSave();}
+ if(t.dataset.stmode){GAL.mode=t.dataset.stmode;galSave();galMode();if(RS.data)generateReal();else if(rsOn())renderStudioReal();return;}
+ if(t.dataset.galgrp){GAL.grp=t.dataset.galgrp;return galRender();}
+ if(t.dataset.galbg){GAL.bg=t.dataset.galbg;galSave();galMode();return galRender();}
+ if(t.dataset.galtit){GAL.title=t.dataset.galtit==='1';galSave();galMode();return galRender();}
+ if(t.dataset.galdl!=null){return galDownload(+t.dataset.galdl,t);}
+ if(t.dataset.galall!=null){return galDownloadAll(t);}
+ if(t.dataset.galtxt!=null){const x=GAL.items[+t.dataset.galtxt];if(x){const txt=`${x.t}\n\nDados: ${GAL.src} · Análise: TEL.SCORE`;(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Texto copiado.'),()=>toast('Não deu para copiar. Selecione o texto e copie.'));}return;}
  if(t.dataset.go)return show(t.dataset.go);
  if(t.dataset.rcm){REAL.key=String(t.dataset.rcm);REAL.goals=null;REAL.cur=null;REAL.tab='lance';return show('centro');}
  if(t.dataset.rday!=null){REAL.day=+t.dataset.rday;REAL.st='all';REAL.lg='all';return renderPartidasReal();}
