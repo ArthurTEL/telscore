@@ -791,7 +791,7 @@ p .note{display:block;margin-top:6px;font-family:var(--f-mono);font-size:8.5px;l
 .sheet-lgs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .sheet-lgs button{appearance:none;display:grid;justify-items:center;gap:5px;padding:10px 4px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;min-width:0}
 .sheet-lgs button span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sheet-lgs .sl{width:34px;height:34px;border-radius:10px;background:#fff;display:grid;place-items:center;padding:4px}.sheet-lgs .sl img{width:100%;height:100%;object-fit:contain}
+.sheet-lgs .sl{width:38px;height:38px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;padding:5px;overflow:hidden;flex:none}.sheet-lgs .sl img{width:28px;height:28px;max-width:28px;max-height:28px;object-fit:contain;display:block}
 .sheet-theme{display:flex;width:100%}.sheet-theme button{flex:1;width:auto;height:38px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted)}
 .sheet-ref{width:100%;justify-content:center;margin-top:16px;padding:11px}.sheet-ref svg{width:16px;height:16px}
 .sheet-tip{font-size:11.5px;color:var(--muted);margin:12px 2px 0;line-height:1.45}
@@ -1218,7 +1218,9 @@ body.noscroll{overflow:hidden}
 .lg-bar{flex-direction:column;align-items:flex-start;gap:10px}
 .lg-bar .lg-grp[hidden]{display:none}
 .chip.lgc{display:inline-flex;align-items:center;gap:6px}
-.chip.lgc img{width:18px;height:18px;object-fit:contain;border-radius:5px;background:#fff;padding:1px;flex:none}
+.chip.lgc img{width:20px;height:20px;max-width:20px;object-fit:contain;border-radius:5px;background:#fff;padding:2px;flex:none}
+.ko-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:12px}
+.ko-sum{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin:0 0 10px}
 .lg-phase{margin:0 0 10px}
 .lg-phase[hidden]{display:none}
 .lg-phase .chip small{font-size:10px;color:var(--muted);margin-left:4px;font-weight:500}
@@ -1261,7 +1263,7 @@ body.noscroll{overflow:hidden}
 .gate-chips,.gate-tabs{display:flex;flex-wrap:wrap;gap:8px}
 .gate-tabs{margin:12px 0 10px}.gate-tabs[hidden]{display:none}
 .gchip{appearance:none;display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 13px 8px 9px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
-.gchip img{width:20px;height:20px;object-fit:contain;border-radius:6px;background:#fff;padding:1px}
+.gchip img{width:22px;height:22px;max-width:22px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex:none}
 .gchip.sm{padding:6px 11px 6px 7px;font-size:12.5px}
 .gchip[aria-pressed="true"]{border-color:var(--red);background:var(--red);color:#fff}
 .gate-foot{position:sticky;bottom:-20px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px -22px -20px;padding:12px 22px 18px;background:linear-gradient(transparent,var(--bg) 26%);}
@@ -2916,6 +2918,7 @@ const RLmap=Object.fromEntries(RL.map(l=>[l.id,l]));
 // copas só de mata-mata (sem tabela de classificação)
 const KO_LG=new Set([73,45,48,143,137,81,66,96,97,90]);
 const TABLE_LG=RL.filter(l=>!KO_LG.has(l.id)).map(l=>l.id);
+const LIGAS_TAB=RL.map(l=>l.id); // aba Ligas: tabelas e também as copas em mata-mata
 const lgGroupOf=id=>(RLmap[id]||{}).g||'br';
 const LIVE_S=['1H','HT','2H','ET','BT','P','LIVE','INT','SUSP'],FT_S=['FT','AET','PEN'],OFF_S=['PST','CANC','ABD','AWD','WO'];
 const seasonFor=id=>{const l=RLmap[id];const d=NOW();const y=d.getFullYear();return l&&l.sa?y:(d.getMonth()>=6?y:y-1);};
@@ -2997,8 +3000,12 @@ async function renderCupReal(id,quiet){
  const L=RLmap[id],info=CUP_INFO[id]||{};
  $('.lg-layout').hidden=true;const box=$('#lg-cup');box.hidden=false;
  $('#lg-desc').textContent=`Temporada ${seasonLabel(id)}. ${info.fmt||''}`;
- const tab=REAL.cupTab||(L.sa&&NOW().getMonth()>=6?'mata':'tabela');REAL.cupTab=tab;
- if(!(quiet&&$('#cup-body')))box.innerHTML=`<div class="pd-bar" style="margin-top:0"><div class="seg" id="cup-tabs">${[['tabela',info.phase||'Tabela'],['mata','Mata-mata']].map(([k,l])=>`<button aria-pressed="${tab===k}" data-cuptab="${k}">${l}</button>`).join('')}</div><button class="btn sm" data-cuppost="${id}">${tab==='mata'?'Gerar post do mata-mata':'Gerar post da tabela'}</button></div><div id="cup-body"><div class="empty">Carregando…</div></div>`;
+ const KO=KO_LG.has(id);
+ if(KO)$('#lg-desc').textContent=`Temporada ${seasonLabel(id)}. Copa em mata-mata: quem perde, sai. Escolha a fase para ver os confrontos.`;
+ const tab=KO?'mata':(REAL.cupTab||(L.sa&&NOW().getMonth()>=6?'mata':'tabela'));REAL.cupTab=tab;
+ if(KO){if(!(quiet&&$('#cup-body')&&box.dataset.cup===String(id)))box.innerHTML=`<div class="pd-bar" style="margin-top:0"><div class="chips" id="ko-rounds"></div><button class="btn sm" data-cuppost="${id}">Gerar post do mata-mata</button></div><div id="cup-body"><div class="empty">Carregando…</div></div>`;}
+ else if(!(quiet&&$('#cup-body')&&box.dataset.cup===String(id)))box.innerHTML=`<div class="pd-bar" style="margin-top:0"><div class="seg" id="cup-tabs">${[['tabela',info.phase||'Tabela'],['mata','Mata-mata']].map(([k,l])=>`<button aria-pressed="${tab===k}" data-cuptab="${k}">${l}</button>`).join('')}</div><button class="btn sm" data-cuppost="${id}">${tab==='mata'?'Gerar post do mata-mata':'Gerar post da tabela'}</button></div><div id="cup-body"><div class="empty">Carregando…</div></div>`;
+ box.dataset.cup=String(id);
  const body=$('#cup-body');
  if(tab==='tabela'){
   let groups;
@@ -3025,11 +3032,13 @@ async function renderCupReal(id,quiet){
  try{fx=await apiGet('fixtures',{league:id,season:seasonFor(id),timezone:TZ,v:Math.floor(Date.now()/1800000)},600000);}
  catch(e){if(view==='ligas'&&REAL.lgTab===id&&REAL.cupTab===tab)body.innerHTML=`<div class="empty">Não foi possível carregar o mata-mata. ${esc(e.message)}</div>`;return;}
  if(view!=='ligas'||REAL.lgTab!==id||REAL.cupTab!=='mata')return;
+ if(KO)return koCupHTML(id,fx,body);
  const ko=(fx||[]).filter(f=>f.league&&KO_RX.test(f.league.round||'')&&!/Group|League Stage|Regular Season/i.test(f.league.round||''));
  if(!ko.length){body.innerHTML='<div class="empty">O mata-mata desta temporada ainda não começou. Os confrontos aparecem aqui assim que forem definidos.</div>';return;}
  const byRound=new Map();ko.forEach(f=>{const k=f.league.round.replace(/\s*-\s*\d+(st|nd|rd|th)?\s*Leg$/i,'').replace(/\s*-\s*(1st|2nd) Leg$/i,'').trim();if(!byRound.has(k))byRound.set(k,[]);byRound.get(k).push(f);});
  const rounds=[...byRound.entries()].map(([k,list])=>({k,list,first:Math.min(...list.map(f=>new Date(f.fixture.date)))})).sort((a,b)=>a.first-b.first);
- const tieHTML=list=>{const ties=new Map();list.sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)).forEach(f=>{const ids=[f.teams.home.id,f.teams.away.id].sort((a,b)=>a-b).join('-');if(!ties.has(ids))ties.set(ids,[]);ties.get(ids).push(f);});
+ const tieHTML=list=>tiesHTML(list);
+ const _oldTie=list=>{const ties=new Map();list.sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)).forEach(f=>{const ids=[f.teams.home.id,f.teams.away.id].sort((a,b)=>a-b).join('-');if(!ties.has(ids))ties.set(ids,[]);ties.get(ids).push(f);});
   return [...ties.values()].map(legs=>{const A=legs[0].teams.home,B=legs[0].teams.away;let ga=0,gb=0,played=0;legs.forEach(f=>{if(FT_S.includes(f.fixture.status.short)||LIVE_S.includes(f.fixture.status.short)){played++;const ah=f.teams.home.id===A.id;ga+=(ah?f.goals.home:f.goals.away)||0;gb+=(ah?f.goals.away:f.goals.home)||0;}});
    const last=legs[legs.length-1];const done=FT_S.includes(last.fixture.status.short);const pen=last.score&&last.score.penalty&&last.score.penalty.home!=null?last.score.penalty:null;
    let win=null;if(done){if(last.teams.home.winner===true)win=last.teams.home.id;else if(last.teams.away.winner===true)win=last.teams.away.id;else if(ga!==gb)win=ga>gb?A.id:B.id;}
@@ -3040,6 +3049,33 @@ async function renderCupReal(id,quiet){
  body.innerHTML=`<div class="bracket">${rounds.map(r=>`<div class="br-col"><h4>${esc(roundTxt(r.k))}</h4>${tieHTML(r.list)}</div>`).join('')}</div><p class="chart-note">Toque em um jogo para abrir a Central do jogo. O chaveamento atualiza a cada 30 minutos.</p>`;
 }
 
+// confrontos de uma fase (ida e volta somados, pênaltis, quem passou)
+function tiesHTML(list){const ties=new Map();list.slice().sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)).forEach(f=>{const ids=[f.teams.home.id,f.teams.away.id].sort((a,b)=>a-b).join('-');if(!ties.has(ids))ties.set(ids,[]);ties.get(ids).push(f);});
+  return [...ties.values()].map(legs=>{const A=legs[0].teams.home,B=legs[0].teams.away;let ga=0,gb=0,played=0;legs.forEach(f=>{if(FT_S.includes(f.fixture.status.short)||LIVE_S.includes(f.fixture.status.short)){played++;const ah=f.teams.home.id===A.id;ga+=(ah?f.goals.home:f.goals.away)||0;gb+=(ah?f.goals.away:f.goals.home)||0;}});
+   const last=legs[legs.length-1];const done=FT_S.includes(last.fixture.status.short);const pen=last.score&&last.score.penalty&&last.score.penalty.home!=null?last.score.penalty:null;
+   let win=null;if(done){if(last.teams.home.winner===true)win=last.teams.home.id;else if(last.teams.away.winner===true)win=last.teams.away.id;else if(ga!==gb)win=ga>gb?A.id:B.id;}
+   const penTxt=pen?(()=>{const ah=last.teams.home.id===A.id;return ` (${ah?pen.home:pen.away}–${ah?pen.away:pen.home} pên.)`;})():'';
+   const legTxt=legs.map((f,i)=>{const st=rStatus(f);const s=FT_S.includes(f.fixture.status.short)||LIVE_S.includes(f.fixture.status.short)?`${f.goals.home}–${f.goals.away}`:shortDate(new Date(f.fixture.date));return `<button class="leg ${st.k==='live'?'live':''}" data-rcm="${f.fixture.id}">${legs.length>1?(i?'Volta':'Ida'):'Jogo'} · ${esc(teamCode(f.teams.home.name))} ${s} ${esc(teamCode(f.teams.away.name))}</button>`;}).join('');
+   const row=(T,g)=>`<div class="tie-t ${win===T.id?'win':win?'out':''}">${rCrest(T)}<span>${esc(T.name)}</span><b class="num">${played?g:''}</b></div>`;
+   return `<div class="tie">${row(A,ga)}${row(B,gb)}${penTxt?`<div class="tie-p">${penTxt.trim()}</div>`:''}<div class="tie-legs">${legTxt}</div></div>`;}).join('');}
+// copas nacionais (FA Cup, Copa do Rei, Copa do Brasil...): uma fase por vez, começando pela fase atual
+const koRoundKey=r=>String(r||'').replace(/\s*-\s*(1st|2nd)\s*Leg$/i,'').trim();
+function koCupHTML(id,fx,body){
+ const all=(fx||[]).filter(f=>f.league&&f.league.round&&!['CANC'].includes(f.fixture.status.short));
+ const chips=$('#ko-rounds');
+ if(!all.length){if(chips)chips.innerHTML='';body.innerHTML='<div class="empty">Os confrontos desta temporada ainda não foram definidos. Eles aparecem aqui assim que o sorteio sair.</div>';return;}
+ const by=new Map();all.forEach(f=>{const k=koRoundKey(f.league.round);if(!by.has(k))by.set(k,[]);by.get(k).push(f);});
+ const rounds=[...by.entries()].map(([k,list])=>({k,list,first:Math.min(...list.map(f=>+new Date(f.fixture.date))),done:list.every(f=>FT_S.includes(f.fixture.status.short)),live:list.some(f=>LIVE_S.includes(f.fixture.status.short))})).sort((a,b)=>a.first-b.first);
+ let cur=null;const now=Date.now();
+ if(REAL.koRound&&REAL.koRound.id===id)cur=rounds.find(r=>r.k===REAL.koRound.k)||null;
+ if(!cur)cur=rounds.find(r=>r.live)||null;
+ if(!cur){const st=rounds.filter(r=>r.first<=now);cur=st.length?st[st.length-1]:rounds[0];const i=rounds.indexOf(cur);if(cur.done&&rounds[i+1])cur=rounds[i+1];}
+ if(chips){chips.innerHTML=rounds.map(r=>`<button class="chip" aria-pressed="${r===cur}" data-koround="${esc(r.k)}">${esc(roundTxt(r.k))}${r.live?' <span class="dot pulse"></span>':''}</button>`).join('');const a=chips.querySelector('[aria-pressed="true"]');if(a)requestAnimationFrame(()=>{chips.scrollLeft=Math.max(0,a.offsetLeft-chips.clientWidth/2+a.offsetWidth/2);});}
+ const nT=new Set(cur.list.map(f=>[f.teams.home.id,f.teams.away.id].sort((a,b)=>a-b).join('-'))).size;
+ const lv=cur.list.filter(f=>LIVE_S.includes(f.fixture.status.short)).length,left=cur.list.filter(f=>!FT_S.includes(f.fixture.status.short)&&!LIVE_S.includes(f.fixture.status.short)).length;
+ body.innerHTML=`<p class="ko-sum">${esc(roundTxt(cur.k))} · ${nT} confronto${nT>1?'s':''}${cur.done?' · fase encerrada':''}${lv?` · ${lv} ao vivo`:''}${left?` · ${left} jogo${left>1?'s':''} por jogar`:''}</p><div class="ko-grid">${tiesHTML(cur.list)}</div><p class="chart-note">Toque em um jogo para abrir a Central do jogo. Quem foi eliminado aparece apagado.</p>`;
+}
+
 const PHASE_RX=/^(Apertura|Clausura|1st Phase|2nd Phase|First Stage|Second Stage|Quadrangulars?|Cuadrangulares?|Championship Round|Relegation Round|Torneo [A-Za-z]+)\s*-\s*(\d+)$/i;
 const phasePT=x=>({'1st phase':'1ª fase','2nd phase':'2ª fase','first stage':'1ª fase','second stage':'2ª fase','quadrangular':'Quadrangular','quadrangulars':'Quadrangulares','cuadrangular':'Quadrangular','cuadrangulares':'Quadrangulares','championship round':'Fase final','relegation round':'Fase de rebaixamento'})[String(x).toLowerCase()]||x;
 const phaseAb=x=>({apertura:'Ap',clausura:'Cl','1st phase':'1ª','2nd phase':'2ª','first stage':'1ª','second stage':'2ª'})[String(x).toLowerCase()]||String(x).slice(0,4);
@@ -3048,7 +3084,9 @@ function roundTxt(r){
  m=r.match(/Group Stage - (\d+)/i);if(m)return 'Fase de grupos · '+m[1];
  // ligas em fases (Argentina, Colômbia): "Clausura - 12" vira "Clausura · Rodada 12"
  m=r.match(PHASE_RX);if(m)return `${phasePT(m[1])} · Rodada ${m[2]}`;
- const map={'Knockout Round Play-offs':'Playoffs','Play-offs':'Playoffs','8th Finals':'Oitavas de final','Preliminary Round':'Fase preliminar','Round of 32':'16-avos de final','Round of 16':'Oitavas de final','Quarter-finals':'Quartas de final','Semi-finals':'Semifinal','Final':'Final','1st Round':'1ª fase','2nd Round':'2ª fase','3rd Round':'3ª fase','League Stage':'Fase de liga'};
+ m=r.match(/^(\d+)(st|nd|rd|th) Round(.*)$/i);if(m)return `${m[1]}ª fase${m[3].replace(/\s*-\s*1st Leg/i,' (ida)').replace(/\s*-\s*2nd Leg/i,' (volta)')}`;
+ m=r.match(/^(\d+)(st|nd|rd|th) Qualifying Round/i);if(m)return `Qualificatória · ${m[1]}ª fase`;
+ const map={'Knockout Round Play-offs':'Playoffs','Play-offs':'Playoffs','8th Finals':'Oitavas de final','Preliminary Round':'Fase preliminar','Round of 128':'64-avos de final','Round of 64':'32-avos de final','Round of 32':'16-avos de final','Extra Preliminary Round':'Fase preliminar extra','Qualifying Round':'Qualificatória','Round of 16':'Oitavas de final','Quarter-finals':'Quartas de final','Semi-finals':'Semifinal','Final':'Final','1st Round':'1ª fase','2nd Round':'2ª fase','3rd Round':'3ª fase','League Stage':'Fase de liga'};
  const leg=x=>x.replace(/\s*-\s*1st Leg/i,' (ida)').replace(/\s*-\s*2nd Leg/i,' (volta)');for(const k in map)if(r.startsWith(k))return leg(map[k]+r.slice(k.length));return leg(r);
 }
 async function rDay(off){const d=new Date(today0);d.setDate(d.getDate()+off);const list=await apiGet('fixtures',{date:ymd(d),timezone:TZ,leagues:RL.map(l=>l.id).join(',')},off===0?12000:120000);return (list||[]).slice().sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)||lgRank(a.league.id)-lgRank(b.league.id));}
@@ -3100,7 +3138,7 @@ async function renderPartidasReal(){
  // grupos por liga (ligas com jogo ao vivo primeiro)
  const groupsHTML=arr=>{const by={};arr.forEach(f=>(by[f.league.id]=by[f.league.id]||[]).push(f));
   return Object.keys(by).map(Number).sort((a,b)=>{const la=by[a].some(f=>rStatus(f).k==='live'),lb=by[b].some(f=>rStatus(f).k==='live');return (lb-la)||(lgRank(a)-lgRank(b));}).map(id=>{const g=by[id],f0=g[0];
-  return `<div class="lg-group"><div class="lg-gh"><button class="lg-open" data-lgp="${id}" data-lgs="${f0.league.season}" title="Abrir a página da liga"><span class="lg-badge img"><img src="${esc(imgUrl(f0.league.logo))}" alt="" loading="lazy" onerror="this.remove()"></span><span class="lg-ot"><h3>${esc(lgName(f0))}<span class="lg-arrow" aria-hidden="true">›</span></h3><small>${esc(roundTxt(f0.league.round))} · ${g.length} jogo${g.length>1?'s':''}</small></span></button>${FAV.ligas.has(id)?'<span class="fav-tag" title="Liga favorita">★</span>':''}${TABLE_LG.includes(id)?`<button class="btn sm" data-rlgo="${id}">Tabela</button>`:''}</div>${g.map(rowReal).join('')}</div>`;}).join('');};
+  return `<div class="lg-group"><div class="lg-gh"><button class="lg-open" data-lgp="${id}" data-lgs="${f0.league.season}" title="Abrir a página da liga"><span class="lg-badge img"><img src="${esc(imgUrl(f0.league.logo))}" alt="" loading="lazy" onerror="this.remove()"></span><span class="lg-ot"><h3>${esc(lgName(f0))}<span class="lg-arrow" aria-hidden="true">›</span></h3><small>${esc(roundTxt(f0.league.round))} · ${g.length} jogo${g.length>1?'s':''}</small></span></button>${FAV.ligas.has(id)?'<span class="fav-tag" title="Liga favorita">★</span>':''}${TABLE_LG.includes(id)?`<button class="btn sm" data-rlgo="${id}">Tabela</button>`:KO_LG.has(id)?`<button class="btn sm" data-rlgo="${id}">Chaveamento</button>`:''}</div>${g.map(rowReal).join('')}</div>`;}).join('');};
  // com favoritos: primeiro os jogos dos seus times, depois as suas ligas; o resto fica recolhido num botão
  const favMode=REAL.lg==='all'&&hasFav();
  if(!list.length)box.innerHTML='<div class="empty">Nenhum jogo das ligas acompanhadas neste dia. Dia de descanso.</div>';
@@ -3432,16 +3470,16 @@ const LIVE_NOTE='<div class="lvnote"><span class="dot pulse"></span><span><b>Tab
 // seletor da aba Ligas: primeiro o grupo (Brasil, Copas, Europa...), depois a liga
 function renderLgPicker(my){
  const g=lgGroupOf(my),gb=$('#lg-grp');
- if(gb){gb.hidden=false;gb.innerHTML=LG_GROUPS.filter(x=>TABLE_LG.some(id=>lgGroupOf(id)===x.k)).map(x=>`<button aria-pressed="${x.k===g}" data-lgg="${x.k}">${esc(x.l)}</button>`).join('');const a=gb.querySelector('[aria-pressed="true"]');if(a)requestAnimationFrame(()=>{gb.scrollLeft=Math.max(0,a.offsetLeft-gb.clientWidth/2+a.offsetWidth/2);});}
- $('#lg-filter').innerHTML=TABLE_LG.filter(id=>lgGroupOf(id)===g).map(id=>`<button class="chip lgc" aria-pressed="${my===id}" data-rlg="${id}"><img src="${esc(imgUrl(`https://media.api-sports.io/football/leagues/${id}.png`))}" alt="" loading="lazy" onerror="this.remove()">${esc(RLmap[id].short)}</button>`).join('');
+ if(gb){gb.hidden=false;gb.innerHTML=LG_GROUPS.filter(x=>LIGAS_TAB.some(id=>lgGroupOf(id)===x.k)).map(x=>`<button aria-pressed="${x.k===g}" data-lgg="${x.k}">${esc(x.l)}</button>`).join('');const a=gb.querySelector('[aria-pressed="true"]');if(a)requestAnimationFrame(()=>{gb.scrollLeft=Math.max(0,a.offsetLeft-gb.clientWidth/2+a.offsetWidth/2);});}
+ $('#lg-filter').innerHTML=LIGAS_TAB.filter(id=>lgGroupOf(id)===g).map(id=>`<button class="chip lgc" aria-pressed="${my===id}" data-rlg="${id}"><img src="${esc(imgUrl(`https://media.api-sports.io/football/leagues/${id}.png`))}" alt="" loading="lazy" onerror="this.remove()">${esc(RLmap[id].short)}</button>`).join('');
 }
 async function renderLigasReal(quiet){
- if(!TABLE_LG.includes(REAL.lgTab))REAL.lgTab=71;
+ if(!LIGAS_TAB.includes(REAL.lgTab))REAL.lgTab=71;
  const my=REAL.lgTab,L=RLmap[my];if(quiet!==true)quiet=false;
  renderLgPicker(my);
  $('#lg-title').textContent=L.name;
- const ph=$('#lg-phase');if(ph&&(CUPS.has(my)||!ph.querySelector(`[data-lgph]`)||ph.dataset.lg!==String(my)))ph.hidden=true;if(ph)ph.dataset.lg=String(my);
- if(CUPS.has(my))return renderCupReal(my,quiet);
+ const ph=$('#lg-phase');if(ph&&(CUPS.has(my)||KO_LG.has(my)||!ph.querySelector(`[data-lgph]`)||ph.dataset.lg!==String(my)))ph.hidden=true;if(ph)ph.dataset.lg=String(my);
+ if(CUPS.has(my)||KO_LG.has(my))return renderCupReal(my,quiet);
  $('.lg-layout').hidden=false;$('#lg-cup').hidden=true;
  $('#lg-desc').textContent=`Temporada ${seasonLabel(my)}.`;
  $('#lg-luck-title').textContent='Saldo de gols';$('#lg-luck-sub').textContent='Gols marcados menos gols sofridos';$('#lg-leg-note').textContent='Últimos 5 jogos';
@@ -6552,7 +6590,7 @@ function lgpTabela(C,mini){
  const G=C.groups;if(!G.length)return mini?'':'<div class="empty">Classificação indisponível para esta competição.</div>';
  const tbl=(g,cut)=>{const rows=cut?g.slice(0,cut):g;return `<div class="tbl-wrap"><table class="tbl tm-mini lgp-tbl"><thead><tr><th class="l">#</th><th class="l">Clube</th><th>Pts</th><th>J</th><th>SG</th>${mini?'':'<th class="l lgp-f">Últimos 5</th>'}</tr></thead><tbody>${rows.map(r=>{const z=CUPS.has(C.id)?cupZone(r.description):zoneInfo(r.description);return `<tr class="${z?'zr':''}"${z?` style="--zc:${z.c}"`:''}><td class="pos l"><span>${r.rank}</span></td><td class="l"><span class="tmc tlink" data-team="${r.team.id}" data-tlg="${C.id}" role="link" tabindex="0">${rCrest(r.team)}${esc(r.team.name)}</span></td><td class="pts">${r.points}</td><td>${r.all.played}</td><td>${r.goalsDiff>0?'+':''}${r.goalsDiff}</td>${mini?'':`<td class="l lgp-f"><span class="form">${String(r.form||'').split('').slice(-5).map(c=>({W:'V',D:'E',L:'D'}[c]||c)).map(x=>`<i class="${x}">${x}</i>`).join('')}</span></td>`}</tr>`;}).join('')}</tbody></table></div>`;};
  const leg=[];const seen=new Set();G.flat().forEach(r=>{const z=CUPS.has(C.id)?cupZone(r.description):zoneInfo(r.description);if(z&&!seen.has(z.k)){seen.add(z.k);leg.push(z);}});
- const full=TABLE_LG.includes(C.id)?`<button class="btn sm" data-lgptab="${C.id}">Tabela com xG e gráficos</button>`:'';
+ const full=TABLE_LG.includes(C.id)?`<button class="btn sm" data-lgptab="${C.id}">Tabela com xG e gráficos</button>`:KO_LG.has(C.id)?`<button class="btn sm" data-lgptab="${C.id}">Ver o chaveamento</button>`:'';
  if(mini){const g=G[0];return `<div class="card"><div class="card-h"><div><h3>Classificação</h3><div class="sub">${G.length>1?esc(grpName(g)||'Grupo 1'):'Os primeiros colocados'}</div></div><button class="btn sm" data-lgpt="tabela">Ver tudo</button></div>${tbl(g,6)}</div>`;}
  return `${G.map(g=>`<div class="card lgp-grp"><div class="card-h"><div><h3>${esc(G.length>1?(grpName(g)||'Grupo'):'Classificação')}</h3><div class="sub">${g.length} times</div></div>${G.length===1?full:''}</div>${tbl(g)}</div>`).join('')}${leg.length?`<div class="legend zleg">${leg.map(z=>`<span><i style="background:${z.c}"></i>${esc(z.l)}</span>`).join('')}</div>`:''}${G.length>1&&full?`<div style="margin-top:10px">${full}</div>`:''}`;
 }
@@ -6675,9 +6713,10 @@ document.addEventListener('click',e=>{
  if(t.dataset.rplg){REAL.lg=t.dataset.rplg;return renderPartidasReal();}
  if(t.dataset.rcmt){REAL.tab=t.dataset.rcmt;return renderCentroReal();}
  if(t.dataset.cuptab){REAL.cupTab=t.dataset.cuptab;return renderLigasReal();}
+ if(t.dataset.koround!=null){REAL.koRound={id:REAL.lgTab,k:t.dataset.koround};return renderLigasReal();}
  if(t.dataset.rlg){REAL.lgTab=+t.dataset.rlg;REAL.cupTab=null;return renderLigasReal();}
  if(t.dataset.lgph!=null){REAL.lgGrp={id:REAL.lgTab,name:t.dataset.lgph};return renderLigasReal();}
- if(t.dataset.lgg){const id=TABLE_LG.find(x=>lgGroupOf(x)===t.dataset.lgg);if(id){REAL.lgTab=id;REAL.cupTab=null;return renderLigasReal();}}
+ if(t.dataset.lgg){const id=LIGAS_TAB.find(x=>lgGroupOf(x)===t.dataset.lgg);if(id){REAL.lgTab=id;REAL.cupTab=null;return renderLigasReal();}}
  if(t.dataset.rlgo){REAL.lgTab=+t.dataset.rlgo;REAL.cupTab=null;return show('ligas');}
  if(t.dataset.labsrc){LV.src=t.dataset.labsrc;return renderLabAny();}
  if(t.dataset.lvpl){LV.player=+t.dataset.lvpl;return drawLabLive(LV.cur);}
