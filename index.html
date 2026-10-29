@@ -2897,13 +2897,25 @@ const RL=[
  {id:141,name:'La Liga 2 (Espanha)',short:'La Liga 2',g:'div2'},
  {id:136,name:'Serie B (Itália)',short:'Serie B ITA',g:'div2'},
  {id:79,name:'2. Bundesliga (Alemanha)',short:'2. Bundesliga',g:'div2'},
- {id:62,name:'Ligue 2 (França)',short:'Ligue 2',g:'div2'}
+ {id:62,name:'Ligue 2 (França)',short:'Ligue 2',g:'div2'},
+ // copas nacionais das ligas europeias (mata-mata, como a Copa do Brasil)
+ {id:45,name:'FA Cup (Inglaterra)',short:'FA Cup',g:'euc'},
+ {id:48,name:'Copa da Liga Inglesa (EFL Cup)',short:'EFL Cup',g:'euc'},
+ {id:143,name:'Copa del Rey (Espanha)',short:'Copa del Rey',g:'euc'},
+ {id:137,name:'Coppa Italia',short:'Coppa Italia',g:'euc'},
+ {id:81,name:'Copa da Alemanha (DFB-Pokal)',short:'DFB-Pokal',g:'euc'},
+ {id:66,name:'Copa da França',short:'Copa da França',g:'euc'},
+ {id:96,name:'Taça de Portugal',short:'Taça de Portugal',g:'euc'},
+ {id:97,name:'Taça da Liga (Portugal)',short:'Taça da Liga',g:'euc'},
+ {id:90,name:'Copa da Holanda (KNVB Beker)',short:'Copa da Holanda',g:'euc'}
 ];
 // grupos para organizar as ligas no site (aba Ligas, menu Mais e seletores)
-const LG_GROUPS=[{k:'br',l:'Brasil'},{k:'copas',l:'Copas'},{k:'eu',l:'Europa'},{k:'eu2',l:'Mais Europa'},{k:'sa',l:'América do Sul'},{k:'div2',l:'Segundas divisões'}];
+const LG_GROUPS=[{k:'br',l:'Brasil'},{k:'copas',l:'Copas'},{k:'eu',l:'Europa'},{k:'eu2',l:'Mais Europa'},{k:'euc',l:'Copas nacionais da Europa'},{k:'sa',l:'América do Sul'},{k:'div2',l:'Segundas divisões'}];
 const RLmap=Object.fromEntries(RL.map(l=>[l.id,l]));
 // ligas com tabela (a Copa do Brasil é só mata-mata)
-const TABLE_LG=RL.filter(l=>l.id!==73).map(l=>l.id);
+// copas só de mata-mata (sem tabela de classificação)
+const KO_LG=new Set([73,45,48,143,137,81,66,96,97,90]);
+const TABLE_LG=RL.filter(l=>!KO_LG.has(l.id)).map(l=>l.id);
 const lgGroupOf=id=>(RLmap[id]||{}).g||'br';
 const LIVE_S=['1H','HT','2H','ET','BT','P','LIVE','INT','SUSP'],FT_S=['FT','AET','PEN'],OFF_S=['PST','CANC','ABD','AWD','WO'];
 const seasonFor=id=>{const l=RLmap[id];const d=NOW();const y=d.getFullYear();return l&&l.sa?y:(d.getMonth()>=6?y:y-1);};
@@ -4276,11 +4288,11 @@ async function ctxTab(id){
  const fxP=apiGet('fixtures',{league:id,season,timezone:TZ},90000).catch(()=>[]);const [st,fx]=await Promise.all([stFresh(id,season,120000,fxP).catch(()=>null),fxP]);
  const G=stCur(st);
  // copas: confrontos do mata-mata (ida, volta, agregado, pênaltis)
- const koI=(CUPS.has(id)||id===73)?koInfo(koBuild(fx||[])):null;
+ const koI=(CUPS.has(id)||KO_LG.has(id))?koInfo(koBuild(fx||[])):null;
  if(!G.length&&!koI)throw new Error('Tabela indisponível para esta temporada.');
  const sd=s=>({pl:s&&s.played||0,w:s&&s.win||0,d:s&&s.draw||0,l:s&&s.lose||0,gf:s&&s.goals&&s.goals.for||0,ga:s&&s.goals&&s.goals.against||0});
  const groups=G.map(g=>g.map(x=>{const a=sd(x.all);return {rank:x.rank,id:x.team.id,name:x.team.name,logo:x.team.logo,pts:x.points,gd:x.goalsDiff,...a,form:FORM_PT(x.form),zone:CUPS.has(id)?cupZone(x.description):zoneInfo(x.description),desc:x.description||'',group:grpName([x])||'',home:sd(x.home),away:sd(x.away)};}));
- const cup=CUPS.has(id)||id===73;const multi=groups.length>1;const rows=groups[0]||[];const all=groups.flat();
+ const cup=CUPS.has(id)||KO_LG.has(id);const multi=groups.length>1;const rows=groups[0]||[];const all=groups.flat();
  // rodadas: a última com jogo encerrado e a próxima com jogo por fazer
  const list=(fx||[]).slice().sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date));const now=Date.now();
  const done=list.filter(f=>FT_S.includes(f.fixture.status.short));const lastR=done.length?done[done.length-1].league.round:null;
@@ -5094,7 +5106,7 @@ async function renderStudioReal(){
  $('#st-preview').innerHTML=`<p style="color:var(--muted);margin:0">${src==='cmp'?'Carregando jogadores…':src==='time'?'Carregando times…':'Carregando partidas…'}</p>`;
  try{
   if(src==='cmp'){await cmpRender();}
-  else if(src==='tab'){const L=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id)||id===73);if(!RS.key||!L.includes(+RS.key))RS.key=String(L.includes(REAL.lgTab)?REAL.lgTab:L[0]);sel.innerHTML=LG_GROUPS.map(g=>{const ids=L.filter(id=>lgGroupOf(id)===g.k);return ids.length?`<optgroup label="${esc(g.l)}">${ids.map(id=>`<option value="${id}">${esc(RLmap[id].name)} ${esc(seasonLabel(id))}</option>`).join('')}</optgroup>`:'';}).join('');sel.value=RS.key;}
+  else if(src==='tab'){const L=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id)||KO_LG.has(id));if(!RS.key||!L.includes(+RS.key))RS.key=String(L.includes(REAL.lgTab)?REAL.lgTab:L[0]);sel.innerHTML=LG_GROUPS.map(g=>{const ids=L.filter(id=>lgGroupOf(id)===g.k);return ids.length?`<optgroup label="${esc(g.l)}">${ids.map(id=>`<option value="${id}">${esc(RLmap[id].name)} ${esc(seasonLabel(id))}</option>`).join('')}</optgroup>`:'';}).join('');sel.value=RS.key;}
   else if(src==='time'){
    // times: os seus favoritos primeiro, depois os times da liga escolhida (pela ordem da tabela)
    const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id));const tl=$('#st-tlg');
@@ -6294,8 +6306,8 @@ const tmRes=(f,id)=>{const me=f.teams.home.id===id?'home':'away',op=me==='home'?
 function tmLeague(list){
  const cnt=new Map();
  list.forEach(f=>{const L=f.league;if(!L)return;const o=cnt.get(L.id)||{n:0,lg:L};o.n++;cnt.set(L.id,o);});
- const cupRe=/cup|copa|taça|taca|coupe|pokal|trophy|super|supercopa|recopa|friendl|amistos/i;
- const score=o=>(RLmap[o.lg.id]&&!CUPS.has(o.lg.id)&&o.lg.id!==73?1000:0)+(o.lg.country&&o.lg.country!=='World'&&!cupRe.test(o.lg.name)?100:0)+o.n;
+ const cupRe=/cup|copa|coppa|taça|taca|coupe|pokal|beker|trophy|super|supercopa|recopa|friendl|amistos/i;
+ const score=o=>(RLmap[o.lg.id]&&!CUPS.has(o.lg.id)&&!KO_LG.has(o.lg.id)?1000:0)+(o.lg.country&&o.lg.country!=='World'&&!cupRe.test(o.lg.name)?100:0)+o.n;
  const all=[...cnt.values()].sort((a,b)=>score(b)-score(a));const o=all[0];if(!o||score(o)<100)return null;
  return {id:o.lg.id,season:RLmap[o.lg.id]?seasonFor(o.lg.id):o.lg.season,name:(RLmap[o.lg.id]||{}).name||o.lg.name};
 }
@@ -6311,7 +6323,7 @@ async function renderTime(){
   const team=T&&T.team||(any?(any.teams.home.id===id?any.teams.home:any.teams.away):null);
   if(!team){head.innerHTML='<div class="empty">Não foi possível carregar este time agora. Tente de novo em instantes.</div>';return;}
   const pool=[...(last||[]),...(next||[])];
-  const L=TM.lg&&!CUPS.has(TM.lg)&&RLmap[TM.lg]&&TM.lg!==73?{id:TM.lg,season:seasonFor(TM.lg),name:RLmap[TM.lg].name}:tmLeague(pool);
+  const L=TM.lg&&!CUPS.has(TM.lg)&&RLmap[TM.lg]&&!KO_LG.has(TM.lg)?{id:TM.lg,season:seasonFor(TM.lg),name:RLmap[TM.lg].name}:tmLeague(pool);
   const live=pool.find(f=>rStatus(f).k==='live')||null;
   const lastS=(last||[]).filter(f=>FT_S.includes(f.fixture.status.short)).sort((a,b)=>new Date(b.fixture.date)-new Date(a.fixture.date));
   const nextS=(next||[]).filter(f=>rStatus(f).k==='pre'||rStatus(f).k==='off').sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date));
