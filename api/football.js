@@ -16,7 +16,7 @@ const ALLOWED = {
   teams: ['id', 'search'],
   'players/squads': ['team'],
   'teams/statistics': ['league', 'season', 'team'],
-  players: ['team', 'season', 'page'],
+  players: ['team', 'season', 'page', 'id'],
   'players/topscorers': ['league', 'season'],
   'players/topassists': ['league', 'season'],
   'players/topyellowcards': ['league', 'season']
@@ -55,7 +55,11 @@ module.exports = async (req, res) => {
 
   const params = new URLSearchParams();
   for (const name of ALLOWED[endpoint]) {
-    if (q[name] != null && q[name] !== '') params.set(name, String(q[name]).slice(0, 60));
+    if (q[name] != null && q[name] !== '') {
+      // ids: até 20 jogos separados por hífen ("123-456-..."), que passam de 60 caracteres
+      const v = name === 'ids' ? String(q[name]).replace(/[^0-9-]/g, '').split('-').filter(Boolean).slice(0, 20).join('-') : String(q[name]).slice(0, 60);
+      if (v) params.set(name, v);
+    }
   }
   const url = `${BASE}/${endpoint}${params.toString() ? '?' + params.toString() : ''}`;
 
