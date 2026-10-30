@@ -4923,12 +4923,14 @@ const CMP_BLUE='#3D8BFF';
 async function ctxCmp(){
  const S=RS.cmp;if(!S||!S.a||!S.b||!S.a.pid||!S.b.pid)throw new Error('Escolha os dois jogadores.');
  const side=async x=>{
-  const season=seasonFor(+x.lg);const raw=await teamPlayersRaw(+x.team,season);const p=raw.find(q=>q.player&&q.player.id===+x.pid);
+  const season=cmpSeason(x);const raw=await teamPlayersRaw(+x.team,season);const p=raw.find(q=>q.player&&q.player.id===+x.pid);
   if(!p)throw new Error('Este jogador ainda não tem números nesta temporada.');
   const a=cmpAgg(p,+x.team);const t=(p.statistics||[]).find(s=>s.team&&s.team.id===+x.team);const tm=t&&t.team||{};const team={id:+x.team,name:tm.name||x.tname||'Time',logo:tm.logo||x.tlogo||`https://media.api-sports.io/football/teams/${+x.team}.png`};
-  a.team={id:team.id,name:team.name,logo:team.logo};a.lg=+x.lg;a.season=seasonLabelAny(+x.lg,season);a.ax=cmpAxes(a);return a;};
+  a.team={id:team.id,name:team.name,logo:team.logo};a.lg=+x.lg;a.season=lgSeasonLbl(+x.lg,season);a.ax=cmpAxes(a);return a;};
  const [A,B]=await Promise.all([side(S.a),side(S.b)]);
- if(A.id===B.id&&A.team.id===B.team.id)throw new Error('Escolha dois jogadores diferentes.');
+ if(A.id===B.id&&A.team.id===B.team.id&&A.season===B.season)throw new Error('Escolha dois jogadores diferentes (ou o mesmo jogador em temporadas diferentes).');
+ // temporadas diferentes: o time leva a temporada do lado ("Flamengo · 2025"); o mesmo jogador ganha a temporada no nome
+ if(A.season!==B.season){[A,B].forEach(p=>{p.tlab=`${p.team.name} · ${p.season}`;});if(A.id===B.id){A.name=`${A.name} (${A.season})`;B.name=`${B.name} (${B.season})`;}}
  const ab=`${A.name} x ${B.name}`;
  const c={src:'cmp',tab:true,cmpMode:true,id:RS.key,source:'API-Football',PA:A,PB:B,cup:false,multi:false,groups:[],rows:[],all:[],games:()=>0,koI:null,
   season:A.season===B.season?A.season:`${A.season} / ${B.season}`,lg:{name:'Comparação de jogadores',short:'Comparação',tag:'Comparacao'},m:{off:0,date:NOW()},dateLabel:'hoje',live:false,minute:'',pre:false,
@@ -4939,7 +4941,7 @@ async function ctxCmp(){
 const cmpFace=(p,col)=>({player:true,name:p.name,photo:p.photo,ring:col});
 function cmpWins(c){let a=0,b=0;const wa=[],wb=[];CMP_AX.forEach(([k,l])=>{const x=c.PA.ax[k],y=c.PB.ax[k];if(x==null||y==null||x===y)return;if(x>y){a++;wa.push(l.toLowerCase());}else{b++;wb.push(l.toLowerCase());}});return {a,b,wa,wb};}
 const cmpList=L=>L.length<2?L.join(''):L.slice(0,-1).join(', ')+' e '+L[L.length-1];
-function cmpRadarV(c){const A=c.PA,B=c.PB;return {k:'radar2',a:{...cmpFace(A,CMP_BLUE),team:A.team.name,logo:imgUrl(A.team.logo)},b:{...cmpFace(B,VZC.red),team:B.team.name,logo:imgUrl(B.team.logo)},
+function cmpRadarV(c){const A=c.PA,B=c.PB;return {k:'radar2',a:{...cmpFace(A,CMP_BLUE),team:A.tlab||A.team.name,logo:imgUrl(A.team.logo)},b:{...cmpFace(B,VZC.red),team:B.tlab||B.team.name,logo:imgUrl(B.team.logo)},
  axes:CMP_AX.map(([k,l])=>({lab:l,a:A.ax[k],b:B.ax[k]})),note:`índice TEL.SCORE de 0 a 99 · por 90 min · temporada ${c.season}`};}
 const cmpN=(v,d)=>v==null?'–':d?f1(v):String(Math.round(v));
 function cmpDuelSeason(c){const A=c.PA,B=c.PB;const rows=[{lab:'Jogos',h:A.j,a:B.j,ht:A.j,at:B.j,neu:true},{lab:'Minutos',h:A.min,a:B.min,ht:A.min,at:B.min,neu:true},
@@ -4990,12 +4992,16 @@ const CMP_TONE={
 const cmpTone=t=>CMP_TONE[t.id]?{...t,...CMP_TONE[t.id]}:t;
 
 /* ---- escolha dos dois jogadores (aba "Jogadores" do Estúdio) ---- */
-async function cmpTeams(lg){
- const st=await stFresh(+lg,seasonFor(+lg)).catch(()=>null);const seen=new Set(),tms=[];
+// temporada escolhida para cada jogador: 0 = a atual, 1 = a anterior...
+const CMP_SEASONS=5;
+const lgSeasonLbl=(lg,y)=>RLmap[+lg]&&RLmap[+lg].sa?String(y):`${y}/${String(y+1).slice(2)}`;
+const cmpSeason=x=>seasonFor(+x.lg)-Math.max(0,Math.min(CMP_SEASONS-1,+x.so||0));
+async function cmpTeams(lg,season){
+ const st=await stFresh(+lg,season||seasonFor(+lg)).catch(()=>null);const seen=new Set(),tms=[];
  stGroups(st).forEach(g=>g.forEach(r=>{if(r.team&&!seen.has(r.team.id)){seen.add(r.team.id);tms.push({id:r.team.id,name:r.team.name,logo:r.team.logo,rank:r.rank});}}));return tms;
 }
-async function cmpPlayers(team,lg){
- const raw=await teamPlayersRaw(+team,seasonFor(+lg));
+async function cmpPlayers(team,lg,season){
+ const raw=await teamPlayersRaw(+team,season||seasonFor(+lg));
  return raw.map(p=>cmpAgg(p,+team)).filter(a=>a.min>0&&a.pos!=='Goalkeeper').sort((x,y)=>(CMP_ORD[x.pos]??4)-(CMP_ORD[y.pos]??4)||y.min-x.min);
 }
 async function cmpRender(){
@@ -5003,24 +5009,25 @@ async function cmpRender(){
  const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id));
  RS.cmp=RS.cmp||{};const fav=[...FAV.times.values()];
  const lg0=String(LS.includes(REAL.lgTab)?REAL.lgTab:[...FAV.ligas].find(id=>LS.includes(id))||LS[0]);
- for(const s of ['a','b']){const x=RS.cmp[s]=RS.cmp[s]||{};if(!x.lg||!LS.includes(+x.lg))x.lg=lg0;}
+ for(const s of ['a','b']){const x=RS.cmp[s]=RS.cmp[s]||{};if(!x.lg||!LS.includes(+x.lg))x.lg=lg0;x.so=Math.max(0,Math.min(CMP_SEASONS-1,+x.so||0));}
  const lgOpts=LG_GROUPS.map(g=>{const ids=LS.filter(id=>lgGroupOf(id)===g.k);return ids.length?`<optgroup label="${esc(g.l)}">${ids.map(id=>`<option value="${id}">${esc(RLmap[id].name)}</option>`).join('')}</optgroup>`:'';}).join('');
  const T={},Pl={};
- for(const s of ['a','b']){const x=RS.cmp[s];T[s]=await cmpTeams(x.lg);
+ for(const s of ['a','b']){const x=RS.cmp[s];T[s]=await cmpTeams(x.lg,cmpSeason(x));
   if(!x.team||!(T[s].some(t=>t.id===+x.team)||fav.some(t=>t.id===+x.team))){const pick0=s==='a'?(fav.find(t=>T[s].some(u=>u.id===t.id))||T[s][0]):(T[s].find(t=>t.id!==+((RS.cmp.a||{}).team))||T[s][0]);x.team=pick0?String(pick0.id):'';x.pid='';}
   {const tt=T[s].find(t=>t.id===+x.team)||fav.map(t=>({id:t.id,name:t.nome,logo:t.logo})).find(t=>t.id===+x.team);if(tt){x.tname=tt.name;x.tlogo=tt.logo||'';}}
-  Pl[s]=x.team?await cmpPlayers(x.team,x.lg).catch(()=>[]):[];
+  Pl[s]=x.team?await cmpPlayers(x.team,x.lg,cmpSeason(x)).catch(()=>[]):[];
   if(!x.pid||!Pl[s].some(p=>p.id===+x.pid)){const best=Pl[s].slice().sort((p,q)=>(q.g+q.as)-(p.g+p.as)||q.min-p.min);const other=s==='b'&&RS.cmp.a?+RS.cmp.a.pid:0;const ch=best.find(p=>p.id!==other)||best[0];x.pid=ch?String(ch.id):'';}}
- const teamOpts=s=>{const x=RS.cmp[s],tl=T[s],fv=fav.filter(t=>!tl.some(u=>u.id===t.id));return (fv.length?`<optgroup label="Seus times">${fv.map(t=>`<option value="${t.id}">${esc(t.nome)}</option>`).join('')}</optgroup>`:'')+`<optgroup label="${esc((RLmap[+x.lg]||{}).name||'Liga')}">${tl.map(t=>`<option value="${t.id}">${t.rank}º · ${esc(t.name)}</option>`).join('')}</optgroup>`;};
- const plOpts=s=>{const L=Pl[s];if(!L.length)return '<option value="">Sem jogadores com minutos na temporada</option>';const G=[['Attacker','Atacantes'],['Midfielder','Meio-campistas'],['Defender','Defensores']];
+ const teamOpts=s=>{const x=RS.cmp[s],tl=T[s],fv=fav.filter(t=>!tl.some(u=>u.id===t.id));return (fv.length?`<optgroup label="Seus times">${fv.map(t=>`<option value="${t.id}">${esc(t.nome)}</option>`).join('')}</optgroup>`:'')+`<optgroup label="${esc((RLmap[+x.lg]||{}).name||'Liga')} ${esc(lgSeasonLbl(x.lg,cmpSeason(x)))}">${tl.map(t=>`<option value="${t.id}">${t.rank}º · ${esc(t.name)}</option>`).join('')}</optgroup>`;};
+ const ssOpts=s=>{const x=RS.cmp[s],y0=seasonFor(+x.lg);return Array.from({length:CMP_SEASONS},(_,k)=>`<option value="${k}">Temporada ${esc(lgSeasonLbl(x.lg,y0-k))}${k?'':' (atual)'}</option>`).join('');};
+ const plOpts=s=>{const L=Pl[s];if(!L.length)return `<option value="">Sem jogadores com minutos em ${esc(lgSeasonLbl(RS.cmp[s].lg,cmpSeason(RS.cmp[s])))} neste time</option>`;const G=[['Attacker','Atacantes'],['Midfielder','Meio-campistas'],['Defender','Defensores']];
   return G.map(([k,l])=>{const ps=L.filter(p=>p.pos===k);return ps.length?`<optgroup label="${l}">${ps.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.g}G ${p.as}A · ${p.j} jogos</option>`).join('')}</optgroup>`:'';}).join('')+(L.some(p=>!CMP_ORD.hasOwnProperty(p.pos))?`<optgroup label="Outros">${L.filter(p=>!CMP_ORD.hasOwnProperty(p.pos)).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</optgroup>`:'');};
- box.innerHTML=['a','b'].map((s,i)=>`<div class="cmp-pick ${s}"><span class="lbl"><i></i>Jogador ${i+1}</span><select data-cmp="${s}-lg" aria-label="Liga do jogador ${i+1}">${lgOpts}</select><select data-cmp="${s}-team" aria-label="Time do jogador ${i+1}">${teamOpts(s)}</select><select data-cmp="${s}-pid" aria-label="Jogador ${i+1}">${plOpts(s)}</select></div>`).join('')+'<small class="cmp-note">Goleiros ficam de fora: o radar é para jogadores de linha. Números da temporada pelo clube, em todas as competições.</small>';
- ['a','b'].forEach(s=>{const x=RS.cmp[s];box.querySelector(`[data-cmp="${s}-lg"]`).value=x.lg;box.querySelector(`[data-cmp="${s}-team"]`).value=x.team;box.querySelector(`[data-cmp="${s}-pid"]`).value=x.pid;});
- RS.key=`${RS.cmp.a.pid}-${RS.cmp.a.team}-${RS.cmp.b.pid}-${RS.cmp.b.team}`;
+ box.innerHTML=['a','b'].map((s,i)=>`<div class="cmp-pick ${s}"><span class="lbl"><i></i>Jogador ${i+1}</span><select data-cmp="${s}-lg" aria-label="Liga do jogador ${i+1}">${lgOpts}</select><select data-cmp="${s}-so" aria-label="Temporada do jogador ${i+1}">${ssOpts(s)}</select><select data-cmp="${s}-team" aria-label="Time do jogador ${i+1}">${teamOpts(s)}</select><select data-cmp="${s}-pid" aria-label="Jogador ${i+1}">${plOpts(s)}</select></div>`).join('')+'<small class="cmp-note">Goleiros ficam de fora: o radar é para jogadores de linha. Números da temporada escolhida pelo clube, em todas as competições. Dá para comparar o mesmo jogador em duas temporadas.</small>';
+ ['a','b'].forEach(s=>{const x=RS.cmp[s];box.querySelector(`[data-cmp="${s}-lg"]`).value=x.lg;box.querySelector(`[data-cmp="${s}-so"]`).value=String(x.so||0);box.querySelector(`[data-cmp="${s}-team"]`).value=x.team;box.querySelector(`[data-cmp="${s}-pid"]`).value=x.pid;});
+ RS.key=`${RS.cmp.a.pid}-${RS.cmp.a.team}-${RS.cmp.a.so||0}-${RS.cmp.b.pid}-${RS.cmp.b.team}-${RS.cmp.b.so||0}`;
 }
 async function cmpChange(sel){
  const [s,k]=sel.dataset.cmp.split('-');const x=RS.cmp[s];x[k]=sel.value;
- if(k==='lg'){x.team='';x.pid='';}else if(k==='team')x.pid='';
+ if(k==='lg'){x.team='';x.pid='';x.so=0;}else if(k==='team')x.pid='';else if(k==='so')x.so=+sel.value||0;
  $('#st-preview').innerHTML='<p style="color:var(--muted);margin:0">Carregando jogadores…</p>';
  await cmpRender();RS.focus='auto';RS.ver=1;await loadStudioMatch();
 }
@@ -5320,7 +5327,7 @@ function vzTheme(P,light){if(!light)return P;
   text:(s,x,y,st)=>{const f=st.fill||'#fff',cx=st.align==='center'?x:st.align==='right'?x-vzMeasure(s,st)/2:x+vzMeasure(s,st)/2;P.text(s,x,y,{...st,fill:W(f)&&onShape(cx,y-st.size*.35)?'#fff':m(f)});},poly:(pts,f,s,sw,fa)=>P.poly(pts,m(f),m(s),sw,fa),image:(...a)=>P.image(...a)};}
 function galSVG(v,light){const S=svgPainter();const h=Math.ceil(vzPaint(vzTheme(S,light),v,VZW));return `<svg viewBox="-8 -6 ${VZW+16} ${h+12}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gráfico">${S.o.join('')}</svg>`;}
 // jogador sozinho (a partir da comparação): radar e números da temporada
-function radar1V(c,p,col){return {k:'radar1',p:{...cmpFace(p,col),team:p.team.name},axes:CMP_AX.map(([k,l])=>({lab:l,v:p.ax[k]})),note:`índice TEL.SCORE de 0 a 99 · por 90 min · temporada ${p.season}`};}
+function radar1V(c,p,col){return {k:'radar1',p:{...cmpFace(p,col),team:p.tlab||`${p.team.name} · ${p.season}`},axes:CMP_AX.map(([k,l])=>({lab:l,v:p.ax[k]})),note:`índice TEL.SCORE de 0 a 99 · por 90 min · temporada ${p.season}`};}
 function pstatsV(c,p,col){const n9=v=>p.min>=90?f1(v/p.min*90):null,n92=v=>p.min>=90?(Math.round(v/p.min*90*100)/100).toFixed(2).replace('.',','):null;
  const rows=[{lab:'Jogos',t:p.j,n:null},{lab:'Minutos',t:p.min,n:null},{lab:'Gols',t:p.g,n:n92(p.g)},{lab:'Assistências',t:p.as,n:n92(p.as)}];
  if(p.cov.sh){rows.push({lab:'Finalizações',t:p.sh,n:n9(p.sh)});rows.push({lab:'Finalizações no gol',t:p.son,n:n9(p.son)});}
@@ -5328,7 +5335,7 @@ function pstatsV(c,p,col){const n9=v=>p.min>=90?f1(v/p.min*90):null,n92=v=>p.min
  if(p.cov.dri)rows.push({lab:'Dribles certos',t:p.ds,n:n9(p.ds)});
  if(p.cov.def)rows.push({lab:'Desarmes + interceptações',t:p.tk+p.it,n:n9(p.tk+p.it)});
  if(p.nota)rows.push({lab:'Nota média',t:f1(p.nota),n:null});
- return {k:'pstats',p:{...cmpFace(p,col),team:p.team.name},rows,note:`temporada ${p.season} · pelo clube, em todas as competições`};}
+ return {k:'pstats',p:{...cmpFace(p,col),team:p.tlab||`${p.team.name} · ${p.season}`},rows,note:`temporada ${p.season} · pelo clube, em todas as competições`};}
 function radar1Txt(p){const ax=CMP_AX.map(([k,l])=>({l:l.toLowerCase(),v:p.ax[k]})).filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);if(!ax.length)return `${p.name} ainda tem poucos minutos para o índice.`;
  return `${p.name}: o ponto mais forte no índice TEL.SCORE é ${ax[0].l} (${ax[0].v} de 99)${ax.length>1?`; o mais fraco, ${ax[ax.length-1].l} (${ax[ax.length-1].v})`:''}.${p.min<450?' Atenção: poucos minutos na temporada.':''}`;}
 function galSubj(c){return c.cmpMode?`${c.PA.name} x ${c.PB.name} · ${c.season}`:c.teamMode?`${c.team.name} · ${c.season}`:c.tab?`${c.lg.name} ${c.season||''}`.trim():c.H&&c.A?`${c.H.name} ${c.pre?'x':`${c.H.goals}×${c.A.goals}`} ${c.A.name}${c.pmode&&c.P?` · ${c.P.name}`:''}`:'TEL.SCORE';}
