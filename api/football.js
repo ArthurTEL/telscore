@@ -18,6 +18,7 @@ const ALLOWED = {
   'teams/statistics': ['league', 'season', 'team'],
   players: ['team', 'season', 'page', 'id', 'league'],
   'players/teams': ['player'],
+  'players/profiles': ['search', 'player', 'page'],
   'players/seasons': ['player'],
   transfers: ['player'],
   trophies: ['player'],
@@ -96,7 +97,7 @@ module.exports = async (req, res) => {
     else if (endpoint === 'players/squads') ttl = 86400;
     else if (endpoint === 'teams/statistics') ttl = 21600;
     else if (endpoint === 'players') ttl = 43200;
-    else if (endpoint === 'players/teams' || endpoint === 'players/seasons' || endpoint === 'transfers' || endpoint === 'trophies') ttl = 86400;
+    else if (endpoint === 'players/teams' || endpoint === 'players/profiles' || endpoint === 'players/seasons' || endpoint === 'transfers' || endpoint === 'trophies') ttl = 86400;
     else if (/^players\/top/.test(endpoint)) ttl = 21600;
     else if (endpoint === 'fixtures') {
       const list = Array.isArray(response) ? response : [];
