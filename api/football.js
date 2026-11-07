@@ -74,6 +74,9 @@ module.exports = async (req, res) => {
     const errors = countErrors(data && data.errors) ? data.errors : null;
     let response = data ? data.response : null;
 
+    // O site só precisa saber se a API responde. A conta (nome, e-mail, plano e uso) não sai do servidor.
+    if (endpoint === 'status') response = errors ? null : {};
+
     // Filtra as ligas acompanhadas aqui no servidor, para a resposta chegar leve ao navegador.
     if (endpoint === 'fixtures' && q.leagues && Array.isArray(response)) {
       const wanted = new Set(String(q.leagues).split(',').map(s => s.trim()));
