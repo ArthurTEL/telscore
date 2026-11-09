@@ -7016,7 +7016,7 @@ const TM={id:null,lg:null,tab:'resumo',prev:'partidas',ctx:null,squad:null,pstat
   window.tsViewIn=el=>{
    sw=Date.now();
    if(rm()){animate(el,{opacity:[0,1]},{duration:.2});return;}
-   animate(el,{opacity:[0,1],y:[mob()?6:12,0]},{duration:mob()?.22:.32,ease:EO});
+   animate(el,{opacity:[0,1],y:[mob()?10:12,0]},{duration:mob()?.28:.32,ease:EO});
    force.add(el);queue(el); // cartões que já estavam no HTML também entram
   };
 
@@ -7025,7 +7025,7 @@ const TM={id:null,lg:null,tab:'resumo',prev:'partidas',ctx:null,squad:null,pstat
    const parts=h.classList.contains('tm-hero')?[h.firstElementChild,...(h.querySelector('.tm-id')||{children:[]}).children]:[...h.querySelectorAll('h2,p')];
    const els=parts.filter(Boolean).slice(0,6);if(!els.length)return;
    if(rm()){animate(els,{opacity:[0,1]},{duration:.2,delay:stagger(.04)});return;}
-   const [a,...rest]=els,d=mob()?6:10;
+   const [a,...rest]=els,d=mob()?8:10;
    if(h.classList.contains('tm-hero')){
     animate(a,{opacity:[0,1],scale:[.92,1]},{duration:.45,ease:EO});
     if(rest.length)animate(rest,{opacity:[0,1],y:[d,0]},{duration:.4,ease:EO,delay:stagger(.05,{startDelay:.06})});
@@ -7035,7 +7035,7 @@ const TM={id:null,lg:null,tab:'resumo',prev:'partidas',ctx:null,squad:null,pstat
   // cartões: os da tela entram em sequência na troca de seção; os de baixo esperam a rolagem
   let q=0,qt=0;const wait=new Map();
   const reveal=el=>{
-   const d=mob()?10:20;
+   const d=mob()?16:20;
    animate(el,{opacity:0,y:d},{duration:0});
    const stop=inView(el,()=>{
     const n=performance.now();if(n-qt>120)q=0;qt=n;
@@ -7052,9 +7052,9 @@ const TM={id:null,lg:null,tab:'resumo',prev:'partidas',ctx:null,squad:null,pstat
     const r=el.getBoundingClientRect();
     if(r.top>vh){if(!wait.has(el))reveal(el);return;}
     if(wait.has(el)){wait.get(el)();wait.delete(el);animate(el,{opacity:1,y:0},{duration:0});}
-    if(Date.now()-sw<1500&&!document.getElementById('intro')&&!mob())now.push(el);
+    if(Date.now()-sw<1500&&!document.getElementById('intro'))now.push(el);
    });
-   if(now.length)animate(now.slice(0,8),{opacity:[0,1],y:[16,0]},{duration:.42,ease:EO,delay:stagger(.05,{startDelay:.04})});
+   if(now.length)animate(now.slice(0,8),{opacity:[0,1],y:[mob()?12:16,0]},{duration:.42,ease:EO,delay:stagger(.05,{startDelay:.04})});
   };
 
   let pend=new Set(),raf=0;
