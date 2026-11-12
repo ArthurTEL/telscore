@@ -2659,15 +2659,15 @@ function vzPaint(P,v,W){
   if(v.note){y+=30;P.text(vzEll(v.note,{f:'mono',size:20},W),W/2,y,{f:'mono',size:20,a:.6,align:'center'});y+=10;}
   if(v.note2){y+=28;P.text(vzEll(v.note2,{f:'mono',size:20},W),W/2,y,{f:'mono',size:20,a:.6,align:'center'});y+=10;}return y+6;}
  // ranking: posição, foto ou escudo, nome, time e o número, com uma barrinha proporcional
- if(v.k==='rank'){const rows=v.rows||[],rh=rows.length>10?64:78,mx=Math.max(...rows.map(r=>Math.abs(+r.v||0)))||1;let y=0;
+ if(v.k==='rank'){const rows=v.rows||[],big=rows.length>20,rh=big?54:rows.length>10?64:78,nS=big?24:28,sS=big?16:18,vS=big?28:34,mx=Math.max(...rows.map(r=>Math.abs(+r.v||0)))||1;let y=0;
   P.text(String(v.who||'').toUpperCase(),84,22,{f:'mono',w:700,size:19,a:.6});P.text(String(v.col||'').toUpperCase(),W-18,22,{f:'mono',w:700,size:19,a:.6,align:'right'});y=40;
   rows.forEach((r,i)=>{if(i%2===0)P.rect(-8,y,W+16,rh-6,14,'rgba(255,255,255,.05)');const cy=y+(rh-6)/2,top=r.pos<=3;
-   P.text(String(r.pos),30,cy+11,{f:'display',w:900,size:30,align:'center',fill:top?VZC.red:undefined,a:top?1:.55});
-   vzEnt(P,r.e,86,cy,rh>70?25:22);const nx=124,vw=vzMeasure(String(r.txt),{f:'display',w:900,size:34});const nw=W-nx-vw-48;
-   P.text(vzEll(r.name,{f:'body',w:800,size:28},nw),nx,r.sub?cy-2:cy+10,{f:'body',w:800,size:28});
-   if(r.sub)P.text(vzEll(r.sub,{f:'mono',size:18},nw),nx,cy+22,{f:'mono',size:18,a:.62});
-   P.text(String(r.txt),W-18,cy+12,{f:'display',w:900,size:34,align:'right',fill:top?VZC.red:undefined});
-   const bw=Math.max(4,(W-nx-18)*Math.abs(+r.v||0)/mx);P.rect(nx,y+rh-12,bw,4,2,top?VZC.red:'rgba(255,255,255,.28)');
+   P.text(String(r.pos),30,cy+(big?9:11),{f:'display',w:900,size:big?24:30,align:'center',fill:top?VZC.red:undefined,a:top?1:.55});
+   vzEnt(P,r.e,86,cy,rh>70?25:big?18:22);const nx=124,vw=vzMeasure(String(r.txt),{f:'display',w:900,size:vS});const nw=W-nx-vw-48;
+   P.text(vzEll(r.name,{f:'body',w:800,size:nS},nw),nx,r.sub?cy-(big?1:2):cy+10,{f:'body',w:800,size:nS});
+   if(r.sub)P.text(vzEll(r.sub,{f:'mono',size:sS},nw),nx,cy+(big?18:22),{f:'mono',size:sS,a:.62});
+   P.text(String(r.txt),W-18,cy+(big?10:12),{f:'display',w:900,size:vS,align:'right',fill:top?VZC.red:undefined});
+   const bw=Math.max(4,(W-nx-18)*Math.abs(+r.v||0)/mx);P.rect(nx,y+rh-(big?9:12),bw,big?2:4,1,top?VZC.red:'rgba(255,255,255,.28)');
    y+=rh;});
   if(v.note){y+=28;P.text(vzEll(v.note,{f:'mono',size:19},W),W/2,y,{f:'mono',size:19,a:.6,align:'center'});y+=8;}return y+6;}
  // diagrama de Venn: três critérios e os jogadores em cada interseção
@@ -5068,9 +5068,9 @@ async function cmpOppsMulti(x){const n=cmpMulti(x),y0=seasonFor(+x.lg);if(!x.pid
 const VENN_ST={kp:['Passes decisivos','passes decisivos',a=>a.kp],sh:['Finalizações','finalizações',a=>a.sh],son:['Finalizações no gol','finalizações no gol',a=>a.son],g:['Gols','gols',a=>a.g],as:['Assistências','assistências',a=>a.as],ga:['Gols + assistências','gols + assistências',a=>a.g+a.as],ds:['Dribles certos','dribles certos',a=>a.ds],tk:['Desarmes','desarmes',a=>a.tk],it:['Interceptações','interceptações',a=>a.it],def:['Desarmes + interceptações','desarmes + interceptações',a=>a.tk+a.it],dw:['Duelos ganhos','duelos ganhos',a=>a.dw],pas:['Passes','passes',a=>a.pas]};
 const VENN_COL=['#3D8BFF','#F29B30','#FF2533'];
 const VENN_CACHE=new Map();
-async function vennPlayers(lg,season){const key=lg+'|'+season;if(VENN_CACHE.has(key))return VENN_CACHE.get(key);
+async function vennPlayers(lg,season){const key=lg+'|'+season;{const h=VENN_CACHE.get(key);if(h&&Date.now()-h._t<3600000)return h;}
  const all=[];let page=1;
- for(;page<=40;page+=4){const rs=await Promise.all([0,1,2,3].map(k=>apiGet('players',{league:lg,season,page:page+k},43200000).catch(()=>[])));let stop=false;rs.forEach(r=>{if(!r||!r.length)stop=true;else{all.push(...r);if(r.length<20)stop=true;}});if(stop)break;}
+ for(;page<=40;page+=4){const rs=await Promise.all([0,1,2,3].map(k=>apiGet('players',{league:lg,season,page:page+k},10800000).catch(()=>[])));let stop=false;rs.forEach(r=>{if(!r||!r.length)stop=true;else{all.push(...r);if(r.length<20)stop=true;}});if(stop)break;}
  const seen=new Set(),out=[],TS=new Map();const nn=v=>+v||0;
  all.forEach(p=>{if(!p||!p.player||seen.has(p.player.id))return;seen.add(p.player.id);const st=(p.statistics||[]).filter(s=>s.league&&s.league.id===+lg);if(!st.length)return;
   // somas por clube (todos os jogadores, inclusive goleiros) para os rankings de clubes
@@ -5078,7 +5078,7 @@ async function vennPlayers(lg,season){const key=lg+'|'+season;if(VENN_CACHE.has(
    o.sh+=nn(s.shots&&s.shots.total);o.son+=nn(s.shots&&s.shots.on);o.kp+=nn(s.passes&&s.passes.key);o.tk+=nn(s.tackles&&s.tackles.total);o.it+=nn(s.tackles&&s.tackles.interceptions);o.ds+=nn(s.dribbles&&s.dribbles.success);
    o.yc+=nn(s.cards&&s.cards.yellow);o.rc+=nn(s.cards&&s.cards.red)+nn(s.cards&&s.cards.yellowred);o.fc+=nn(s.fouls&&s.fouls.committed);o.fd+=nn(s.fouls&&s.fouls.drawn);o.pas+=nn(s.passes&&s.passes.total);TS.set(t.id,o);});
   const a=cmpAgg({...p,statistics:st},null);if(!a.min||a.pos==='Goalkeeper')return;const t=st.slice().sort((x,y)=>((y.games&&y.games.minutes)||0)-((x.games&&x.games.minutes)||0))[0].team||{};a.team={id:t.id,name:t.name,logo:t.logo};out.push(a);});
- out.teams=[...TS.values()];VENN_CACHE.set(key,out);return out;}
+ out.teams=[...TS.values()];out._t=Date.now();VENN_CACHE.set(key,out);return out;}
 const niceMin=v=>{if(!v||v<1)return 1;const st=v>=200?20:v>=100?10:v>=40?5:v>=10?2:1;return Math.max(1,Math.floor(v/st)*st);};
 function vennDefaults(){const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id)&&!CUPS.has(id));const lg=LS.includes(REAL.lgTab)?REAL.lgTab:([...FAV.ligas].find(id=>LS.includes(id))||71);
  return {lg:String(lg),so:0,cr:[{k:'kp',min:null},{k:'sh',min:null},{k:'ds',min:null}],quiz:false};}
@@ -5149,12 +5149,12 @@ async function rankRender(){
  const box=$('#st-rank-field');if(!box)return;RS.rank=RS.rank||rankDefaults();const X=RS.rank;
  const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id)&&!CUPS.has(id));if(!LS.includes(+X.lg))X.lg=String(LS[0]);const y0=seasonFor(+X.lg);
  const lgOpts=LG_GROUPS.map(g=>{const ids=LS.filter(id=>lgGroupOf(id)===g.k);return ids.length?`<optgroup label="${esc(g.l)}">${ids.map(id=>`<option value="${id}">${esc(RLmap[id].name)}</option>`).join('')}</optgroup>`:'';}).join('');
- const M=X.kind==='tm'?RANK_TM:RANK_PL;if(X.m!=='all'&&!M.some(m=>m.k===X.m))X.m='all';
+ const M=X.kind==='tm'?RANK_TM:RANK_PL;if(X.m!=='all'&&!M.some(m=>m.k===X.m))X.m='all';if(X.kind==='tm'&&X.n>20)X.n=20;
  const grpOpts=[...new Set(M.map(m=>m.grp))].map(g=>`<optgroup label="${esc(g)}">${M.filter(m=>m.grp===g).map(m=>`<option value="${m.k}">${esc(m.lab)}</option>`).join('')}</optgroup>`).join('');
  box.innerHTML=`<div class="venn-ctl"><div class="seg"><button type="button" data-rankk="pl" aria-pressed="${X.kind!=='tm'}">Jogadores</button><button type="button" data-rankk="tm" aria-pressed="${X.kind==='tm'}">Clubes</button></div>
   <select data-rank="lg" aria-label="Liga">${lgOpts}</select><select data-rank="so" aria-label="Temporada">${Array.from({length:5},(_,k)=>`<option value="${k}">Temporada ${esc(lgSeasonLbl(X.lg,y0-k))}${k?'':' (atual)'}</option>`).join('')}</select>
   <select data-rank="m" aria-label="Ranking"><option value="all">Todos os rankings</option>${grpOpts}</select>
-  <div class="seg">${[5,10,15].map(n=>`<button type="button" data-rankn="${n}" aria-pressed="${X.n===n}">Top ${n}</button>`).join('')}</div>
+  <div class="seg">${(X.kind==='tm'?[5,10,15,20]:[5,10,15,25,50]).map(n=>`<button type="button" data-rankn="${n}" aria-pressed="${X.n===n}">${X.kind==='tm'&&n===20?'Todos':'Top '+n}</button>`).join('')}</div>
   ${X.kind!=='tm'?`<div class="seg"><button type="button" data-rank90="0" aria-pressed="${!X.p90}">Total</button><button type="button" data-rank90="1" aria-pressed="${!!X.p90}">Por 90 minutos</button></div>`:''}</div>
   <small class="cmp-note">${X.kind==='tm'?'Campanha calculada com os jogos da liga; finalizações, desarmes e cartões somam os jogadores; xG do banco TEL.SCORE.':'Números do jogador só nesta liga (sem goleiros). Por 90 minutos: só quem jogou pelo menos 30% dos minutos do líder (mínimo 450).'}</small>`;
  box.querySelector('[data-rank="lg"]').value=X.lg;box.querySelector('[data-rank="so"]').value=String(X.so||0);box.querySelector('[data-rank="m"]').value=X.m;
@@ -5197,7 +5197,7 @@ function rankBlocks(c,all){const X=c.rank,M=X.kind==='tm'?RANK_TM:RANK_PL;
  const ms=X.m!=='all'?M.filter(m=>m.k===X.m):all?M:M.filter(m=>RANK_MAIN[X.kind==='tm'?'tm':'pl'].includes(m.k));
  return ms.map(m=>rankOne(c,m)).filter(Boolean);}
 const RANKFORMATS=[{id:'rank-lista',rank:true,tab:true,cat:'Jogadores',name:'Rankings da liga',desc:'Os melhores da liga em cada número',visual:'Listas com foto ou escudo, posição e barra',need:c=>!!c.rankMode,run(c,r){const B=rankBlocks(c,false);const X=c.rank;const one=X.m!=='all'&&B[0];
- return {head:one?`${c.lg.short}: ${B[0].viz.kick.toLowerCase()}`:pick(r,[`${c.lg.short}: os líderes da temporada`,`${c.lg.short} em números: ${X.kind==='tm'?'os clubes':'os jogadores'}`]),stat:one?[B[0].viz.v.rows[0].txt,B[0].viz.v.rows[0].name]:[String(B.length),X.kind==='tm'?'rankings de clubes':'rankings de jogadores'],blocks:B.map(b=>({t:b.t,viz:b.viz}))};}}];
+ return {head:one?`${c.lg.short}: ${B[0].viz.kick.toLowerCase()}`:pick(r,[`${c.lg.short}: os líderes da temporada`,`${c.lg.short} em números: ${X.kind==='tm'?'os clubes':'os jogadores'}`]),stat:one?[B[0].viz.v.rows[0].txt,B[0].viz.v.rows[0].name]:[String(B.length),X.kind==='tm'?'rankings de clubes':'rankings de jogadores'],blocks:B.flatMap(b=>{const rows=b.viz.v.rows;if(rows.length<=15)return [{t:b.t,viz:b.viz}];const out=[];for(let i=0;i<rows.length;i+=10){const part=rows.slice(i,i+10);out.push({t:i?`${b.viz.kick}: do ${part[0].pos}º ao ${part[part.length-1].pos}º.`:b.t,viz:{...b.viz,kick:`${b.viz.kick} · ${i+1}–${i+part.length}`,v:{...b.viz.v,rows:part}}});}return out;})};}}];
 RFORMATS.push(...RANKFORMATS);
 const rankTone=t=>({...t,open:[c=>'',c=>`${c.lg.name}: quem lidera os números da temporada.`],close:[c=>`Dados: ${c.source} · temporada ${c.season}.`,c=>'Quem você colocaria nessa lista? Comenta.']});
 function vennV(c,quiz){const X=c.venn;return {k:'venn',quiz:!!quiz,crit:X.crit.map(k=>({big:k.big,lab:k.lab,col:k.col})),R:Object.fromEntries(Object.entries(X.R).map(([k,l])=>[k,l.map(vennFace)])),note:`${c.lg.short} · temporada ${c.season} · totais na liga · ${X.n} jogadores`};}
