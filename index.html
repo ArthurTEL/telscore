@@ -5080,11 +5080,11 @@ async function vennPlayers(lg,season){const key=lg+'|'+season;{const h=VENN_CACH
   const a=cmpAgg({...p,statistics:st},null);if(!a.min||a.pos==='Goalkeeper')return;const t=st.slice().sort((x,y)=>((y.games&&y.games.minutes)||0)-((x.games&&x.games.minutes)||0))[0].team||{};a.team={id:t.id,name:t.name,logo:t.logo};out.push(a);});
  out.teams=[...TS.values()];out._t=Date.now();VENN_CACHE.set(key,out);return out;}
 const niceMin=v=>{if(!v||v<1)return 1;const st=v>=200?20:v>=100?10:v>=40?5:v>=10?2:1;return Math.max(1,Math.floor(v/st)*st);};
-function vennDefaults(){const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id)&&!CUPS.has(id));const lg=LS.includes(REAL.lgTab)?REAL.lgTab:([...FAV.ligas].find(id=>LS.includes(id))||71);
+function vennDefaults(){const LS=RL.map(l=>l.id);const lg=LS.includes(REAL.lgTab)?REAL.lgTab:([...FAV.ligas].find(id=>LS.includes(id))||71);
  return {lg:String(lg),so:0,cr:[{k:'kp',min:null},{k:'sh',min:null},{k:'ds',min:null}],quiz:false};}
 async function vennRender(){
  const box=$('#st-venn-field');if(!box)return;RS.venn=RS.venn||vennDefaults();const V=RS.venn;
- const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id)&&!CUPS.has(id));if(!LS.includes(+V.lg))V.lg=String(LS[0]);
+ const LS=RL.map(l=>l.id);if(!LS.includes(+V.lg))V.lg=String(LS[0]);
  const y0=seasonFor(+V.lg);
  const lgOpts=LG_GROUPS.map(g=>{const ids=LS.filter(id=>lgGroupOf(id)===g.k);return ids.length?`<optgroup label="${esc(g.l)}">${ids.map(id=>`<option value="${id}">${esc(RLmap[id].name)}</option>`).join('')}</optgroup>`:'';}).join('');
  const stOpts=Object.entries(VENN_ST).map(([k,[l]])=>`<option value="${k}">${esc(l)}</option>`).join('');
@@ -5147,7 +5147,7 @@ const RANK_MAIN={pl:['g','as','ga','kp','sh','nota'],tm:['pts','gf','ga','cs','x
 function rankDefaults(){const V=vennDefaults();return {lg:V.lg,so:0,kind:'pl',m:'all',n:10,p90:false};}
 async function rankRender(){
  const box=$('#st-rank-field');if(!box)return;RS.rank=RS.rank||rankDefaults();const X=RS.rank;
- const LS=RL.map(l=>l.id).filter(id=>TABLE_LG.includes(id)&&!CUPS.has(id));if(!LS.includes(+X.lg))X.lg=String(LS[0]);const y0=seasonFor(+X.lg);
+ const LS=RL.map(l=>l.id);if(!LS.includes(+X.lg))X.lg=String(LS[0]);const y0=seasonFor(+X.lg);
  const lgOpts=LG_GROUPS.map(g=>{const ids=LS.filter(id=>lgGroupOf(id)===g.k);return ids.length?`<optgroup label="${esc(g.l)}">${ids.map(id=>`<option value="${id}">${esc(RLmap[id].name)}</option>`).join('')}</optgroup>`:'';}).join('');
  const M=X.kind==='tm'?RANK_TM:RANK_PL;if(X.m!=='all'&&!M.some(m=>m.k===X.m))X.m='all';if(X.kind==='tm'&&X.n>20)X.n=20;
  const grpOpts=[...new Set(M.map(m=>m.grp))].map(g=>`<optgroup label="${esc(g)}">${M.filter(m=>m.grp===g).map(m=>`<option value="${m.k}">${esc(m.lab)}</option>`).join('')}</optgroup>`).join('');
@@ -5156,12 +5156,14 @@ async function rankRender(){
   <select data-rank="m" aria-label="Ranking"><option value="all">Todos os rankings</option>${grpOpts}</select>
   <div class="seg">${(X.kind==='tm'?[5,10,15,20]:[5,10,15,25,50]).map(n=>`<button type="button" data-rankn="${n}" aria-pressed="${X.n===n}">${X.kind==='tm'&&n===20?'Todos':'Top '+n}</button>`).join('')}</div>
   ${X.kind!=='tm'?`<div class="seg"><button type="button" data-rank90="0" aria-pressed="${!X.p90}">Total</button><button type="button" data-rank90="1" aria-pressed="${!!X.p90}">Por 90 minutos</button></div>`:''}</div>
-  <small class="cmp-note">${X.kind==='tm'?'Campanha calculada com os jogos da liga; finalizações, desarmes e cartões somam os jogadores; xG do banco TEL.SCORE.':'Números do jogador só nesta liga (sem goleiros). Por 90 minutos: só quem jogou pelo menos 30% dos minutos do líder (mínimo 450).'}</small>`;
+  <small class="cmp-note">${X.kind==='tm'?`Campanha calculada com os jogos da competição${CUPS.has(+X.lg)?' (só a fase principal, sem as qualificatórias)':''}; finalizações, desarmes e cartões somam os jogadores; xG do banco TEL.SCORE.`:`Números do jogador só nesta competição (sem goleiros${CUPS.has(+X.lg)?'; inclui as fases preliminares':''}). Por 90 minutos: só quem jogou pelo menos 30% dos minutos do líder.`}</small>`;
  box.querySelector('[data-rank="lg"]').value=X.lg;box.querySelector('[data-rank="so"]').value=String(X.so||0);box.querySelector('[data-rank="m"]').value=X.m;
  RS.key=`rank-${X.lg}-${X.so||0}-${X.kind}-${X.m}-${X.n}-${X.p90?1:0}`;}
 async function rankChange(el){const X=RS.rank;const k=el.dataset.rank;if(k==='lg'){X.lg=el.value;X.so=0;}else if(k==='so')X.so=+el.value||0;else if(k==='m')X.m=el.value;await rankRender();RS.ver=1;await loadStudioMatch();}
-function rankTeams(fx,pl,bx){const T=new Map();const tm=t=>{if(!T.has(t.id))T.set(t.id,{id:t.id,name:t.name,logo:t.logo,j:0,w:0,d:0,l:0,pts:0,gf:0,ga:0,hp:0,ap:0,cs:0,fts:0,gf1:0,gf2:0,vir:0,ced:0,btts:0,o25:0,res:[]});return T.get(t.id);};
- (fx||[]).filter(f=>f&&f.fixture&&FT_S.includes(f.fixture.status.short)&&f.goals&&f.goals.home!=null).sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)).forEach(f=>{
+// nas copas continentais, só a fase principal (sem as qualificatórias)
+const isQualRound=(lg,r)=>CUPS.has(+lg)&&/qualifying|preliminary|^play-offs$|^\d+(st|nd|rd|th) round/i.test(String(r||'').trim());
+function rankTeams(fx,pl,bx,lg){const T=new Map();const tm=t=>{if(!T.has(t.id))T.set(t.id,{id:t.id,name:t.name,logo:t.logo,j:0,w:0,d:0,l:0,pts:0,gf:0,ga:0,hp:0,ap:0,cs:0,fts:0,gf1:0,gf2:0,vir:0,ced:0,btts:0,o25:0,res:[]});return T.get(t.id);};
+ (fx||[]).filter(f=>f&&f.fixture&&!isQualRound(lg,f.league&&f.league.round)&&FT_S.includes(f.fixture.status.short)&&f.goals&&f.goals.home!=null).sort((a,b)=>new Date(a.fixture.date)-new Date(b.fixture.date)).forEach(f=>{
   const ht=(f.score&&f.score.halftime)||{};[[f.teams.home,f.goals.home,f.goals.away,ht.home,ht.away,1],[f.teams.away,f.goals.away,f.goals.home,ht.away,ht.home,0]].forEach(([t,g,o,h1,o1,home])=>{const x=tm(t);
    const p=g>o?3:g===o?1:0;x.j++;x.pts+=p;x.gf+=g;x.ga+=o;if(home)x.hp+=p;else x.ap+=p;if(g>o)x.w++;else if(g===o)x.d++;else x.l++;if(!o)x.cs++;if(!g)x.fts++;if(g&&o)x.btts++;if(g+o>=3)x.o25++;
    if(h1!=null&&o1!=null){x.gf1+=h1;x.gf2+=g-h1;if(h1<o1&&g>o)x.vir++;if(h1>o1&&g<=o)x.ced+=g===o?2:3;}x.res.push(p);});});
@@ -5172,7 +5174,7 @@ function rankTeams(fx,pl,bx){const T=new Map();const tm=t=>{if(!T.has(t.id))T.se
 async function ctxRank(){
  const X=RS.rank||rankDefaults();const lg=+X.lg,season=seasonFor(lg)-(+X.so||0),L=RLmap[lg];
  const [pl,fx,bx]=await Promise.all([vennPlayers(lg,season).catch(()=>[]),apiGet('fixtures',{league:lg,season,timezone:TZ},600000).catch(()=>[]),bancoGet({acao:'liga',id:lg,season}).catch(()=>null)]);
- const teams=rankTeams(fx,pl,bx);
+ const teams=rankTeams(fx,pl,bx,lg);
  if(X.kind!=='tm'&&!pl.length)throw new Error(`Ainda não há números de jogadores de ${L.name} em ${lgSeasonLbl(lg,season)} na API.`);
  if(X.kind==='tm'&&!teams.length)throw new Error(`Ainda não há jogos encerrados de ${L.name} em ${lgSeasonLbl(lg,season)}.`);
  const lab=lgSeasonLbl(lg,season);
@@ -5183,7 +5185,7 @@ async function ctxRank(){
 // um ranking pronto (viz + texto) para a métrica m
 function rankOne(c,m){const X=c.rank,tm=X.kind==='tm',n=X.n||10;let list,thr=0,p9=false;
  if(tm){list=X.teams.map(t=>({t,v:m.f(t)})).filter(o=>o.v!=null&&isFinite(o.v));}
- else{p9=!!(X.p90&&m.p9);const mx=Math.max(...X.pl.map(a=>a.min));thr=p9||m.minq?Math.max(450,Math.round(mx*.3/90)*90):0;
+ else{p9=!!(X.p90&&m.p9);const mx=Math.max(...X.pl.map(a=>a.min));thr=p9||m.minq?Math.max(Math.round(mx*.3/90)*90,Math.min(450,Math.round(mx*.5/90)*90)):0;
   list=X.pl.filter(a=>(!m.cov||!a.cov||a.cov[m.cov])&&a.min>=thr).map(a=>{const raw=m.f(a);return {a,v:raw==null?null:p9?raw/a.min*90:raw};}).filter(o=>o.v!=null&&isFinite(o.v)&&(m.fmt||o.v>0));}
  list.sort((x,y)=>m.asc?x.v-y.v:y.v-x.v);if(!list.length)return null;list=list.slice(0,n);
  const fmt=v=>m.fmt?m.fmt(v):p9?rk2(v):String(Math.round(v));let pos=0,prev=null;
