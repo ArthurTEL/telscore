@@ -74,9 +74,6 @@ module.exports = async (req, res) => {
     const errors = countErrors(data && data.errors) ? data.errors : null;
     let response = data ? data.response : null;
 
-    // O site só precisa saber se a API responde. A conta (nome, e-mail, plano e uso) não sai do servidor.
-    if (endpoint === 'status') response = errors ? null : {};
-
     // Filtra as ligas acompanhadas aqui no servidor, para a resposta chegar leve ao navegador.
     if (endpoint === 'fixtures' && q.leagues && Array.isArray(response)) {
       const wanted = new Set(String(q.leagues).split(',').map(s => s.trim()));
@@ -99,7 +96,8 @@ module.exports = async (req, res) => {
     else if (endpoint === 'teams') ttl = 604800;
     else if (endpoint === 'players/squads') ttl = 86400;
     else if (endpoint === 'teams/statistics') ttl = 21600;
-    else if (endpoint === 'players') ttl = 43200;
+    // números de jogador por liga (rankings e diagrama): 3 h, para acompanhar a rodada; por time/jogador: 12 h
+    else if (endpoint === 'players') ttl = params.get('league') ? 10800 : 43200;
     else if (endpoint === 'players/teams' || endpoint === 'players/profiles' || endpoint === 'players/seasons' || endpoint === 'transfers' || endpoint === 'trophies') ttl = 86400;
     else if (/^players\/top/.test(endpoint)) ttl = 21600;
     else if (endpoint === 'fixtures') {
